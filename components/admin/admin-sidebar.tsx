@@ -8,6 +8,7 @@ import {
   Wallet,
   ToggleLeft,
   Shield,
+  Settings,
   LogOut,
   ChevronsUpDown,
   Bell,
@@ -44,6 +45,7 @@ const navItems = [
   { title: "Users", href: "/admin/users", icon: Users },
   { title: "Accounts", href: "/admin/accounts", icon: Wallet },
   { title: "Modules", href: "/admin/modules", icon: ToggleLeft },
+  { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 function AdminNavUser() {

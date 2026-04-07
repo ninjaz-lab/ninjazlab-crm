@@ -12,7 +12,19 @@ import {
   Bell,
   BadgeCheck,
   Sparkles,
+  Mail,
+  ChevronRight,
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from "@/components/ui/sidebar";
 import {
   Sidebar,
   SidebarContent,
@@ -42,6 +54,10 @@ const navItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "Users", href: "/users", icon: Users },
   { title: "Settings", href: "/settings", icon: Settings },
+];
+
+const marketingItems = [
+  { title: "Email Marketing", href: "/marketing/email", icon: Mail },
 ];
 
 function NavUser() {
@@ -169,6 +185,45 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Marketing</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Collapsible
+                defaultOpen={pathname.startsWith("/marketing")}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Marketing">
+                      <Mail />
+                      <span>Marketing</span>
+                      <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {marketingItems.map((item) => (
+                        <SidebarMenuSubItem key={item.href}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname.startsWith(item.href)}
+                          >
+                            <Link href={item.href}>
+                              <item.icon />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

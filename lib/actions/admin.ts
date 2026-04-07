@@ -6,10 +6,11 @@ import {
   userAccount,
   userPermission,
   accountTransaction,
+  marketingProvider,
   MODULES,
   type Module,
 } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, isNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -201,4 +202,76 @@ export async function getAllUsersWithPermissions() {
     }
     return { ...u, permissions: perms };
   });
+}
+
+// ── System Marketing Providers (admin-only) ────────────────────────────────
+
+export async function getSystemProviders(channel?: string) {
+  await requireAdmin();
+  const conditions = [isNull(marketingProvider.userId)];
+  if (channel) conditions.push(eq(marketingProvider.channel, channel));
+  return db
+    .select()
+    .from(marketingProvider)
+    .where(and(...conditions))
+    .orderBy(marketingProvider.createdAt);
+}
+
+export async function createSystemProvider(data: {
+  channel: string;
+  name: string;
+  type: "ses" | "smtp" | "resend";
+  config: Record<string, string>;
+  isDefault?: boolean;
+}) {
+  await requireAdmin();
+  const { randomUUID } = await import("crypto");
+
+  // If setting as default, unset existing defaults for this channel
+  if (data.isDefault) {
+    await db
+      .update(marketingProvider)
+      .set({ isDefault: false })
+      .where(
+        and(isNull(marketingProvider.userId), eq(marketingProvider.channel, data.channel))
+      );
+  }
+
+  const id = randomUUID();
+  await db.insert(marketingProvider).values({
+    id,
+    userId: null,
+    channel: data.channel,
+    name: data.name,
+    config: { type: data.type, ...data.config },
+    isDefault: data.isDefault ?? false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  revalidatePath("/admin/settings");
+  return id;
+}
+
+export async function deleteSystemProvider(id: string) {
+  await requireAdmin();
+  await db
+    .delete(marketingProvider)
+    .where(and(eq(marketingProvider.id, id), isNull(marketingProvider.userId)));
+  revalidatePath("/admin/settings");
+}
+
+export async function setDefaultProvider(id: string, channel: string) {
+  await requireAdmin();
+  await db
+    .update(marketingProvider)
+    .set({ isDefault: false })
+    .where(
+      and(isNull(marketingProvider.userId), eq(marketingProvider.channel, channel))
+    );
+  await db
+    .update(marketingProvider)
+    .set({ isDefault: true, updatedAt: new Date() })
+    .where(eq(marketingProvider.id, id));
+  revalidatePath("/admin/settings");
 }

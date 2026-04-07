@@ -15,14 +15,12 @@ export async function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
 
   // Not authenticated — redirect to login unless on a public route
-  if (!sessionCookie && !isPublicRoute) {
+  if (!sessionCookie && !isPublicRoute)
     return NextResponse.redirect(new URL("/login", request.url));
-  }
 
   // Already authenticated — skip auth pages
-  if (sessionCookie && (pathname === "/login" || pathname === "/register")) {
+  if (sessionCookie && (pathname === "/login" || pathname === "/register"))
     return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
 
   // Admin route guard — fetch session to read role
   const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
@@ -35,9 +33,8 @@ export async function proxy(request: NextRequest) {
         }
       );
       const session = await sessionRes.json();
-      if (session?.user?.role !== "admin") {
+      if (session?.user?.role !== "admin")
         return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
     } catch {
       return NextResponse.redirect(new URL("/login", request.url));
     }
