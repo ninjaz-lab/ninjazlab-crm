@@ -8,7 +8,9 @@
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --yes --force)",
       "Bash(mv /Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/CLAUDE.md /tmp/CLAUDE_backup.md)",
       "Read(//Users/yswei93/Desktop/workspace/ninjazlab/**)",
-      "Bash(npx create-next-app@latest ninjazlab-crm --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --yes)"
+      "Bash(npx create-next-app@latest ninjazlab-crm --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --yes)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init -d)"
     ]
   }
 }
