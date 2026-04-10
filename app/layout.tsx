@@ -1,35 +1,43 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Roboto } from "next/font/google";
+import type {Metadata} from "next";
+import {Geist, Geist_Mono, Roboto} from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
+import {cn} from "@/lib/utils";
+import {ThemeProvider} from "@/components/theme-provider";
 
-const roboto = Roboto({subsets:['latin'],variable:'--font-sans'});
+const roboto = Roboto({subsets: ['latin'], variable: '--font-sans'});
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "NinjazCRM - Admin Dashboard",
-  description: "Admin dashboard for NinjazCRM",
+    title: "Ninjazlab - CRM",
+    description: "Admin dashboard for NinjazCRM",
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
+                                       children,
+                                   }: Readonly<{
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en" className={cn("font-sans", roboto.variable)}>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en" suppressHydrationWarning className={cn("font-sans", roboto.variable)}>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            {children}
+        </ThemeProvider>
+        </body>
+        </html>
+    );
 }

@@ -1,19 +1,12 @@
-import { unstable_noStore as noStore } from "next/cache";
+import {unstable_noStore as noStore} from "next/cache";
 import Link from "next/link";
-import { getEmailCampaigns, getEmailTemplates, getEmailLists } from "@/lib/actions/email-marketing";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Plus, Mail, FileText, Users } from "lucide-react";
+import {fetchEmailTemplates, getEmailCampaigns} from "@/lib/actions/email-marketing";
+import {Button} from "@/components/ui/button";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {Badge} from "@/components/ui/badge";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
+import {FileText, Mail, Plus} from "lucide-react";
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   draft: "secondary",
@@ -27,10 +20,9 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 
 export default async function EmailMarketingPage() {
   noStore();
-  const [campaigns, templates, lists] = await Promise.all([
+  const [campaigns, templates] = await Promise.all([
     getEmailCampaigns(),
-    getEmailTemplates(),
-    getEmailLists(),
+    fetchEmailTemplates(),
   ]);
 
   const totalSent = campaigns.reduce((s, c) => s + (c.sentCount ?? 0), 0);
@@ -108,10 +100,6 @@ export default async function EmailMarketingPage() {
           <TabsTrigger value="templates">
             <FileText className="size-4 mr-1" />
             Templates ({templates.length})
-          </TabsTrigger>
-          <TabsTrigger value="lists">
-            <Users className="size-4 mr-1" />
-            Lists ({lists.length})
           </TabsTrigger>
         </TabsList>
 
@@ -215,53 +203,6 @@ export default async function EmailMarketingPage() {
           </div>
         </TabsContent>
 
-        {/* Lists tab */}
-        <TabsContent value="lists" className="mt-4">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>List</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Subscribers</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lists.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                      No lists yet.{" "}
-                      <Link href="/marketing/email/subscribers" className="underline">
-                        Create your first list
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                )}
-                {lists.map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell className="font-medium">{l.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {l.description ?? "—"}
-                    </TableCell>
-                    <TableCell>{l.subscriberCount}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(l.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button asChild size="sm" variant="ghost">
-                        <Link href={`/marketing/email/subscribers?list=${l.id}`}>
-                          Manage
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
       </Tabs>
     </div>
   );

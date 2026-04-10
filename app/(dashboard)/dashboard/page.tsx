@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, ShoppingCart, DollarSign } from "lucide-react";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {DollarSign, ShoppingCart, TrendingUp, Users} from "lucide-react";
 
 const stats = [
   { title: "Total Users", value: "12,345", change: "+12%", icon: Users },
@@ -40,7 +40,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {["User John Doe signed up", "Order #1234 placed", "Payment received $299", "New contact added"].map(
+              {["User John Doe signed up", "Order #1234 placed", "Payment received $299", "New audience added"].map(
                 (item, i) => (
                   <div key={i} className="flex items-center gap-3 text-sm">
                     <div className="h-2 w-2 rounded-full bg-primary" />

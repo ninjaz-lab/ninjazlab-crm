@@ -48,7 +48,25 @@
       "Bash(curl -s https://ui.shadcn.com/registry/b5x2IwvS4.json)",
       "Bash(mkdir -p /tmp/shadcn-theme-test)",
       "Read(//tmp/**)",
-      "Bash(printf \"y\\\\nn\\\\n\")"
+      "Bash(printf \"y\\\\nn\\\\n\")",
+      "Bash(pkill -f \"next start\")",
+      "Bash(/Users/yswei93/.nvm/versions/node/v22.21.1/bin/pnpm build:*)",
+      "Bash(/usr/local/bin/pnpm build:*)",
+      "Bash(~/.nvm/versions/node/v22.21.1/bin/node node_modules/.bin/next build)",
+      "Bash(~/.nvm/versions/node/v22.21.1/bin/node /Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/node_modules/next/dist/bin/next build)",
+      "Bash(PATH=\"/Users/yswei93/.nvm/versions/node/v22.21.1/bin:$PATH\" ~/.nvm/versions/node/v22.21.1/bin/node /Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/node_modules/next/dist/bin/next build)",
+      "Bash(PATH=\"/Users/yswei93/.nvm/versions/node/v22.21.1/bin:$PATH\" ~/.nvm/versions/node/v22.21.1/bin/node node_modules/next/dist/bin/next build)",
+      "Bash(PATH=\"/Users/yswei93/.nvm/versions/node/v22.21.1/bin:$PATH\" pnpm db:push)",
+      "Bash(PATH=\"/Users/yswei93/.nvm/versions/node/v22.21.1/bin:$PATH\" npx drizzle-kit push)",
+      "Bash(PATH=\"/Users/yswei93/.nvm/versions/node/v22.21.1/bin:$PATH\" npx drizzle-kit push --force)",
+      "Bash(PATH=\"/Users/yswei93/.nvm/versions/node/v22.21.1/bin:$PATH\" node scripts/migrate-contacts.mjs)",
+      "Bash(PATH=\"/Users/yswei93/.nvm/versions/node/v22.21.1/bin:$PATH\" npx shadcn@latest add checkbox radio-group --yes)",
+      "Bash(PATH=\"/Users/yswei93/.nvm/versions/node/v22.21.1/bin:$PATH\" node scripts/migrate-contact-import-job.mjs)",
+      "Bash(ls \"/Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/app/\\(dashboard\\)/marketing/email/\")",
+      "Bash(/Users/yswei93/.nvm/versions/node/v22.21.1/bin/node /Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/node_modules/next/dist/bin/next build)",
+      "Bash(/Users/yswei93/.nvm/versions/node/v22.21.1/bin/node node_modules/next/dist/bin/next build --no-turbopack)",
+      "Bash(/Users/yswei93/.nvm/versions/node/v22.21.1/bin/node node_modules/typescript/bin/tsc --noEmit)",
+      "Bash(ls /Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/app/\\\\\\(dashboard\\\\\\)/)"
     ]
   }
 }

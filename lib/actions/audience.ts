@@ -1,0 +1,379 @@
+"use server";
+
+import {randomUUID} from "crypto";
+import {and, asc, count, desc, eq, ilike, inArray, or, sql} from "drizzle-orm";
+import * as XLSX from "xlsx";
+import {auth} from "@/lib/auth";
+import {db} from "@/lib/db";
+import {audience, audienceList, audienceListMember, job_import_audience} from "@/lib/db/schema";
+import {type ImportField, SegmentRule} from "@/lib/audience-utils";
+import {getAudienceImportQueue} from "@/lib/queue";
+import {headers} from "next/headers";
+import {revalidatePath} from "next/cache";
+import {buildDynamicSegmentQuery} from "@/lib/segments";
+
+async function getSession() {
+    const session = await auth.api.getSession({headers: await headers()});
+    if (!session) throw new Error("Unauthorized");
+    return session;
+}
+
+// ─── Audience CRUD ─────────────────────────────────────────────────────────────
+
+export type AudienceRow = typeof audience.$inferSelect;
+
+export async function getAudiences(opts?: {
+    search?: string;
+    listId?: string;
+    page?: number;
+    pageSize?: number;
+}) {
+    const session = await getSession();
+    const {search = "", listId, page = 1, pageSize = 50} = opts ?? {};
+    const offset = (page - 1) * pageSize;
+
+    // Base conditions: must belong to user, and apply search text if any
+    let baseWhere = and(
+        eq(audience.userId, session.user.id),
+        search
+            ? or(
+                ilike(audience.firstName, `%${search}%`),
+                ilike(audience.lastName, `%${search}%`),
+                ilike(audience.email, `%${search}%`),
+                ilike(audience.phone, `%${search}%`),
+            )
+            : undefined
+    );
+
+    if (listId) {
+        // 1. Fetch the segment to see what type it is
+        const [segment] = await db
+            .select()
+            .from(audienceList)
+            .where(and(eq(audienceList.id, listId), eq(audienceList.userId, session.user.id)));
+
+        if (!segment) return {audiences: [], total: 0};
+
+        if (segment.type === "dynamic") {
+            // 2. DYNAMIC SEGMENT: Generate the WHERE clause from the JSON rules!
+            const dynamicConditions = buildDynamicSegmentQuery(segment.rules as SegmentRule[]);
+
+            // Combine our base search/user rules with the dynamic segment rules
+            if (dynamicConditions) {
+                baseWhere = and(baseWhere, dynamicConditions) as any;
+            }
+
+            const rows = await db
+                .select()
+                .from(audience)
+                .where(baseWhere)
+                .orderBy(desc(audience.createdAt))
+                .limit(pageSize)
+                .offset(offset);
+
+            const [{total}] = await db
+                .select({total: count()})
+                .from(audience)
+                .where(baseWhere);
+
+            return {audiences: rows, total};
+
+        } else {
+            // 3. STATIC SEGMENT: Fall back to checking the audienceListMember join table
+            const rows = await db
+                .select({audience: audience})
+                .from(audience)
+                .innerJoin(audienceListMember, eq(audienceListMember.audienceId, audience.id))
+                .where(and(baseWhere, eq(audienceListMember.listId, listId)))
+                .orderBy(desc(audience.createdAt))
+                .limit(pageSize)
+                .offset(offset);
+
+            const [{total}] = await db
+                .select({total: count()})
+                .from(audience)
+                .innerJoin(audienceListMember, eq(audienceListMember.audienceId, audience.id))
+                .where(and(baseWhere, eq(audienceListMember.listId, listId)));
+
+            return {audiences: rows.map((r) => r.audience), total};
+        }
+    }
+
+    // 4. NO SEGMENT SELECTED: Return all audiences
+    const rows = await db
+        .select()
+        .from(audience)
+        .where(baseWhere)
+        .orderBy(desc(audience.createdAt))
+        .limit(pageSize)
+        .offset(offset);
+
+    const [{total}] = await db
+        .select({total: count()})
+        .from(audience)
+        .where(baseWhere);
+
+    return {audiences: rows, total};
+}
+
+export async function createAudience(data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+    notes?: string;
+}) {
+    const session = await getSession();
+    const id = randomUUID();
+    await db.insert(audience).values({
+        id,
+        userId: session.user.id,
+        source: "manual",
+        ...data,
+        updatedAt: new Date(),
+    });
+    revalidatePath("/audiences");
+    return id;
+}
+
+export async function updateAudience(
+    audienceId: string,
+    data: Partial<Omit<AudienceRow, "id" | "userId" | "createdAt" | "updatedAt" | "source">>
+) {
+    const session = await getSession();
+    await db
+        .update(audience)
+        .set({...data, updatedAt: new Date()})
+        .where(and(eq(audience.id, audienceId), eq(audience.userId, session.user.id)));
+    revalidatePath("/audiences");
+}
+
+export async function deleteAudience(audienceId: string) {
+    const session = await getSession();
+    await db
+        .delete(audience)
+        .where(and(eq(audience.id, audienceId), eq(audience.userId, session.user.id)));
+    revalidatePath("/audiences");
+}
+
+export async function deleteAudiences(audienceIds: string[]) {
+    const session = await getSession();
+    await db
+        .delete(audience)
+        .where(and(eq(audience.userId, session.user.id), inArray(audience.id, audienceIds)));
+    revalidatePath("/audiences");
+}
+
+// ─── Audience Lists ─────────────────────────────────────────────────────────────
+
+export type AudienceListRow = typeof audienceList.$inferSelect;
+
+export async function fetchAudienceLists() {
+    const session = await getSession();
+
+    // 1. Fetch all lists from the database
+    const lists = await db
+        .select()
+        .from(audienceList)
+        .where(eq(audienceList.userId, session.user.id))
+        .orderBy(asc(audienceList.name));
+
+    // 2. Loop through the lists and calculate the live count for dynamic segments
+    return await Promise.all(lists.map(async (list) => {
+        if (list.type === "dynamic" && list.rules) {
+            const rules = list.rules as SegmentRule[];
+            const dynamicConditions = buildDynamicSegmentQuery(rules);
+
+            // Base condition to ensure we only count this user's audience
+            let baseWhere = eq(audience.userId, session.user.id);
+
+            // Add the dynamic rules if they exist
+            if (dynamicConditions)
+                baseWhere = and(baseWhere, dynamicConditions) as any;
+
+            // Run a quick count query against the database
+            const [{total}] = await db
+                .select({total: count()})
+                .from(audience)
+                .where(baseWhere);
+
+            // Return the list with the calculated live count
+            return {...list, count: total};
+        }
+
+        // If it's a static list, just return it as is
+        return list;
+    }));
+}
+
+export async function deleteAudienceList(listId: string) {
+    const session = await getSession();
+    await db
+        .delete(audienceList)
+        .where(and(eq(audienceList.id, listId), eq(audienceList.userId, session.user.id)));
+    revalidatePath("/audiences");
+}
+
+export async function addAudiencesToList(listId: string, audienceIds: string[]) {
+    const session = await getSession();
+    // Verify list belongs to user
+    const [list] = await db
+        .select()
+        .from(audienceList)
+        .where(and(eq(audienceList.id, listId), eq(audienceList.userId, session.user.id)));
+    if (!list) throw new Error("List not found");
+
+    // Insert members, skip duplicates
+    const existing = await db
+        .select({audienceId: audienceListMember.audienceId})
+        .from(audienceListMember)
+        .where(
+            and(
+                eq(audienceListMember.listId, listId),
+                inArray(audienceListMember.audienceId, audienceIds)
+            )
+        );
+    const existingIds = new Set(existing.map((e) => e.audienceId));
+    const newIds = audienceIds.filter((id) => !existingIds.has(id));
+
+    if (newIds.length > 0) {
+        await db.insert(audienceListMember).values(
+            newIds.map((audienceId) => ({id: randomUUID(), listId, audienceId}))
+        );
+        await db
+            .update(audienceList)
+            .set({
+                count: sql`${audienceList.count}
+                +
+                ${newIds.length}`, updatedAt: new Date()
+            })
+            .where(eq(audienceList.id, listId));
+    }
+    revalidatePath("/audiences");
+}
+
+export async function removeAudienceFromList(listId: string, audienceId: string) {
+    const session = await getSession();
+    const [list] = await db
+        .select()
+        .from(audienceList)
+        .where(and(eq(audienceList.id, listId), eq(audienceList.userId, session.user.id)));
+    if (!list) throw new Error("List not found");
+
+    await db
+        .delete(audienceListMember)
+        .where(
+            and(eq(audienceListMember.listId, listId), eq(audienceListMember.audienceId, audienceId))
+        );
+    await db
+        .update(audienceList)
+        .set({
+            count: sql`GREATEST
+            (
+            ${audienceList.count}
+            -
+            1,
+            0
+            )`, updatedAt: new Date()
+        })
+        .where(eq(audienceList.id, listId));
+    revalidatePath("/audiences");
+}
+
+// ─── Import ────────────────────────────────────────────────────────────────────
+
+/** Parse Excel/CSV and return headers + first 5 preview rows */
+export async function parseImportFile(formData: FormData) {
+    const file = formData.get("file") as File;
+    if (!file)
+        throw new Error("No file provided");
+
+    const buf = Buffer.from(await file.arrayBuffer());
+    const wb = XLSX.read(buf, {type: "buffer"});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, {
+        defval: "",
+        raw: false,
+    });
+    if (rows.length === 0)
+        throw new Error("File is empty");
+
+    const headers = Object.keys(rows[0]);
+    const previewLimit = parseInt(process.env.AUDIENCE_IMPORT_PREVIEW_ROWS ?? "5", 10);
+
+    // Slice the rows based on the environment variable
+    const preview = rows
+        .slice(0, previewLimit)
+        .map((row) => headers.map((h) => row[h]));
+
+    return {
+        headers,
+        preview,
+        totalRows: rows.length
+    };
+}
+
+/** Parse file, store rows in DB, enqueue background job — returns immediately */
+export async function queueAudienceImport(formData: FormData) {
+    const session = await getSession();
+    const file = formData.get("file") as File;
+    if (!file) throw new Error("No file provided");
+    const mapping: Record<string, ImportField> = JSON.parse(formData.get("mapping") as string);
+    const mergeStrategy = formData.get("mergeStrategy") as "fill" | "overwrite";
+    const addToListId = (formData.get("addToListId") as string) || undefined;
+
+    // Parse the file now (fast) — worker processes rows in background
+    const buf = Buffer.from(await file.arrayBuffer());
+    const wb = XLSX.read(buf, {type: "buffer"});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, {defval: "", raw: false});
+
+    if (rows.length === 0) throw new Error("File is empty");
+
+    // Save job record with parsed rows
+    const jobId = randomUUID();
+    await db.insert(job_import_audience).values({
+        id: jobId,
+        userId: session.user.id,
+        fileName: file.name,
+        totalRows: rows.length,
+        rows: rows as unknown as Record<string, unknown>[],
+        mapping: mapping as unknown as Record<string, unknown>,
+        mergeStrategy,
+        addToListId: addToListId ?? null,
+        updatedAt: new Date(),
+    });
+
+    // Enqueue — worker picks this up and processes in background
+    await getAudienceImportQueue().add("import", {importJobId: jobId}, {jobId});
+
+    revalidatePath("/audiences");
+    return {jobId, totalRows: rows.length};
+}
+
+/** Get all import jobs for the current user (recent 10) */
+export async function getImportJobs() {
+    const session = await getSession();
+    return db
+        .select({
+            id: job_import_audience.id,
+            status: job_import_audience.status,
+            fileName: job_import_audience.fileName,
+            totalRows: job_import_audience.totalRows,
+            processedRows: job_import_audience.processedRows,
+            newCount: job_import_audience.newCount,
+            updatedCount: job_import_audience.updatedCount,
+            skippedCount: job_import_audience.skippedCount,
+            error: job_import_audience.error,
+            createdAt: job_import_audience.createdAt,
+        })
+        .from(job_import_audience)
+        .where(eq(job_import_audience.userId, session.user.id))
+        .orderBy(desc(job_import_audience.createdAt))
+        .limit(10);
+}

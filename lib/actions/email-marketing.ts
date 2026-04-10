@@ -2,14 +2,12 @@
 
 import {db} from "@/lib/db";
 import {
+    audienceListMember,
     emailCampaignDetail,
     emailTemplateDetail,
-    marketingBlastJob,
+    jobMarketingBlast,
     marketingCampaign,
-    marketingList,
-    marketingListSubscriber,
     marketingProvider,
-    marketingSubscriber,
     marketingTemplate,
 } from "@/lib/db/schema";
 import {and, desc, eq, isNull, sql} from "drizzle-orm";
@@ -27,7 +25,7 @@ async function getSession() {
 
 // ─── Templates ────────────────────────────────────────────────────────────
 
-export async function getEmailTemplates() {
+export async function fetchEmailTemplates() {
     const session = await getSession();
     return db
         .select({
@@ -231,11 +229,11 @@ export async function createEmailCampaign(data: {
     const session = await getSession();
     const campaignId = randomUUID();
 
-    // Count subscribers in list
+    // Count contacts in segment
     const [{count}] = await db
         .select({count: sql<number>`count(*)`})
-        .from(marketingListSubscriber)
-        .where(eq(marketingListSubscriber.listId, data.listId));
+        .from(audienceListMember)
+        .where(eq(audienceListMember.listId, data.listId));
 
     await db.insert(marketingCampaign).values({
         id: campaignId,
@@ -281,9 +279,9 @@ export async function scheduleCampaign(campaignId: string, scheduledAt: Date) {
     if (!campaign[0]) throw new Error("Campaign not found");
 
     const subscriberRows = await db
-        .select({ subscriberId: marketingListSubscriber.subscriberId })
-        .from(marketingListSubscriber)
-        .where(eq(marketingListSubscriber.listId, campaign[0].listId!));
+        .select({ subscriberId: audienceListMember.audienceId })
+        .from(audienceListMember)
+        .where(eq(audienceListMember.listId, campaign[0].listId!));
 
     const subscriberIds = subscriberRows.map((r) => r.subscriberId);
 
@@ -298,7 +296,7 @@ export async function scheduleCampaign(campaignId: string, scheduledAt: Date) {
         );
 
     const blastJobId = randomUUID();
-    await db.insert(marketingBlastJob).values({
+    await db.insert(jobMarketingBlast).values({
         id: blastJobId,
         campaignId,
         status: "waiting",
@@ -340,100 +338,6 @@ export async function cancelCampaign(campaignId: string) {
     revalidatePath(`/marketing/email/campaigns/${campaignId}`);
 }
 
-// ─── Subscriber Lists ─────────────────────────────────────────────────────
-
-export async function getEmailLists() {
-    const session = await getSession();
-    return db
-        .select()
-        .from(marketingList)
-        .where(
-            and(
-                eq(marketingList.userId, session.user.id),
-                eq(marketingList.channel, "email")
-            )
-        )
-        .orderBy(desc(marketingList.createdAt));
-}
-
-export async function createEmailList(data: { name: string; description?: string }) {
-    const session = await getSession();
-    const id = randomUUID();
-    await db.insert(marketingList).values({
-        id,
-        userId: session.user.id,
-        channel: "email",
-        name: data.name,
-        description: data.description ?? null,
-        subscriberCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    });
-    revalidatePath("/marketing/email/subscribers");
-    return id;
-}
-
-export async function getListSubscribers(listId: string) {
-    const session = await getSession();
-    return db
-        .select({
-            id: marketingSubscriber.id,
-            email: marketingSubscriber.email,
-            firstName: marketingSubscriber.firstName,
-            lastName: marketingSubscriber.lastName,
-            status: marketingSubscriber.status,
-            createdAt: marketingSubscriber.createdAt,
-        })
-        .from(marketingListSubscriber)
-        .innerJoin(
-            marketingSubscriber,
-            eq(marketingSubscriber.id, marketingListSubscriber.subscriberId)
-        )
-        .where(eq(marketingListSubscriber.listId, listId));
-}
-
-export async function addSubscribers(
-    listId: string,
-    subscribers: { email: string; firstName?: string; lastName?: string }[]
-) {
-    const session = await getSession();
-    let added = 0;
-
-    for (const sub of subscribers) {
-        const id = randomUUID();
-        await db.insert(marketingSubscriber).values({
-            id,
-            userId: session.user.id,
-            channel: "email",
-            email: sub.email,
-            firstName: sub.firstName ?? null,
-            lastName: sub.lastName ?? null,
-            status: "subscribed",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-        await db.insert(marketingListSubscriber).values({
-            id: randomUUID(),
-            listId,
-            subscriberId: id,
-            createdAt: new Date(),
-        });
-        added++;
-    }
-
-    // Update count
-    await db
-        .update(marketingList)
-        .set({
-            subscriberCount: sql`${marketingList.subscriberCount}
-            +
-            ${added}`,
-            updatedAt: new Date(),
-        })
-        .where(eq(marketingList.id, listId));
-
-    revalidatePath("/marketing/email/subscribers");
-}
 
 // ─── System provider lookup (used internally by worker + campaign form) ───
 

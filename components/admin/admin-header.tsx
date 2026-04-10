@@ -1,49 +1,54 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import {usePathname} from "next/navigation";
+import {SidebarTrigger} from "@/components/ui/sidebar";
+import {Separator} from "@/components/ui/separator";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Badge } from "@/components/ui/badge";
+import {ThemeToggle} from "@/components/theme-toggle";
+import {NotificationBell} from "@/components/notification-bell";
 
 const routeLabels: Record<string, string> = {
-  "/admin": "Overview",
-  "/admin/users": "Users",
-  "/admin/accounts": "Accounts",
-  "/admin/modules": "Modules",
+    "/admin": "Overview",
+    "/admin/users": "Users",
+    "/admin/accounts": "Accounts",
+    "/admin/modules": "Modules",
 };
 
 export function AdminHeader() {
-  const pathname = usePathname();
-  const label = routeLabels[pathname] ?? "Admin";
+    const pathname = usePathname();
+    const label = routeLabels[pathname] ?? "Admin";
 
-  return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-      <div className="flex items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator className="hidden md:block" />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{label}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <Badge variant="destructive" className="ml-2 text-xs">
-          Admin
-        </Badge>
-      </div>
-    </header>
-  );
+    return (
+        <header
+            className="flex h-16 w-full shrink-0 items-center justify-between border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2">
+                <SidebarTrigger className="-ml-1"/>
+                <Separator orientation="vertical" className="mr-2 h-4"/>
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem className="hidden md:block">
+                            <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator className="hidden md:block"/>
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{label}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <NotificationBell/>
+                <ThemeToggle/>
+            </div>
+
+        </header>
+    );
 }

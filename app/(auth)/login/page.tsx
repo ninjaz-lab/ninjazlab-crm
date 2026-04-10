@@ -21,21 +21,23 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await signIn.email({ email, password });
+    const { error } = await signIn.email({
+      email,
+      password,
+      callbackURL: "/auth-redirect",
+    });
     if (error) {
       setError(error.message ?? "Invalid credentials");
       setLoading(false);
-    } else {
-      router.push("/dashboard");
     }
   }
 
   async function handleGithub() {
-    await signIn.social({ provider: "github", callbackURL: "/dashboard" });
+    await signIn.social({ provider: "github", callbackURL: "/auth-redirect" });
   }
 
   async function handleGoogle() {
-    await signIn.social({ provider: "google", callbackURL: "/dashboard" });
+    await signIn.social({ provider: "google", callbackURL: "/auth-redirect" });
   }
 
   return (
@@ -45,7 +47,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-zinc-900" />
         <div className="relative z-20 flex items-center gap-2 text-lg font-medium">
           <Database className="size-5" />
-          NinjazCRM
+          Ninjazlab
         </div>
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
