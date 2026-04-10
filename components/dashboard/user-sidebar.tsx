@@ -41,6 +41,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {signOut, useSession} from "@/lib/auth-client";
 import {useModuleStore} from "@/lib/store/modules-store";
 import {fetchGrantedModules} from "@/lib/actions/modules";
+import {USER_ROLES} from "@/lib/enums";
 
 const USER_ICON_MAP: Record<string, LucideIcon> = {
     LayoutDashboard,
@@ -56,7 +57,7 @@ function NavUser() {
     const name = session?.user?.name ?? "User";
     const email = session?.user?.email ?? "";
     const image = session?.user?.image ?? "";
-    const role = session?.user?.role ?? "user";
+    const role = session?.user?.role ?? USER_ROLES.USER;
     const initials = name
         .split(" ")
         .map((n) => n[0])
@@ -120,7 +121,7 @@ function NavUser() {
 
 
                             {/* Switch to Admin */}
-                            {role === "admin" && (
+                            {role === USER_ROLES.ADMIN && (
                                 <DropdownMenuItem onClick={() => router.push("/admin")}>
                                     <Shield className="size-4 mr-2"/>
                                     Admin Dashboard

@@ -1,4 +1,5 @@
 import {create} from "zustand";
+import {CAMPAIGN_STATUS} from "@/lib/enums";
 
 export type SendMode = "draft" | "now" | "schedule";
 
@@ -38,7 +39,7 @@ export const useEmailCampaignStore = create<CampaignState>((set) => ({
     replyTo: "",
     templateId: "",
     listId: "",
-    sendMode: "draft",
+    sendMode: CAMPAIGN_STATUS.DRAFT,
     scheduledAt: "",
     utmSource: "email",
     utmMedium: "newsletter",
@@ -59,8 +60,16 @@ export const useEmailCampaignStore = create<CampaignState>((set) => ({
 
     // Reset function to clear the form after successful submission
     reset: () => set({
-        name: "", fromName: "", fromEmail: "", replyTo: "",
-        templateId: "", listId: "", sendMode: "draft", scheduledAt: "",
-        utmSource: "email", utmMedium: "newsletter", utmCampaign: ""
+        name: "",
+        fromName: "",
+        fromEmail: "",
+        replyTo: "",
+        templateId: "",
+        listId: "",
+        sendMode: CAMPAIGN_STATUS.DRAFT,
+        scheduledAt: "",
+        utmSource: "email",
+        utmMedium: "newsletter",
+        utmCampaign: ""
     })
 }));

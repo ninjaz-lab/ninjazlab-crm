@@ -2,23 +2,33 @@
 
 import {db} from "@/lib/db";
 import {
-    accountTransaction,
     appModule,
+    audience,
+    marketingCampaign,
     marketingProvider,
     pricingRule,
     user,
-    userAccount,
-    userPermission
+    userPermission,
+    wallets,
+    walletTransaction
 } from "@/lib/db/schema";
-import {and, asc, desc, eq, isNull, sql} from "drizzle-orm";
+import {and, asc, desc, eq, ilike, inArray, isNull, or, sql} from "drizzle-orm";
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
 import {revalidatePath} from "next/cache";
 import {randomUUID} from "crypto";
+import {
+    CAMPAIGN_STATUS,
+    TRANSACTION_MODULES,
+    TRANSACTION_TYPES,
+    USER_ROLES,
+    type UserRole,
+    WALLET_TYPES
+} from "@/lib/enums";
 
 async function requireAdmin() {
     const session = await auth.api.getSession({headers: await headers()});
-    if (!session || session.user.role !== "admin")
+    if (!session || session.user.role !== USER_ROLES.ADMIN)
         throw new Error("Unauthorized");
 
     return session;
@@ -26,12 +36,62 @@ async function requireAdmin() {
 
 // ── Users ──────────────────────────────────────────────────────────────────
 
-export async function getAllUsers() {
+export async function fetchAllUsers() {
     await requireAdmin();
     return db.select().from(user).orderBy(user.createdAt);
 }
 
-export async function setUserRole(userId: string, role: "user" | "admin") {
+export async function fetchAllUsersWithWallets(
+    page: number = 1,
+    pageSize: number = 10,
+    search?: string
+) {
+    await requireAdmin();
+
+    const offset = (page - 1) * pageSize;
+    const baseQuery = db.select({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        role: user.role,
+        banned: user.banned,
+        createdAt: user.createdAt,
+        balance: wallets.balance,
+    })
+        .from(user)
+        .leftJoin(
+            wallets,
+            and(
+                eq(user.id, wallets.userId),
+                eq(wallets.walletType, WALLET_TYPES.MAIN)
+            )
+        );
+
+    // Filter logic
+    const whereClause = search
+        ? or(ilike(user.name, `%${search}%`), ilike(user.email, `%${search}%`))
+        : undefined;
+
+    const data = await baseQuery
+        .where(whereClause)
+        .limit(pageSize)
+        .offset(offset)
+        .orderBy(desc(user.createdAt));
+
+    const [countResult] = await db
+        .select({count: sql<number>`count(*)`})
+        .from(user)
+        .where(whereClause);
+
+    return {
+        users: data,
+        total: Number(countResult.count),
+    };
+
+}
+
+export async function setUserRole(userId: string, role: UserRole) {
     await requireAdmin();
     await db
         .update(user)
@@ -58,83 +118,132 @@ export async function unbanUser(userId: string) {
     revalidatePath("/admin/users");
 }
 
-// ── Accounts ───────────────────────────────────────────────────────────────
+// ── Accounts & Wallets ─────────────────────────────────────────────────────
 
-export async function getAllAccounts() {
-    await requireAdmin();
-    return db
-        .select({
-            id: userAccount.id,
-            userId: userAccount.userId,
-            balance: userAccount.balance,
-            currency: userAccount.currency,
-            updatedAt: userAccount.updatedAt,
-            name: user.name,
-            email: user.email,
-            image: user.image,
-        })
-        .from(userAccount)
-        .innerJoin(user, eq(userAccount.userId, user.id));
-}
-
-export async function ensureAccount(userId: string) {
-    const existing = await db
+export async function ensureMainWallet(userId: string) {
+    const [existing] = await db
         .select()
-        .from(userAccount)
-        .where(eq(userAccount.userId, userId))
+        .from(wallets)
+        .where(and(eq(wallets.userId, userId), eq(wallets.walletType, WALLET_TYPES.MAIN)))
         .limit(1);
-    if (existing.length === 0) {
-        await db.insert(userAccount).values({
-            id: randomUUID(),
-            userId,
-            balance: "0.00",
-            currency: "USD",
-            updatedAt: new Date(),
-        });
-    }
+
+    if (existing)
+        return existing;
+
+    // If not found, create and return the new wallet
+    const [newWallet] = await db.insert(wallets).values({
+        userId,
+        walletType: WALLET_TYPES.MAIN,
+        balance: "0",
+    }).returning();
+
+    return newWallet;
 }
 
 export async function adjustBalance(
     userId: string,
     amount: number,
-    type: "credit" | "debit",
+    type: keyof typeof TRANSACTION_TYPES,
     note: string
 ) {
     const adminSession = await requireAdmin();
-    await ensureAccount(userId);
 
-    const delta = type === "credit" ? amount : -amount;
+    // 1. Ensure the wallet exists and get the record
+    const wallet = await ensureMainWallet(userId);
 
-    await db
-        .update(userAccount)
-        .set({
-            balance: sql`${userAccount.balance}
-            +
-            ${delta}`,
-            updatedAt: new Date(),
-        })
-        .where(eq(userAccount.userId, userId));
+    const delta = type == 'CREDIT'
+        ? amount
+        : -amount;
 
-    await db.insert(accountTransaction).values({
-        id: randomUUID(),
-        userId,
-        amount: Math.abs(amount).toFixed(2),
-        type,
-        note,
-        createdAt: new Date(),
-        createdBy: adminSession.user.id,
+    await db.transaction(async (tx) => {
+        // 2. Update the wallet balance
+        await tx.update(wallets)
+            .set({
+                balance: sql`${wallets.balance}
+                +
+                ${delta}`,
+                updatedAt: new Date()
+            })
+            .where(eq(wallets.id, wallet.id));
+
+        // 3. Record the transaction tied to that specific wallet
+        await tx.insert(walletTransaction).values({
+            id: randomUUID(),
+            walletId: wallet.id,
+            userId,
+            amount: Math.abs(amount).toFixed(2),
+            type: TRANSACTION_TYPES[type],
+            module: TRANSACTION_MODULES.SYSTEM,
+            note: note || `Admin adjustment`,
+            createdAt: new Date(),
+        });
     });
 
     revalidatePath("/admin/accounts");
 }
 
-export async function getTransactions(userId: string) {
+export async function fetchUserFullDetails(userId: string) {
     await requireAdmin();
-    return db
+
+    // 1. Fetch User Identity + CRM Data + Main Wallet
+    const [userDetails] = await db
         .select()
-        .from(accountTransaction)
-        .where(eq(accountTransaction.userId, userId))
-        .orderBy(accountTransaction.createdAt);
+        .from(user)
+        .leftJoin(audience, eq(user.id, audience.userId))
+        .leftJoin(wallets, and(eq(user.id, wallets.userId), eq(wallets.walletType, WALLET_TYPES.MAIN)))
+        .where(eq(user.id, userId))
+        .limit(1);
+
+    // 2. Fetch Recent Transactions
+    const transactions = await db
+        .select()
+        .from(walletTransaction)
+        .where(eq(walletTransaction.userId, userId))
+        .orderBy(desc(walletTransaction.createdAt))
+        .limit(20);
+
+    // 3. Fetch Ongoing/Scheduled Marketing Events
+    const ongoingCampaigns = await db
+        .select()
+        .from(marketingCampaign)
+        .where(
+            and(
+                eq(marketingCampaign.userId, userId),
+                inArray(marketingCampaign.status, [
+                    CAMPAIGN_STATUS.SCHEDULED,
+                    CAMPAIGN_STATUS.SENDING,
+                    CAMPAIGN_STATUS.PAUSED
+                ])
+            ))
+        .orderBy(asc(marketingCampaign.scheduledAt));
+
+    return {
+        profile: userDetails,
+        transactions,
+        ongoingCampaigns,
+    };
+}
+
+export async function fetchUserTransactions(
+    userId: string,
+    page: number = 1,
+    pageSize: number = 10
+) {
+    await requireAdmin();
+    const offset = (page - 1) * pageSize;
+
+    const [transactions, countResult] = await Promise.all([
+        db.select().from(walletTransaction)
+            .where(eq(walletTransaction.userId, userId))
+            .limit(pageSize).offset(offset).orderBy(desc(walletTransaction.createdAt)),
+        db.select({count: sql<number>`count(*)`}).from(walletTransaction)
+            .where(eq(walletTransaction.userId, userId))
+    ]);
+
+    return {
+        transactions,
+        total: Number(countResult[0].count)
+    };
 }
 
 // ── Permissions ────────────────────────────────────────────────────────────
@@ -146,7 +255,7 @@ export async function fetchAllAppModules() {
 
 export async function fetchAllUsersWithPermissions() {
     await requireAdmin();
-    const users = await db.select().from(user).where(eq(user.role, "user"));
+    const users = await db.select().from(user).where(eq(user.role, USER_ROLES.USER));
 
     // Fetch all dynamic modules and permissions
     const allModules = await db.select().from(appModule);

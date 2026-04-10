@@ -1,37 +1,89 @@
 import {db} from "../../../lib/db"; // Adjust path to your db instance
 import {appModule} from "../../../lib/db/schema";
+import {USER_ROLES} from "@/lib/enums";
 
 export async function seedAppModules() {
-    console.log("🌱 Seeding app modules...");
+    console.log("🌱 Seeding comprehensive app modules...");
 
     const modules = [
+        // ─────────────────────────────────────────────
+        // USER SCOPE MODULES
+        // ─────────────────────────────────────────────
+        {
+            key: "audience",
+            title: "Audience",
+            href: "/dashboard/audience",
+            iconName: "Users",
+            scope: USER_ROLES.USER,
+            exact: false,
+            description: "Manage your contacts, lists, and segments.",
+        },
         {
             key: "email_marketing",
             title: "Email Marketing",
             href: "/dashboard/email",
             iconName: "Mail",
-            scope: "user",
+            scope: USER_ROLES.USER,
+            exact: false,
+            description: "Create and send email campaigns.",
         },
         {
             key: "sms_marketing",
             title: "SMS Marketing",
             href: "/dashboard/sms",
             iconName: "MessageSquare",
-            scope: "user",
+            scope: USER_ROLES.USER,
+            exact: false,
+            description: "Send bulk SMS messages to your audience.",
         },
         {
             key: "whatsapp_marketing",
             title: "WhatsApp Marketing",
             href: "/dashboard/whatsapp",
             iconName: "MessageCircle",
-            scope: "user",
+            scope: USER_ROLES.USER,
+            exact: false,
+            description: "Engage customers via WhatsApp messages.",
         },
         {
-            key: "admin_settings",
-            title: "System Settings",
-            href: "/admin/settings",
-            iconName: "Settings",
-            scope: "admin",
+            key: "marketing_templates",
+            title: "Templates",
+            href: "/dashboard/templates",
+            iconName: "FileCode",
+            scope: USER_ROLES.USER,
+            exact: false,
+            description: "Manage your reusable email and SMS templates.",
+        },
+        {
+            key: "wallet_billing",
+            title: "Wallet & Billing",
+            href: "/dashboard/billing",
+            iconName: "Wallet",
+            scope: USER_ROLES.USER,
+            exact: false,
+            description: "Top up your balance and view transaction history.",
+        },
+
+        // ─────────────────────────────────────────────
+        // ADMIN SCOPE MODULES
+        // ─────────────────────────────────────────────
+        {
+            key: "admin_users",
+            title: "User Management",
+            href: "/admin/users",
+            iconName: "UsersRound",
+            scope: USER_ROLES.ADMIN,
+            exact: false,
+            description: "Manage system users and their permissions.",
+        },
+        {
+            key: "admin_pricing",
+            title: "Pricing Rules",
+            href: "/admin/pricing",
+            iconName: "CircleDollarSign",
+            scope: USER_ROLES.ADMIN,
+            exact: false,
+            description: "Set unit prices for email and SMS actions.",
         }
     ];
 
@@ -46,10 +98,13 @@ export async function seedAppModules() {
                     title: mod.title,
                     href: mod.href,
                     iconName: mod.iconName,
-                    scope: mod.scope
+                    scope: mod.scope,
+                    exact: mod.exact,
+                    description: mod.description,
+                    updatedAt: new Date(),
                 },
             });
     }
 
-    console.log("✅ Modules table synced.");
+    console.log("✅ Modules table synced and restored.");
 }

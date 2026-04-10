@@ -26,6 +26,7 @@ import {
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {CalendarClock, Send, XCircle} from "lucide-react";
+import {CAMPAIGN_STATUS} from "@/lib/enums";
 
 export function CampaignActions({
                                     campaignId,
@@ -67,13 +68,13 @@ export function CampaignActions({
         });
     }
 
-    if (status === "sent" || status === "sending")
+    if (status === CAMPAIGN_STATUS.S || status === CAMPAIGN_STATUS.SENDING)
         return null;
 
     return (
         <div className="flex items-center gap-2">
             {/* Send Now */}
-            {(status === "draft" || status === "scheduled") && (
+            {(status === CAMPAIGN_STATUS.DRAFT|| status === CAMPAIGN_STATUS.SCHEDULED) && (
                 <Button variant="outline" onClick={handleSendNow} disabled={isPending}>
                     <Send className="size-4"/>
                     Send Now
@@ -83,11 +84,11 @@ export function CampaignActions({
             {/* Schedule */}
             <Button onClick={() => setScheduleOpen(true)} disabled={isPending}>
                 <CalendarClock className="size-4"/>
-                {status === "scheduled" ? "Reschedule" : "Schedule Blast"}
+                {status === CAMPAIGN_STATUS.SCHEDULED ? "Reschedule" : "Schedule Blast"}
             </Button>
 
             {/* Cancel */}
-            {status === "scheduled" && (
+            {status === CAMPAIGN_STATUS.SCHEDULED && (
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="icon" disabled={isPending}>

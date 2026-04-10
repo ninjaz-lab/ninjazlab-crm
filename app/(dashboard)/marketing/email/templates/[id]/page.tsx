@@ -1,7 +1,8 @@
-import { unstable_noStore as noStore } from "next/cache";
-import { notFound } from "next/navigation";
-import { getEmailTemplate } from "@/lib/actions/email-marketing";
-import { TemplateEditor } from "../../_components/template-editor";
+import {unstable_noStore as noStore} from "next/cache";
+import {notFound} from "next/navigation";
+import {getEmailTemplate} from "@/lib/actions/email-marketing";
+import {TemplateEditor} from "../../_components/template-editor";
+import {CAMPAIGN_STATUS} from "@/lib/enums";
 
 export default async function EditTemplatePage({
   params,
@@ -28,7 +29,7 @@ export default async function EditTemplatePage({
           subject: row.email_template_detail.subject,
           previewText: row.email_template_detail.previewText ?? "",
           htmlBody: row.email_template_detail.htmlBody,
-          status: row.marketing_template.status as "draft" | "published",
+          status: row.marketing_template.status as CAMPAIGN_STATUS.DRAFT | CAMPAIGN_STATUS.PUBLISHED,
         }}
       />
     </div>

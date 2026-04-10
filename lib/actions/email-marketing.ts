@@ -16,6 +16,7 @@ import {headers} from "next/headers";
 import {revalidatePath} from "next/cache";
 import {randomUUID} from "crypto";
 import {getEmailBlastQueue} from "@/lib/queue";
+import {CAMPAIGN_STATUS} from "@/lib/enums";
 
 async function getSession() {
     const session = await auth.api.getSession({headers: await headers()});
@@ -85,7 +86,7 @@ export async function createEmailTemplate(data: {
         userId: session.user.id,
         channel: "email",
         name: data.name,
-        status: "draft",
+        status: CAMPAIGN_STATUS.DRAFT,
         editorType: "html",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -112,7 +113,7 @@ export async function updateEmailTemplate(
         subject?: string;
         previewText?: string;
         htmlBody?: string;
-        status?: "draft" | "published";
+        status?: CAMPAIGN_STATUS.DRAFT | CAMPAIGN_STATUS.PUBLISHED;
     }
 ) {
     const session = await getSession();
@@ -240,7 +241,7 @@ export async function createEmailCampaign(data: {
         userId: session.user.id,
         channel: "email",
         name: data.name,
-        status: data.scheduledAt ? "scheduled" : "draft",
+        status: data.scheduledAt ? CAMPAIGN_STATUS.SCHEDULED : CAMPAIGN_STATUS.DRAFT,
         templateId: data.templateId,
         listId: data.listId,
         providerId: data.providerId ?? null,
@@ -287,7 +288,7 @@ export async function scheduleCampaign(campaignId: string, scheduledAt: Date) {
 
     await db
         .update(marketingCampaign)
-        .set({ scheduledAt, status: "scheduled", updatedAt: new Date() })
+        .set({ scheduledAt, status: CAMPAIGN_STATUS.SCHEDULED, updatedAt: new Date() })
         .where(
             and(
                 eq(marketingCampaign.id, campaignId),

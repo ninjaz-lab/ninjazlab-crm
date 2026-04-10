@@ -1,223 +1,182 @@
 "use client";
 
-import { useState } from "react";
-import { setUserRole, banUser, unbanUser } from "@/lib/actions/admin";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { MoreHorizontal, ShieldCheck, UserX, UserCheck } from "lucide-react";
+import {useState} from "react";
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import {ChevronLeft, ChevronRight, Search} from "lucide-react";
+import {UserDetailSheet} from "./user-detail-sheet";
+import {useRouter, useSearchParams} from "next/navigation";
+import {cn} from "@/lib/utils";
+import {USER_ROLES} from "@/lib/enums";
 
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  role: string | null;
-  banned: boolean | null;
-  banReason: string | null;
-  createdAt: Date;
-};
+export function UsersTable({
+                               users,
+                               total,
+                               currentUserId,
+                               page,
+                               pageSize
+                           }: {
+    currentUserId: string;
+    users: any[];
+    total: number;
+    page: number;
+    pageSize: number;
+}) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
-export function UsersTable({ users }: { users: User[] }) {
-  const [banDialog, setBanDialog] = useState<{ open: boolean; userId: string; name: string }>({
-    open: false,
-    userId: "",
-    name: "",
-  });
-  const [banReason, setBanReason] = useState("");
-  const [loading, setLoading] = useState<string | null>(null);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  async function handleRoleChange(userId: string, role: "user" | "admin") {
-    setLoading(userId);
-    await setUserRole(userId, role);
-    setLoading(null);
-  }
+    function handleSearch(term: string) {
+        const params = new URLSearchParams(searchParams);
+        if (term) params.set("q", term);
+        else params.delete("q");
+        params.set("page", "1");
+        router.push(`?${params.toString()}`);
+    }
 
-  async function handleBan() {
-    setLoading(banDialog.userId);
-    await banUser(banDialog.userId, banReason);
-    setBanDialog({ open: false, userId: "", name: "" });
-    setBanReason("");
-    setLoading(null);
-  }
+    function changePage(newPage: number) {
+        const params = new URLSearchParams(searchParams);
+        params.set("page", newPage.toString());
+        router.push(`?${params.toString()}`);
+    }
 
-  async function handleUnban(userId: string) {
-    setLoading(userId);
-    await unbanUser(userId);
-    setLoading(null);
-  }
+    return (
+        <div className="space-y-4">
+            {/* Header: Search + Top Pagination */}
+            <div className="flex items-center justify-between gap-4">
+                <div className="relative max-w-sm flex-1">
+                    <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground"/>
+                    <Input
+                        placeholder="Search name or email..."
+                        className="pl-8 bg-background"
+                        defaultValue={searchParams.get("q") ?? ""}
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
+                </div>
 
-  return (
-    <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((u) => {
-              const initials = u.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()
-                .slice(0, 2);
-
-              return (
-                <TableRow key={u.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-8">
-                        <AvatarImage src={u.image ?? ""} alt={u.name} />
-                        <AvatarFallback>{initials}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-sm">{u.name}</p>
-                        <p className="text-xs text-muted-foreground">{u.email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={u.role === "admin" ? "default" : "secondary"}>
-                      {u.role === "admin" ? (
-                        <ShieldCheck className="mr-1 size-3" />
-                      ) : null}
-                      {u.role ?? "user"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {u.banned ? (
-                      <Badge variant="destructive">Banned</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-green-600 border-green-600">
-                        Active
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(u.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled={loading === u.id}
-                        >
-                          <MoreHorizontal className="size-4" />
+                <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <span>{page} / {totalPages}</span>
+                    <div className="flex gap-1">
+                        <Button variant="outline" size="icon" className="size-8" disabled={page <= 1}
+                                onClick={() => changePage(page - 1)}>
+                            <ChevronLeft className="size-4"/>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {u.role !== "admin" ? (
-                          <DropdownMenuItem
-                            onClick={() => handleRoleChange(u.id, "admin")}
-                          >
-                            <ShieldCheck className="size-4" />
-                            Make Admin
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                            onClick={() => handleRoleChange(u.id, "user")}
-                          >
-                            <UserCheck className="size-4" />
-                            Remove Admin
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        {u.banned ? (
-                          <DropdownMenuItem onClick={() => handleUnban(u.id)}>
-                            <UserCheck className="size-4" />
-                            Unban User
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() =>
-                              setBanDialog({ open: true, userId: u.id, name: u.name })
-                            }
-                          >
-                            <UserX className="size-4" />
-                            Ban User
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+                        <Button variant="outline" size="icon" className="size-8" disabled={page >= totalPages}
+                                onClick={() => changePage(page + 1)}>
+                            <ChevronRight className="size-4"/>
+                        </Button>
+                    </div>
+                </div>
+            </div>
 
-      <Dialog
-        open={banDialog.open}
-        onOpenChange={(open) => setBanDialog((d) => ({ ...d, open }))}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ban {banDialog.name}?</DialogTitle>
-            <DialogDescription>
-              This will prevent the user from signing in. You can unban them at any time.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-2">
-            <Label htmlFor="ban-reason">Reason</Label>
-            <Input
-              id="ban-reason"
-              placeholder="Reason for ban..."
-              value={banReason}
-              onChange={(e) => setBanReason(e.target.value)}
+            <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                <Table>
+                    <TableHeader className="bg-muted/30">
+                        <TableRow>
+                            <TableHead className="w-[60px] text-center font-bold">#</TableHead>
+                            <TableHead className="font-bold">User</TableHead>
+                            <TableHead className="font-bold">Role</TableHead>
+                            <TableHead className="font-bold">Main Balance</TableHead>
+                            <TableHead className="font-bold">Status</TableHead>
+                            <TableHead className="w-10"/>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {users.map((u, index) => {
+                            const isSelf = u.id === currentUserId;
+                            const balance = parseFloat(u.balance ?? "0");
+                            const rowNumber = (page - 1) * pageSize + index + 1;
+
+                            return (
+                                <TableRow
+                                    key={u.id}
+                                    className="cursor-pointer hover:bg-muted/40 transition-all group"
+                                    onClick={() => setDetailUserId(u.id)}
+                                >
+                                    <TableCell className="text-center text-xs font-mono text-muted-foreground">
+                                        {rowNumber}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="size-9 border shadow-sm">
+                                                <AvatarImage src={u.image ?? ""} alt={u.name}/>
+                                                <AvatarFallback>{u.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-bold text-sm leading-none mb-1">
+                                                    {u.name} {isSelf && <Badge variant="secondary"
+                                                                               className="ml-1 text-[9px] h-3.5 px-1 uppercase tracking-tighter">You</Badge>}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">{u.email}</p>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={u.role === USER_ROLES.ADMIN ? "default" : "secondary"}
+                                               className="text-[10px] uppercase font-black tracking-tight">
+                                            {u.role}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className={cn(
+                                        "font-mono text-sm font-black",
+                                        balance < 0 ? "text-rose-600" : "text-emerald-600"
+                                    )}>
+                                        MYR {balance.toFixed(2)}
+                                    </TableCell>
+                                    <TableCell>
+                                        {u.banned ?
+                                            <Badge variant="destructive"
+                                                   className="rounded-full font-bold">Banned</Badge> :
+                                            <Badge variant="outline"
+                                                   className="text-emerald-600 border-emerald-200 bg-emerald-50 rounded-full font-bold">Active</Badge>
+                                        }
+                                    </TableCell>
+                                    <TableCell>
+                                        <ChevronRight
+                                            className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all translate-x-[-4px] group-hover:translate-x-0"/>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+
+                {/* 🚩 FOOTER PAGINATION: This ensures visibility at the bottom */}
+                <div className="px-6 py-4 border-t bg-muted/10 flex items-center justify-between">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        Total {total} Records
+                    </p>
+                    <div className="flex items-center gap-4">
+                        <span className="text-xs font-bold text-muted-foreground">
+                            Page {page} of {totalPages}
+                        </span>
+                        <div className="flex gap-1">
+                            <Button variant="outline" size="icon" className="size-8" disabled={page <= 1}
+                                    onClick={() => changePage(page - 1)}>
+                                <ChevronLeft className="size-4"/>
+                            </Button>
+                            <Button variant="outline" size="icon" className="size-8" disabled={page >= totalPages}
+                                    onClick={() => changePage(page + 1)}>
+                                <ChevronRight className="size-4"/>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <UserDetailSheet
+                userId={detailUserId}
+                open={!!detailUserId}
+                onOpenChangeAction={(open) => {
+                    if (!open)
+                        setDetailUserId(null);
+                }}
             />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setBanDialog({ open: false, userId: "", name: "" })}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleBan} disabled={!banReason}>
-              Ban User
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+        </div>
+    );
 }

@@ -23,6 +23,7 @@ import {
 import {and, eq, inArray} from "drizzle-orm";
 import {randomUUID} from "crypto";
 import type {EmailBlastJobData} from "./index";
+import {CAMPAIGN_STATUS} from "@/lib/enums";
 
 const connection = {
     url: process.env.REDIS_URL,
@@ -212,7 +213,7 @@ async function processEmailBlast(job: Job<EmailBlastJobData>) {
     // Mark blast job complete
     await db
         .update(jobMarketingBlast)
-        .set({status: "completed", completedAt: new Date(), updatedAt: new Date()})
+        .set({status: CAMPAIGN_STATUS.COMPLETED, completedAt: new Date(), updatedAt: new Date()})
         .where(eq(jobMarketingBlast.id, blastJobId));
 
     // Update campaign aggregate counts
@@ -256,7 +257,7 @@ const worker = new Worker<EmailBlastJobData>(
     }
 );
 
-worker.on("completed", (job, result) => {
+worker.on(CAMPAIGN_STATUS.COMPLETED, (job, result) => {
     console.log(`[email-worker] Job ${job.id} completed`, result);
 });
 

@@ -1,12 +1,12 @@
-import { unstable_noStore as noStore } from "next/cache";
-import { getAllPricingRules, getAllUsers } from "@/lib/actions/admin";
-import { PricingManager } from "./pricing-manager";
+import {unstable_noStore as noStore} from "next/cache";
+import {fetchAllUsers, getAllPricingRules} from "@/lib/actions/admin";
+import {PricingManager} from "./pricing-manager";
 
 export default async function AdminPricingPage() {
   noStore();
   const [rules, users] = await Promise.all([
     getAllPricingRules(),
-    getAllUsers(),
+    fetchAllUsers(),
   ]);
 
   return (

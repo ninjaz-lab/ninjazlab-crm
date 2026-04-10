@@ -11,6 +11,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/
 import {Alert, AlertDescription} from "@/components/ui/alert";
 import {CalendarClock, Clock, FileEdit, Info, Send} from "lucide-react";
 import {SendMode, useEmailCampaignStore} from "@/lib/store/email-campaign-store";
+import {CAMPAIGN_STATUS} from "@/lib/enums";
 
 type Template = { id: string; name: string; subject: string | null; status: string };
 type Segment = { id: string; name: string; count: number };
@@ -75,7 +76,7 @@ export function CampaignForm({
         });
     }
 
-    const publishedTemplates = templates.filter((t) => t.status === "published");
+    const publishedTemplates = templates.filter((t) => t.status === CAMPAIGN_STATUS.PUBLISHED);
 
     // Dynamic button text and icon based on the selected mode
     const buttonConfig = {
@@ -269,7 +270,7 @@ export function CampaignForm({
                             className="w-full flex items-center gap-2"
                             onClick={handleSubmit}
                             disabled={isPending}
-                            variant={sendMode === "draft" ? "secondary" : "default"}
+                            variant={sendMode === CAMPAIGN_STATUS.DRAFT ? "secondary" : "default"}
                         >
                             {buttonConfig[sendMode].icon}
                             {buttonConfig[sendMode].text}

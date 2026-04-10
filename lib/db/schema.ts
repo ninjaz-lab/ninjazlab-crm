@@ -1,4 +1,5 @@
 import {boolean, decimal, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid,} from "drizzle-orm/pg-core";
+import {CAMPAIGN_STATUS, USER_ROLES, WALLET_TYPES} from "@/lib/enums";
 
 // ─────────────────────────────────────────────
 // AUTH TABLES
@@ -10,7 +11,7 @@ export const user = pgTable("user", {
     email: text("email").notNull().unique(),
     emailVerified: boolean("email_verified").notNull(),
     image: text("image"),
-    role: text("role").default("user"),
+    role: text("role").default(USER_ROLES.USER),
     banned: boolean("banned").default(false),
     banReason: text("ban_reason"),
     banExpires: timestamp("ban_expires"),
@@ -69,7 +70,7 @@ export const appModule = pgTable("app_module", {
     title: text("title").notNull(),
     href: text("href").notNull(),
     iconName: text("icon_name").notNull(),
-    scope: text("scope").notNull().default("user"),
+    scope: text("scope").notNull().default(USER_ROLES.USER),
     exact: boolean("exact").default(false),
     description: text("description"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -81,22 +82,11 @@ export const userPermission = pgTable("user_permission", {
     userId: text("user_id")
         .notNull()
         .references(() => user.id, {onDelete: "cascade"}),
-    moduleId: text("module_id")
+    moduleId: uuid("module_id")
         .notNull()
         .references(() => appModule.id, {onDelete: "cascade"}),
     enabled: boolean("enabled").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const userAccount = pgTable("user_account", {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
-        .notNull()
-        .unique()
-        .references(() => user.id, {onDelete: "cascade"}),
-    balance: decimal("balance", {precision: 12, scale: 2}).notNull().default("0.00"),
-    currency: text("currency").notNull().default("USD"),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
@@ -178,10 +168,10 @@ export const audienceList = pgTable("audience_list", {
 
 export const audienceListMember = pgTable("audience_list_member", {
     id: uuid("id").defaultRandom().primaryKey(),
-    listId: text("list_id")
+    listId: uuid("list_id")
         .notNull()
         .references(() => audienceList.id, {onDelete: "cascade"}),
-    audienceId: text("audience_id")
+    audienceId: uuid("audience_id")
         .notNull()
         .references(() => audience.id, {onDelete: "cascade"}),
     addedAt: timestamp("added_at").notNull().defaultNow(),
@@ -205,7 +195,7 @@ export const job_import_audience = pgTable("job_import_audience", {
     rows: jsonb("rows").notNull().default([]),
     mapping: jsonb("mapping").notNull().default({}),
     mergeStrategy: text("merge_strategy").notNull().default("fill"),
-    addToListId: text("add_to_list_id"),
+    addToListId: uuid("add_to_list_id"),
     error: text("error"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -214,20 +204,6 @@ export const job_import_audience = pgTable("job_import_audience", {
 // ─────────────────────────────────────────────
 // MARKETING CORE (Templates, Campaigns, Sends)
 // ─────────────────────────────────────────────
-
-export type MarketingChannel = "email" | "sms" | "push";
-export type CampaignStatus = "draft" | "scheduled" | "sending" | "sent" | "paused" | "cancelled";
-export type TemplateStatus = "draft" | "published";
-export type SendStatus =
-    "pending"
-    | "sent"
-    | "delivered"
-    | "opened"
-    | "clicked"
-    | "bounced"
-    | "unsubscribed"
-    | "failed";
-export type BlastJobStatus = "waiting" | "active" | "completed" | "failed" | "delayed" | "paused";
 
 export const marketingProvider = pgTable("marketing_provider", {
     id: uuid("id").defaultRandom().primaryKey(),
@@ -247,7 +223,7 @@ export const marketingTemplate = pgTable("marketing_template", {
         .references(() => user.id, {onDelete: "cascade"}),
     channel: text("channel").notNull(),       // MarketingChannel
     name: text("name").notNull(),
-    status: text("status").notNull().default("draft"), // TemplateStatus
+    status: text("status").notNull().default(CAMPAIGN_STATUS.DRAFT), // TemplateStatus
     // future: 'html' | 'drag_drop' | 'preset'
     editorType: text("editor_type").notNull().default("html"),
     thumbnailUrl: text("thumbnail_url"),
@@ -257,7 +233,7 @@ export const marketingTemplate = pgTable("marketing_template", {
 
 export const emailTemplateDetail = pgTable("email_template_detail", {
     id: uuid("id").defaultRandom().primaryKey(),
-    templateId: text("template_id")
+    templateId: uuid("template_id")
         .notNull()
         .unique()
         .references(() => marketingTemplate.id, {onDelete: "cascade"}),
@@ -303,10 +279,10 @@ export const marketingCampaign = pgTable("marketing_campaign", {
         .references(() => user.id, {onDelete: "cascade"}),
     channel: text("channel").notNull(),         // MarketingChannel
     name: text("name").notNull(),
-    status: text("status").notNull().default("draft"), // CampaignStatus
-    templateId: text("template_id").references(() => marketingTemplate.id),
-    listId: text("list_id").references(() => audienceList.id),
-    providerId: text("provider_id").references(() => marketingProvider.id),
+    status: text("status").notNull().default(CAMPAIGN_STATUS.DRAFT), // CampaignStatus
+    templateId: uuid("template_id").references(() => marketingTemplate.id),
+    listId: uuid("list_id").references(() => audienceList.id),
+    providerId: uuid("provider_id").references(() => marketingProvider.id),
     // Scheduling
     scheduledAt: timestamp("scheduled_at"),
     startedAt: timestamp("started_at"),
@@ -326,7 +302,7 @@ export const marketingCampaign = pgTable("marketing_campaign", {
 
 export const emailCampaignDetail = pgTable("email_campaign_detail", {
     id: uuid("id").defaultRandom().primaryKey(),
-    campaignId: text("campaign_id")
+    campaignId: uuid("campaign_id")
         .notNull()
         .unique()
         .references(() => marketingCampaign.id, {onDelete: "cascade"}),
@@ -367,10 +343,10 @@ export const emailCampaignDetail = pgTable("email_campaign_detail", {
 // ── Per-recipient send log (all channels) ─────────────────────────────────
 export const marketingSendLog = pgTable("marketing_send_log", {
     id: uuid("id").defaultRandom().primaryKey(),
-    campaignId: text("campaign_id")
+    campaignId: uuid("campaign_id")
         .notNull()
         .references(() => marketingCampaign.id, {onDelete: "cascade"}),
-    subscriberId: text("subscriber_id")
+    subscriberId: uuid("subscriber_id")
         .notNull()
         .references(() => audience.id, {onDelete: "cascade"}),
     status: text("status").notNull().default("pending"), // SendStatus
@@ -395,7 +371,7 @@ export const marketingSendLog = pgTable("marketing_send_log", {
 
 export const jobMarketingBlast = pgTable("job_marketing_blast", {
     id: uuid("id").defaultRandom().primaryKey(),
-    campaignId: text("campaign_id")
+    campaignId: uuid("campaign_id")
         .notNull()
         .references(() => marketingCampaign.id, {onDelete: "cascade"}),
     // BullMQ job ID for correlation
@@ -431,13 +407,14 @@ export const wallets = pgTable("wallets", {
         .references(() => user.id, {onDelete: "cascade"})
         .notNull(),
     // 'email', 'whatsapp', 'sms'
-    walletType: text("wallet_type").notNull(),
-    // Balance in cents or credits
-    balance: integer("balance").default(0).notNull(),
+    walletType: text("wallet_type").notNull()
+        .default(WALLET_TYPES.MAIN),
+    balance: decimal("balance", {precision: 12, scale: 2})
+        .default("0.00").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
-    // This prevents a user from accidentally having two 'sms' wallets
+    // This prevents a user from accidentally having two same wallets
     userTypeIdx: uniqueIndex("user_wallet_type_idx").on(table.userId, table.walletType),
 }));
 
@@ -445,16 +422,20 @@ export const walletTransaction = pgTable("wallet_transaction", {
     id: uuid("id").defaultRandom().primaryKey(),
     walletId: uuid("wallet_id") // Link directly to the specific wallet
         .notNull()
-        .references(() => wallets.id, { onDelete: "cascade" }),
+        .references(() => wallets.id, {onDelete: "cascade"}),
     userId: text("user_id")
         .notNull()
         .references(() => user.id, {onDelete: "cascade"}),
     amount: decimal("amount", {precision: 12, scale: 2}).notNull(),
     type: text("type").notNull(), // 'credit' | 'debit'
-    note: text("note"),
+    module: text("module"),
 
     // Tracking metadata
     referenceId: text("reference_id"),                  // campaignId or other source
+    unitCost: decimal("unit_cost", {precision: 10, scale: 6}),
+    units: integer("units"),
+
+    note: text("note"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     createdBy: text("created_by").references(() => user.id),
 });
