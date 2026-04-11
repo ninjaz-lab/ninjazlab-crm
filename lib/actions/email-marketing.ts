@@ -1,171 +1,15 @@
 "use server";
 
 import {db} from "@/lib/db";
-import {
-    audienceListMember,
-    emailCampaignDetail,
-    emailTemplateDetail,
-    jobMarketingBlast,
-    marketingCampaign,
-    marketingProvider,
-    marketingTemplate,
-} from "@/lib/db/schema";
-import {and, desc, eq, isNull, sql} from "drizzle-orm";
-import {auth} from "@/lib/auth";
-import {headers} from "next/headers";
+import {audienceListMember, emailCampaignDetail, jobMarketingBlast, marketingCampaign,} from "@/lib/db/schema";
+import {and, desc, eq, sql} from "drizzle-orm";
 import {revalidatePath} from "next/cache";
 import {randomUUID} from "crypto";
 import {getEmailBlastQueue} from "@/lib/queue";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
+import {getSession} from "@/lib/session";
 
-async function getSession() {
-    const session = await auth.api.getSession({headers: await headers()});
-    if (!session) throw new Error("Unauthorized");
-    return session;
-}
-
-// ─── Templates ────────────────────────────────────────────────────────────
-
-export async function fetchEmailTemplates() {
-    const session = await getSession();
-    return db
-        .select({
-            id: marketingTemplate.id,
-            name: marketingTemplate.name,
-            status: marketingTemplate.status,
-            editorType: marketingTemplate.editorType,
-            createdAt: marketingTemplate.createdAt,
-            updatedAt: marketingTemplate.updatedAt,
-            subject: emailTemplateDetail.subject,
-            previewText: emailTemplateDetail.previewText,
-        })
-        .from(marketingTemplate)
-        .leftJoin(
-            emailTemplateDetail,
-            eq(emailTemplateDetail.templateId, marketingTemplate.id)
-        )
-        .where(
-            and(
-                eq(marketingTemplate.userId, session.user.id),
-                eq(marketingTemplate.channel, "email")
-            )
-        )
-        .orderBy(desc(marketingTemplate.updatedAt));
-}
-
-export async function getEmailTemplate(id: string) {
-    const session = await getSession();
-    const [row] = await db
-        .select()
-        .from(marketingTemplate)
-        .innerJoin(
-            emailTemplateDetail,
-            eq(emailTemplateDetail.templateId, marketingTemplate.id)
-        )
-        .where(
-            and(
-                eq(marketingTemplate.id, id),
-                eq(marketingTemplate.userId, session.user.id)
-            )
-        )
-        .limit(1);
-    return row ?? null;
-}
-
-export async function createEmailTemplate(data: {
-    name: string;
-    subject: string;
-    previewText?: string;
-    htmlBody: string;
-}) {
-    const session = await getSession();
-    const templateId = randomUUID();
-
-    await db.insert(marketingTemplate).values({
-        id: templateId,
-        userId: session.user.id,
-        channel: "email",
-        name: data.name,
-        status: CAMPAIGN_STATUS.DRAFT,
-        editorType: "html",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    });
-
-    await db.insert(emailTemplateDetail).values({
-        id: randomUUID(),
-        templateId,
-        subject: data.subject,
-        previewText: data.previewText ?? null,
-        htmlBody: data.htmlBody,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    });
-
-    revalidatePath("/marketing/email/templates");
-    return templateId;
-}
-
-export async function updateEmailTemplate(
-    id: string,
-    data: {
-        name?: string;
-        subject?: string;
-        previewText?: string;
-        htmlBody?: string;
-        status?: CAMPAIGN_STATUS.DRAFT | CAMPAIGN_STATUS.PUBLISHED;
-    }
-) {
-    const session = await getSession();
-
-    if (data.name || data.status) {
-        await db
-            .update(marketingTemplate)
-            .set({
-                ...(data.name && {name: data.name}),
-                ...(data.status && {status: data.status}),
-                updatedAt: new Date(),
-            })
-            .where(
-                and(
-                    eq(marketingTemplate.id, id),
-                    eq(marketingTemplate.userId, session.user.id)
-                )
-            );
-    }
-
-    if (data.subject || data.previewText !== undefined || data.htmlBody) {
-        await db
-            .update(emailTemplateDetail)
-            .set({
-                ...(data.subject && {subject: data.subject}),
-                ...(data.previewText !== undefined && {previewText: data.previewText}),
-                ...(data.htmlBody && {htmlBody: data.htmlBody}),
-                updatedAt: new Date(),
-            })
-            .where(eq(emailTemplateDetail.templateId, id));
-    }
-
-    revalidatePath("/marketing/email/templates");
-    revalidatePath(`/marketing/email/templates/${id}`);
-}
-
-export async function deleteEmailTemplate(id: string) {
-    const session = await getSession();
-    await db
-        .delete(marketingTemplate)
-        .where(
-            and(
-                eq(marketingTemplate.id, id),
-                eq(marketingTemplate.userId, session.user.id)
-            )
-        );
-    revalidatePath("/marketing/email/templates");
-}
-
-// ─── Campaigns ────────────────────────────────────────────────────────────
-
-export async function getEmailCampaigns() {
+export async function fetchEmailCampaigns() {
     const session = await getSession();
     return db
         .select({
@@ -195,7 +39,7 @@ export async function getEmailCampaigns() {
         .orderBy(desc(marketingCampaign.createdAt));
 }
 
-export async function getEmailCampaign(id: string) {
+export async function fetchEmailCampaignById(id: string) {
     const session = await getSession();
     const [row] = await db
         .select()
@@ -280,7 +124,7 @@ export async function scheduleCampaign(campaignId: string, scheduledAt: Date) {
     if (!campaign[0]) throw new Error("Campaign not found");
 
     const subscriberRows = await db
-        .select({ subscriberId: audienceListMember.audienceId })
+        .select({subscriberId: audienceListMember.audienceId})
         .from(audienceListMember)
         .where(eq(audienceListMember.listId, campaign[0].listId!));
 
@@ -288,7 +132,7 @@ export async function scheduleCampaign(campaignId: string, scheduledAt: Date) {
 
     await db
         .update(marketingCampaign)
-        .set({ scheduledAt, status: CAMPAIGN_STATUS.SCHEDULED, updatedAt: new Date() })
+        .set({scheduledAt, status: CAMPAIGN_STATUS.SCHEDULED, updatedAt: new Date()})
         .where(
             and(
                 eq(marketingCampaign.id, campaignId),
@@ -316,8 +160,8 @@ export async function scheduleCampaign(campaignId: string, scheduledAt: Date) {
     const delay = Math.max(0, scheduledAt.getTime() - Date.now());
     await getEmailBlastQueue().add(
         "blast",
-        { campaignId, blastJobId, batchIndex: 0, batchSize: subscriberIds.length, subscriberIds },
-        { delay, jobId: blastJobId }
+        {campaignId, blastJobId, batchIndex: 0, batchSize: subscriberIds.length, subscriberIds},
+        {delay, jobId: blastJobId}
     );
 
     revalidatePath("/marketing/email/campaigns");
@@ -328,7 +172,7 @@ export async function cancelCampaign(campaignId: string) {
     const session = await getSession();
     await db
         .update(marketingCampaign)
-        .set({ status: "cancelled", updatedAt: new Date() })
+        .set({status: "cancelled", updatedAt: new Date()})
         .where(
             and(
                 eq(marketingCampaign.id, campaignId),
@@ -338,22 +182,3 @@ export async function cancelCampaign(campaignId: string) {
     revalidatePath("/marketing/email/campaigns");
     revalidatePath(`/marketing/email/campaigns/${campaignId}`);
 }
-
-
-// ─── System provider lookup (used internally by worker + campaign form) ───
-
-export async function getSystemEmailProvider() {
-    const [provider] = await db
-        .select()
-        .from(marketingProvider)
-        .where(
-            and(
-                isNull(marketingProvider.userId),
-                eq(marketingProvider.channel, "email"),
-                eq(marketingProvider.isDefault, true)
-            )
-        )
-        .limit(1);
-    return provider ?? null;
-}
-

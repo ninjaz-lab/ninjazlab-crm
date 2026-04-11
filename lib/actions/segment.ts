@@ -3,18 +3,11 @@
 import {and, count, eq, isNotNull, sql} from "drizzle-orm";
 import {db} from "@/lib/db";
 import {audience, audienceList} from "@/lib/db/schema";
-import {auth} from "@/lib/auth";
-import {headers} from "next/headers";
 import {type SegmentRule} from "@/lib/audience-utils";
 import {buildDynamicSegmentQuery} from "@/lib/segments";
 import {randomUUID} from "crypto";
 import {revalidatePath} from "next/cache";
-
-async function getSession() {
-    const session = await auth.api.getSession({headers: await headers()});
-    if (!session) throw new Error("Unauthorized");
-    return session;
-}
+import {getSession} from "@/lib/session";
 
 export async function getAvailableFields() {
     const session = await getSession();
@@ -45,18 +38,42 @@ export async function getAvailableFields() {
     return [...standardFields, ...customFields];
 }
 
-export async function getDistinctFieldValues(fieldId: string, type: "standard" | "custom") {
+export async function getDistinctFieldValues(
+    fieldId: string,
+    type: "standard" | "custom"
+) {
     const session = await getSession();
 
     if (type === "standard") {
-        const allowedCols = [
-            "firstName", "lastName", "email", "phone",
-            "state", "city", "country", "source"
-        ] as const;
-        if (!allowedCols.includes(fieldId as any))
-            return [];
-
-        const col = audience[fieldId as keyof typeof audience];
+        let col;
+        switch (fieldId) {
+            case "firstName":
+                col = audience.firstName;
+                break;
+            case "lastName":
+                col = audience.lastName;
+                break;
+            case "email":
+                col = audience.email;
+                break;
+            case "phone":
+                col = audience.phone;
+                break;
+            case "state":
+                col = audience.state;
+                break;
+            case "city":
+                col = audience.city;
+                break;
+            case "country":
+                col = audience.country;
+                break;
+            case "source":
+                col = audience.source;
+                break;
+            default:
+                return []; // Failsafe for invalid inputs
+        }
 
         const results = await db
             .selectDistinct({value: col})
@@ -154,4 +171,32 @@ export async function previewSegmentContacts(rules: SegmentRule[], limit = 50) {
         .from(audience)
         .where(conditions)
         .limit(limit);
+}
+
+export async function updateDynamicSegment(
+    id: string,
+    name: string,
+    color: string,
+    rules: SegmentRule[]
+) {
+    const session = await getSession();
+
+    // Ensure we don't save incomplete rules
+    const validRules = rules.filter(r => r.field && r.operator && r.value);
+    if (validRules.length === 0)
+        throw new Error("Cannot save a segment without valid rules");
+
+    await db.update(audienceList).set({
+        name,
+        color,
+        rules: validRules,
+        updatedAt: new Date(),
+    }).where(
+        and(
+            eq(audienceList.id, id),
+            eq(audienceList.userId, session.user.id) // Security: Only owner can edit
+        )
+    );
+
+    revalidatePath("/audience");
 }

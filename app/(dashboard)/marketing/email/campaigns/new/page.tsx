@@ -1,5 +1,5 @@
 import {unstable_noStore as noStore} from "next/cache";
-import {fetchEmailTemplates} from "@/lib/actions/email-marketing";
+import {fetchEmailTemplates} from "@/lib/actions/email-template";
 import {fetchAudienceLists} from "@/lib/actions/audience";
 import {CampaignForm} from "../../_components/campaign-form";
 

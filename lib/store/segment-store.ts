@@ -5,7 +5,7 @@ type FieldDef = {
     id: string;
     label: string;
     type: "standard" | "custom",
-    inputType: "select" | "text";
+    inputType?: "select" | "text";
 };
 
 export type UIRule = {
@@ -20,12 +20,12 @@ interface SegmentState {
     colorPicker: string;
     fields: FieldDef[];
     rules: UIRule[];
-    fieldValuesCache: Record<string, string[]>; // Caches distinct values to prevent duplicate DB calls
-
+    fieldValuesCache: Record<string, string[]>;
     setName: (name: string) => void;
     setColorPicker: (color: string) => void;
     fetchFields: () => Promise<void>;
     addRule: () => void;
+    setRules: (rules: any[]) => void;
     updateRuleField: (id: string, fieldId: string) => Promise<void>;
     updateRuleOperator: (id: string, operator: string) => void;
     updateRuleValue: (id: string, value: string) => void;
@@ -49,7 +49,7 @@ export const useSegmentStore = create<SegmentState>((set, get) => ({
     setColorPicker: (color) => set({colorPicker: color}),
 
     fetchFields: async () => {
-        const fields = await getAvailableFields();
+        const fields = await getAvailableFields() as FieldDef[];
         set({fields});
     },
 
@@ -57,6 +57,15 @@ export const useSegmentStore = create<SegmentState>((set, get) => ({
         // Use crypto.randomUUID() to ensure each rule row has a unique key
         rules: [...state.rules, {id: crypto.randomUUID(), field: "", operator: "equals", value: ""}]
     })),
+
+    setRules: (rules) => {
+        // If the DB rules don't have an ID, we generate one for the UI to use as a React key
+        const rulesWithIds = rules.map(r => ({
+            ...r,
+            id: r.id || crypto.randomUUID()
+        }));
+        set({rules: rulesWithIds});
+    },
 
     updateRuleField: async (id, fieldId) => {
         // 1. Update the rule's field and reset its selected value

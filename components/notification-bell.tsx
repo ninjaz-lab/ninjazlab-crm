@@ -2,7 +2,7 @@
 
 import {Bell} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {useAppStore} from "@/lib/store/store";
+import {useAppStore} from "@/lib/store/app-store";
 
 export function NotificationBell() {
     // The component manages its own state by subscribing to the store directly

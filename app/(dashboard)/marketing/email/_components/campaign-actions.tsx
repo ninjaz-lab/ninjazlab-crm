@@ -27,6 +27,7 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {CalendarClock, Send, XCircle} from "lucide-react";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
+import {toast} from "sonner";
 
 export function CampaignActions({
                                     campaignId,
@@ -45,45 +46,59 @@ export function CampaignActions({
     const [isPending, startTransition] = useTransition();
 
     function handleSchedule() {
-        if (!dateTime)
-            return;
+        if (!dateTime) return;
         startTransition(async () => {
-            await scheduleCampaign(campaignId, new Date(dateTime));
-            setScheduleOpen(false);
-            router.refresh();
+            try {
+                await scheduleCampaign(campaignId, new Date(dateTime));
+                toast.success("Campaign scheduled successfully!");
+                setScheduleOpen(false);
+                router.refresh();
+            } catch (error) {
+                toast.error("Failed to schedule campaign.");
+            }
         });
     }
 
     function handleSendNow() {
         startTransition(async () => {
-            await scheduleCampaign(campaignId, new Date());
-            router.refresh();
+            try {
+                await scheduleCampaign(campaignId, new Date());
+                toast.success("Campaign is preparing to send!");
+                router.refresh();
+            } catch (error) {
+                toast.error("Failed to trigger campaign.");
+            }
         });
     }
 
     function handleCancel() {
         startTransition(async () => {
-            await cancelCampaign(campaignId);
-            router.refresh();
+            try {
+                await cancelCampaign(campaignId);
+                toast.success("Campaign has been cancelled.");
+                router.refresh();
+            } catch (error) {
+                toast.error("Failed to cancel campaign.");
+            }
         });
     }
 
-    if (status === CAMPAIGN_STATUS.S || status === CAMPAIGN_STATUS.SENDING)
+    if (status === CAMPAIGN_STATUS.SENT || status === CAMPAIGN_STATUS.SENDING)
         return null;
 
     return (
         <div className="flex items-center gap-2">
             {/* Send Now */}
-            {(status === CAMPAIGN_STATUS.DRAFT|| status === CAMPAIGN_STATUS.SCHEDULED) && (
-                <Button variant="outline" onClick={handleSendNow} disabled={isPending}>
-                    <Send className="size-4"/>
+            {(status === CAMPAIGN_STATUS.DRAFT || status === CAMPAIGN_STATUS.SCHEDULED) && (
+                <Button variant="outline" className="font-bold" onClick={handleSendNow} disabled={isPending}>
+                    <Send className="size-4 mr-2"/>
                     Send Now
                 </Button>
             )}
 
             {/* Schedule */}
-            <Button onClick={() => setScheduleOpen(true)} disabled={isPending}>
-                <CalendarClock className="size-4"/>
+            <Button className="font-bold shadow-sm" onClick={() => setScheduleOpen(true)} disabled={isPending}>
+                <CalendarClock className="size-4 mr-2"/>
                 {status === CAMPAIGN_STATUS.SCHEDULED ? "Reschedule" : "Schedule Blast"}
             </Button>
 
@@ -104,7 +119,9 @@ export function CampaignActions({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Keep it</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleCancel}>
+                            <AlertDialogAction
+                                onClick={handleCancel}
+                                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold">
                                 Yes, cancel campaign
                             </AlertDialogAction>
                         </AlertDialogFooter>
@@ -114,27 +131,34 @@ export function CampaignActions({
 
             {/* Schedule dialog */}
             <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Schedule Email Blast</DialogTitle>
                         <DialogDescription>
-                            Choose when to send this campaign. The BullMQ worker will pick it up and process in batches.
+                            Choose when to send this campaign. The background worker will pick it up and process it at
+                            the exact time.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-2">
-                        <Label htmlFor="dt">Send At</Label>
-                        <Input
-                            id="dt"
-                            type="datetime-local"
-                            value={dateTime}
-                            onChange={(e) => setDateTime(e.target.value)}
-                        />
+                    <div className="space-y-3 py-4">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="dt"
+                                   className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                                Send Date & Time
+                            </Label>
+                            <Input
+                                id="dt"
+                                type="datetime-local"
+                                className="bg-background font-mono font-bold"
+                                value={dateTime}
+                                onChange={(e) => setDateTime(e.target.value)}
+                            />
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setScheduleOpen(false)}>
                             Cancel
                         </Button>
-                        <Button onClick={handleSchedule} disabled={isPending || !dateTime}>
+                        <Button onClick={handleSchedule} disabled={isPending || !dateTime} className="font-bold">
                             {isPending ? "Scheduling..." : "Confirm Schedule"}
                         </Button>
                     </DialogFooter>

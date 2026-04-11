@@ -3,20 +3,13 @@
 import {randomUUID} from "crypto";
 import {and, asc, count, desc, eq, ilike, inArray, or, sql} from "drizzle-orm";
 import * as XLSX from "xlsx";
-import {auth} from "@/lib/auth";
 import {db} from "@/lib/db";
 import {audience, audienceList, audienceListMember, job_import_audience} from "@/lib/db/schema";
 import {type ImportField, SegmentRule} from "@/lib/audience-utils";
 import {getAudienceImportQueue} from "@/lib/queue";
-import {headers} from "next/headers";
 import {revalidatePath} from "next/cache";
 import {buildDynamicSegmentQuery} from "@/lib/segments";
-
-async function getSession() {
-    const session = await auth.api.getSession({headers: await headers()});
-    if (!session) throw new Error("Unauthorized");
-    return session;
-}
+import {getSession} from "@/lib/session";
 
 // ─── Audience CRUD ─────────────────────────────────────────────────────────────
 

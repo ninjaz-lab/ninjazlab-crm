@@ -2,18 +2,22 @@
 
 import {useEffect, useState, useTransition} from "react";
 import {useSegmentStore} from "@/lib/store/segment-store";
-import {createDynamicSegment, previewSegmentContacts, previewSegmentCount} from "@/lib/actions/segment";
+import {
+    createDynamicSegment,
+    previewSegmentContacts,
+    previewSegmentCount,
+    updateDynamicSegment
+} from "@/lib/actions/segment";
 import {type SegmentRule} from "@/lib/audience-utils";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
-// FIXED: Added the 'X' icon back to the imports
 import {Loader2, Plus, UserCircle2, Users, X} from "lucide-react";
-
-type FieldDef = { id: string; label: string; type: "standard" | "custom" };
+import {toast} from "sonner";
 
 interface Props {
+    initialSegment?: any | null;
     onDone?: () => void;
 }
 
@@ -27,12 +31,13 @@ const COLOR_PRESETS = [
     {label: "Slate", value: "#64748b"},
 ];
 
-export function SegmentBuilder({onDone}: Props) {
+export function SegmentBuilder({initialSegment, onDone}: Props) {
     const {
         name, setName,
         colorPicker, setColorPicker,
         fields, fetchFields,
-        rules, addRule, updateRuleField, updateRuleOperator, updateRuleValue, removeRule,
+        rules, addRule, setRules,
+        updateRuleField, updateRuleOperator, updateRuleValue, removeRule,
         fieldValuesCache
     } = useSegmentStore();
 
@@ -43,8 +48,23 @@ export function SegmentBuilder({onDone}: Props) {
     const [previewContacts, setPreviewContacts] = useState<any[]>([]);
 
     useEffect(() => {
-        fetchFields()
-    }, [fetchFields]);
+        void fetchFields();
+
+        if (initialSegment) {
+            setName(initialSegment.name);
+            setColorPicker(initialSegment.color || "#3b82f6");
+            if (setRules) {
+                setRules(initialSegment.rules || []);
+            }
+        } else {
+            // Reset for "Create New" mode
+            setName("");
+            setColorPicker("#3b82f6");
+            if (setRules) {
+                setRules([]);
+            }
+        }
+    }, [initialSegment, fetchFields, setName, setColorPicker, setRules]);
 
     const getValidBackendRules = (): SegmentRule[] => {
         return rules
@@ -84,15 +104,25 @@ export function SegmentBuilder({onDone}: Props) {
             return;
 
         startTransition(async () => {
-            await createDynamicSegment(name, colorPicker, validRules);
-            if (onDone)
-                onDone();
+            try {
+                if (initialSegment?.id) {
+                    await updateDynamicSegment(initialSegment.id, name, colorPicker, validRules);
+                    toast.success("Segment updated successfully!");
+                } else {
+                    await createDynamicSegment(name, colorPicker, validRules);
+                    toast.success("Segment created successfully!");
+                }
+
+                if (onDone) onDone();
+            } catch (error) {
+                toast.error("Failed to save segment. Please try again.");
+            }
         });
     }
 
     return (
         <div className="flex h-full w-full">
-            {/* FIXED: Left Column wrapper now correctly wraps all left-side content */}
+            {/* Left Column: Form Settings */}
             <div className="w-1/2 p-6 overflow-y-auto flex flex-col space-y-8 bg-background">
 
                 {/* General Settings */}
@@ -111,7 +141,7 @@ export function SegmentBuilder({onDone}: Props) {
                         <Label>Segment Label</Label>
                         <div className="flex gap-3">
                             {COLOR_PRESETS.map((preset) => (
-                                <button
+                                <Button
                                     key={preset.value}
                                     type="button"
                                     onClick={() => setColorPicker(preset.value)}
@@ -133,7 +163,7 @@ export function SegmentBuilder({onDone}: Props) {
                 <div className="space-y-4">
                     <h3 className="font-semibold text-sm text-muted-foreground">Match audiences where:</h3>
 
-                    {rules.map((rule, index) => {
+                    {rules.map((rule) => {
                         const ruleValues = fieldValuesCache[rule.field] || [];
 
                         const selectedFieldDef = fields.find(f => f.id === rule.field);
@@ -222,10 +252,12 @@ export function SegmentBuilder({onDone}: Props) {
 
                 {/* Save Button */}
                 <div className="mt-auto pt-4 border-t">
-                    <Button onClick={handleSave} disabled={pending || !name || previewCount === null}
-                            className="w-full">
+                    <Button
+                        onClick={handleSave} disabled={pending || !name || previewCount === null}
+                        className="w-full"
+                    >
                         {pending && <Loader2 className="mr-2 size-4 animate-spin"/>}
-                        Save Segment
+                        {initialSegment ? "Save Changes" : "Create Segment"}
                     </Button>
                 </div>
             </div>

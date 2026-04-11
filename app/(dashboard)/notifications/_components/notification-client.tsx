@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect} from "react";
-import {useAppStore} from "@/lib/store/store";
+import {useAppStore} from "@/lib/store/app-store";
 import {markAllNotificationsAsRead} from "@/lib/actions/notification";
 import {Bell, CheckCircle2, ExternalLink, XCircle} from "lucide-react";
 import Link from "next/link";

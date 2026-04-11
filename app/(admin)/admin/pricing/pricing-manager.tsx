@@ -361,7 +361,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                             <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Applies
                                 To</Label>
                             <div className="grid grid-cols-2 gap-3">
-                                <button
+                                <Button
                                     type="button"
                                     disabled={!!editingRuleId}
                                     onClick={() => setScope("default")}
@@ -373,8 +373,8 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                 >
                                     <Globe className="size-4 mb-2 text-primary"/>
                                     System Default
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="button"
                                     disabled={!!editingRuleId}
                                     onClick={() => setScope(USER_ROLES.USER)}
@@ -386,7 +386,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                 >
                                     <User className="size-4 mb-2 text-primary"/>
                                     Specific User
-                                </button>
+                                </Button>
                             </div>
                         </div>
 

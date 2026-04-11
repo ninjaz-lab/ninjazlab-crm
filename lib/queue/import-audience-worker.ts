@@ -80,7 +80,7 @@ const worker = new Worker<ContactImportJobData>(
             const phoneKey = data.phone ? String(data.phone) : null;
 
             // OMNICHANNEL RULE: Drop the row ONLY if they have neither an email nor a phone
-            if (!emailKey && !phoneKey) {
+            if (!emailKey && phoneKey === null) {
                 skippedCount++;
                 continue;
             }
@@ -266,18 +266,17 @@ const worker = new Worker<ContactImportJobData>(
             for (let i = 0; i < importedIds.length; i += BATCH_SIZE) {
                 const chunk = importedIds.slice(i, i + BATCH_SIZE);
 
-                // Only query the DB for the IDs in this specific chunk
                 const existingMembers = await db
-                    .select({contactId: audienceListMember.contactId})
+                    .select({audienceId: audienceListMember.audienceId})
                     .from(audienceListMember)
                     .where(
                         and(
                             eq(audienceListMember.listId, importJob.addToListId),
-                            inArray(audienceListMember.contactId, chunk)
+                            inArray(audienceListMember.audienceId, chunk)
                         )
                     );
 
-                const existingSet = new Set(existingMembers.map((e) => e.contactId));
+                const existingSet = new Set(existingMembers.map((e) => e.audienceId));
                 const newMembers = chunk.filter((id) => !existingSet.has(id));
 
                 if (newMembers.length > 0) {
@@ -285,7 +284,7 @@ const worker = new Worker<ContactImportJobData>(
                         newMembers.map((contactId) => ({
                             id: randomUUID(),
                             listId: importJob.addToListId!,
-                            contactId
+                            audienceId: contactId
                         }))
                     );
                     totalAddedToList += newMembers.length;

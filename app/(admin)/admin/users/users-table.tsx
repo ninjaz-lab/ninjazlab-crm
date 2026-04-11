@@ -147,7 +147,6 @@ export function UsersTable({
                     </TableBody>
                 </Table>
 
-                {/* 🚩 FOOTER PAGINATION: This ensures visibility at the bottom */}
                 <div className="px-6 py-4 border-t bg-muted/10 flex items-center justify-between">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                         Total {total} Records

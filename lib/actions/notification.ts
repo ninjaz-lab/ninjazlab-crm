@@ -3,14 +3,7 @@
 import {and, count, desc, eq, isNull} from "drizzle-orm";
 import {db} from "@/lib/db";
 import {notification} from "@/lib/db/schema";
-import {auth} from "@/lib/auth";
-import {headers} from "next/headers";
-
-async function getSession() {
-    const session = await auth.api.getSession({headers: await headers()});
-    if (!session) throw new Error("Unauthorized");
-    return session;
-}
+import {getSession} from "@/lib/session";
 
 export async function getUnreadNotificationCount() {
     const session = await getSession();

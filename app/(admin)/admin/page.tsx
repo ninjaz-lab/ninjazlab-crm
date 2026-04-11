@@ -44,13 +44,13 @@ async function getStats() {
     };
 }
 
-export default async function AdminOverviewPage() {
+export default async function AdminDashboardPage() {
     const stats = await getStats();
 
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Admin Overview</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                 <p className="text-muted-foreground">System-wide stats and management.</p>
             </div>
 

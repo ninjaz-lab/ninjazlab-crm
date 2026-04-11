@@ -1,6 +1,6 @@
 "use client";
 
-import {useCallback, useState, useTransition} from "react";
+import React, {useCallback, useState, useTransition} from "react";
 import {useRouter} from "next/navigation";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
@@ -66,7 +66,6 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
     const [pending, startTransition] = useTransition();
 
     const [searchVal, setSearchVal] = useState(search);
-    const [selectedSegmentId, setSelectedSegmentId] = useState(segmentId);
 
     const [createOpen, setCreateOpen] = useState(false);
     const [editAudience, setEditAudience] = useState<AudienceRow | null>(null);
@@ -84,7 +83,7 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
     function navigate(params: Record<string, string | number>) {
         const sp = new URLSearchParams();
         if (searchVal) sp.set("search", searchVal);
-        if (selectedSegmentId) sp.set("segmentId", selectedSegmentId);
+        if (segmentId) sp.set("segmentId", segmentId);
         sp.set("page", String(page));
         sp.set("pageSize", String(pageSize));
         Object.entries(params).forEach(([k, v]) => {
@@ -96,11 +95,6 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
     function handleSearch(e: React.FormEvent) {
         e.preventDefault();
         navigate({search: searchVal, page: 1});
-    }
-
-    function handleSegmentFilter(val: string) {
-        setSelectedSegmentId(val);
-        navigate({segmentId: val === "all" ? "" : val, page: 1});
     }
 
     const toggleSelect = useCallback((id: string) => {
@@ -154,6 +148,7 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
             {/* Toolbar */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex gap-2 flex-1">
+                    {/* 🚩 The dropdown has been completely removed */}
                     <form onSubmit={handleSearch} className="flex gap-2 flex-1 max-w-sm">
                         <div className="relative flex-1">
                             <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground"/>
@@ -166,17 +161,6 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
                         </div>
                         <Button type="submit" variant="outline">Search</Button>
                     </form>
-                    <Select value={selectedSegmentId || "all"} onValueChange={handleSegmentFilter}>
-                        <SelectTrigger className="w-44">
-                            <SelectValue placeholder="All audience"/>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All audience</SelectItem>
-                            {segments.map((s) => (
-                                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
                 </div>
                 <div className="flex gap-2">
                     {selected.size > 0 && (
