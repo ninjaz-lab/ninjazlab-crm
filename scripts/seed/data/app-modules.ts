@@ -1,5 +1,5 @@
-import {db} from "../../../lib/db"; // Adjust path to your db instance
-import {appModule} from "../../../lib/db/schema";
+import {db} from "@/lib/db"; // Adjust path to your db instance
+import {appModule} from "@/lib/db/schema";
 import {USER_ROLES} from "@/lib/enums";
 
 export async function seedAppModules() {
@@ -12,7 +12,7 @@ export async function seedAppModules() {
         {
             key: "audience",
             title: "Audience",
-            href: "/dashboard/audience",
+            href: "/audience",
             iconName: "Users",
             scope: USER_ROLES.USER,
             exact: false,
@@ -21,7 +21,7 @@ export async function seedAppModules() {
         {
             key: "email_marketing",
             title: "Email Marketing",
-            href: "/dashboard/email",
+            href: "/marketing/email",
             iconName: "Mail",
             scope: USER_ROLES.USER,
             exact: false,
@@ -30,7 +30,7 @@ export async function seedAppModules() {
         {
             key: "sms_marketing",
             title: "SMS Marketing",
-            href: "/dashboard/sms",
+            href: "/marketing/sms",
             iconName: "MessageSquare",
             scope: USER_ROLES.USER,
             exact: false,
@@ -39,20 +39,11 @@ export async function seedAppModules() {
         {
             key: "whatsapp_marketing",
             title: "WhatsApp Marketing",
-            href: "/dashboard/whatsapp",
+            href: "/marketing/whatsapp",
             iconName: "MessageCircle",
             scope: USER_ROLES.USER,
             exact: false,
             description: "Engage customers via WhatsApp messages.",
-        },
-        {
-            key: "marketing_templates",
-            title: "Templates",
-            href: "/dashboard/templates",
-            iconName: "FileCode",
-            scope: USER_ROLES.USER,
-            exact: false,
-            description: "Manage your reusable email and SMS templates.",
         },
         {
             key: "wallet_billing",

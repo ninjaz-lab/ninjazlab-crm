@@ -3,6 +3,7 @@ import {Geist, Geist_Mono, Roboto} from "next/font/google";
 import "./globals.css";
 import {cn} from "@/lib/utils";
 import {ThemeProvider} from "@/components/theme-provider";
+import {Toaster} from "@/components/ui/sonner";
 
 const roboto = Roboto({subsets: ['latin'], variable: '--font-sans'});
 
@@ -36,6 +37,7 @@ export default function RootLayout({
             disableTransitionOnChange
         >
             {children}
+            <Toaster richColors position="bottom-right"/>
         </ThemeProvider>
         </body>
         </html>

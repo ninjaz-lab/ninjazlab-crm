@@ -18,7 +18,15 @@ export const TRANSACTION_MODULES = {
     SYSTEM: "system_adjustment",
     EMAIL: "email_marketing",
     SMS: "sms_marketing",
+    // PUSH_NOTIFICATION: "push_notification_marketing"
 } as const;
+
+export const TRANSACTION_MODULE_LABELS: Record<string, string> = {
+    [TRANSACTION_MODULES.SYSTEM]: "System Adjustment",
+    [TRANSACTION_MODULES.EMAIL]: "Email Marketing",
+    [TRANSACTION_MODULES.SMS]: "SMS Marketing",
+    // [TRANSACTION_MODULES.PUSH_NOTIFICATION]: "Push Notifications Marketing",
+};
 
 export const CAMPAIGN_STATUS = {
     DRAFT: "draft",

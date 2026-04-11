@@ -7,6 +7,7 @@ import {
     marketingCampaign,
     marketingProvider,
     pricingRule,
+    session,
     user,
     userPermission,
     wallets,
@@ -77,7 +78,7 @@ export async function fetchAllUsersWithWallets(
         .where(whereClause)
         .limit(pageSize)
         .offset(offset)
-        .orderBy(desc(user.createdAt));
+        .orderBy(asc(user.name));
 
     const [countResult] = await db
         .select({count: sql<number>`count(*)`})
@@ -185,7 +186,7 @@ export async function adjustBalance(
 export async function fetchUserFullDetails(userId: string) {
     await requireAdmin();
 
-    // 1. Fetch User Identity + CRM Data + Main Wallet
+    // 1. Fetch User Identity
     const [userDetails] = await db
         .select()
         .from(user)
@@ -217,10 +218,38 @@ export async function fetchUserFullDetails(userId: string) {
             ))
         .orderBy(asc(marketingCampaign.scheduledAt));
 
+    const userPricing = await db
+        .select()
+        .from(pricingRule)
+        .where(eq(pricingRule.userId, userId));
+
+    const defaultPricing = await db
+        .select()
+        .from(pricingRule)
+        .where(isNull(pricingRule.userId));
+
+    const [audienceCount] = await db
+        .select({count: sql<number>`count(*)`})
+        .from(audience)
+        .where(eq(audience.userId, userId));
+
+    const [latestSession] = await db
+        .select()
+        .from(session)
+        .where(eq(session.userId, userId))
+        .orderBy(desc(session.updatedAt))
+        .limit(1);
+
     return {
         profile: userDetails,
         transactions,
         ongoingCampaigns,
+        pricingRules: userPricing || [],
+        defaultPricing: defaultPricing || [],
+        stats: {
+            totalAudience: Number(audienceCount?.count || 0),
+            lastLoginAt: latestSession?.updatedAt || latestSession?.createdAt || null,
+        }
     };
 }
 
@@ -402,6 +431,7 @@ export async function getAllPricingRules() {
             userId: pricingRule.userId,
             userName: user.name,
             userEmail: user.email,
+            userImage: user.image,
             module: pricingRule.module,
             action: pricingRule.action,
             unitPrice: pricingRule.unitPrice,
@@ -426,10 +456,10 @@ export async function getUserPricingRules(userId: string) {
 }
 
 export async function createPricingRule(data: {
-    userId?: string | null;   // null = default
+    userId?: string | null;
     module: string;
     action?: string;
-    unitPrice: string;        // decimal string e.g. "0.001000"
+    unitPrice: string;
     currency?: string;
     effectiveFrom: Date;
     note?: string;
@@ -450,6 +480,21 @@ export async function createPricingRule(data: {
     });
     revalidatePath("/admin/pricing");
     return id;
+}
+
+export async function updatePricingRule(id: string, data: {
+    unitPrice: string;
+    effectiveFrom: Date;
+    note?: string;
+}) {
+    await requireAdmin();
+    await db.update(pricingRule).set({
+        unitPrice: data.unitPrice,
+        effectiveFrom: data.effectiveFrom,
+        note: data.note ?? null,
+    }).where(eq(pricingRule.id, id));
+
+    revalidatePath("/admin/pricing");
 }
 
 export async function deletePricingRule(id: string) {

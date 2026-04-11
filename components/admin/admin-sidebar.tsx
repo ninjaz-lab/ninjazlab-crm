@@ -59,7 +59,7 @@ function AdminNavUser() {
 
     const name = session?.user?.name ?? "Admin";
     const email = session?.user?.email ?? "";
-    const image = session?.user?.image ?? "";
+    const image = session?.user?.image ?? undefined;
     const initials = name
         .split(" ")
         .map((n) => n[0])

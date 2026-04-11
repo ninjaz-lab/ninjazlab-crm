@@ -9,7 +9,7 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/c
 import {ChevronLeft, ChevronRight, Search} from "lucide-react";
 import {UserDetailSheet} from "./user-detail-sheet";
 import {useRouter, useSearchParams} from "next/navigation";
-import {cn} from "@/lib/utils";
+import {cn, formatAmount} from "@/lib/utils";
 import {USER_ROLES} from "@/lib/enums";
 
 export function UsersTable({
@@ -33,7 +33,8 @@ export function UsersTable({
 
     function handleSearch(term: string) {
         const params = new URLSearchParams(searchParams);
-        if (term) params.set("q", term);
+        if (term)
+            params.set("q", term);
         else params.delete("q");
         params.set("page", "1");
         router.push(`?${params.toString()}`);
@@ -81,7 +82,7 @@ export function UsersTable({
                             <TableHead className="w-[60px] text-center font-bold">#</TableHead>
                             <TableHead className="font-bold">User</TableHead>
                             <TableHead className="font-bold">Role</TableHead>
-                            <TableHead className="font-bold">Main Balance</TableHead>
+                            <TableHead className="font-bold">Wallet Balance</TableHead>
                             <TableHead className="font-bold">Status</TableHead>
                             <TableHead className="w-10"/>
                         </TableRow>
@@ -104,7 +105,7 @@ export function UsersTable({
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar className="size-9 border shadow-sm">
-                                                <AvatarImage src={u.image ?? ""} alt={u.name}/>
+                                                <AvatarImage src={u.image || undefined} alt={u.name}/>
                                                 <AvatarFallback>{u.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                                             </Avatar>
                                             <div>
@@ -126,7 +127,7 @@ export function UsersTable({
                                         "font-mono text-sm font-black",
                                         balance < 0 ? "text-rose-600" : "text-emerald-600"
                                     )}>
-                                        MYR {balance.toFixed(2)}
+                                        {formatAmount(balance)} MYR
                                     </TableCell>
                                     <TableCell>
                                         {u.banned ?
