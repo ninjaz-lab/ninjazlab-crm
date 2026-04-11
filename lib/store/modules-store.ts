@@ -20,6 +20,6 @@ export const useModuleStore = create<ModuleState>((set) => ({
     adminModules: [],
     userModules: [],
 
-    setAdminModules: (modules) => set({ adminModules: modules }),
-    setUserModules: (modules) => set({ userModules: modules }),
+    setAdminModules: (modules) => set({adminModules: modules}),
+    setUserModules: (modules) => set({userModules: modules}),
 }));

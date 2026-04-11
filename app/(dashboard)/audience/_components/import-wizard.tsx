@@ -30,7 +30,7 @@ interface Props {
     onCancel: () => void;
 }
 
-export function ImportWizard({ segments, onDone, onCancel }: Props) {
+export function ImportWizard({segments, onDone, onCancel}: Props) {
     const [step, setStep] = useState(0);
     const [pending, startTransition] = useTransition();
 
@@ -109,7 +109,7 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                             "rounded-full p-5 transition-all duration-200",
                             file ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground group-hover:scale-105 group-hover:text-primary"
                         )}>
-                            {file ? <FileSpreadsheet className="size-10" /> : <UploadCloud className="size-10" />}
+                            {file ? <FileSpreadsheet className="size-10"/> : <UploadCloud className="size-10"/>}
                         </div>
 
                         <div className="space-y-2">
@@ -123,7 +123,8 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
 
                         {!file && (
                             <div className="pt-6">
-                                <span className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
+                                <span
+                                    className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
                                     Select File
                                 </span>
                             </div>
@@ -132,10 +133,12 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                 </label>
             </div>
 
-            <div className="flex items-center justify-end border-t bg-background px-8 py-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10">
-                <Button size="lg" onClick={handleParseFile} disabled={!file || pending} className="px-8 rounded-full h-12 text-base">
-                    {pending ? <Loader2 className="mr-2 size-5 animate-spin" /> : null}
-                    Continue <ArrowRight className="ml-2 size-5" />
+            <div
+                className="flex items-center justify-end border-t bg-background px-8 py-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10">
+                <Button size="lg" onClick={handleParseFile} disabled={!file || pending}
+                        className="px-8 rounded-full h-12 text-base">
+                    {pending ? <Loader2 className="mr-2 size-5 animate-spin"/> : null}
+                    Continue <ArrowRight className="ml-2 size-5"/>
                 </Button>
             </div>
         </div>,
@@ -145,14 +148,17 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
         // ─────────────────────────────────────────────────────────
         <div key="map" className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="flex-1 overflow-hidden px-8 py-6 flex flex-col items-center">
-                <div className="w-full max-w-6xl h-full rounded-2xl border border-border shadow-sm flex flex-col bg-card overflow-hidden">
+                <div
+                    className="w-full max-w-6xl h-full rounded-2xl border border-border shadow-sm flex flex-col bg-card overflow-hidden">
                     <div className="overflow-auto flex-1">
                         <table className="w-full text-sm text-left">
                             <thead className="sticky top-0 z-10 bg-muted/90 backdrop-blur-md border-b">
                             <tr>
-                                <th className="px-8 py-5 font-semibold text-muted-foreground w-1/3">Your File Column</th>
+                                <th className="px-8 py-5 font-semibold text-muted-foreground w-1/3">Your File Column
+                                </th>
                                 <th className="px-8 py-5 font-semibold text-muted-foreground w-1/3">Sample Data</th>
-                                <th className="px-8 py-5 font-semibold text-muted-foreground w-1/3">Destination Field</th>
+                                <th className="px-8 py-5 font-semibold text-muted-foreground w-1/3">Destination Field
+                                </th>
                             </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
@@ -168,7 +174,8 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                                     >
                                         <td className="px-8 py-5 font-medium text-base text-foreground">{h}</td>
                                         <td className="px-8 py-5">
-                                            <span className="inline-block max-w-[250px] truncate text-sm font-mono text-muted-foreground rounded-md bg-muted px-3 py-1.5 border border-border/50">
+                                            <span
+                                                className="inline-block max-w-[250px] truncate text-sm font-mono text-muted-foreground rounded-md bg-muted px-3 py-1.5 border border-border/50">
                                                 {/* Only show the first record as a sample */}
                                                 {preview.map((r) => r[i]).filter(Boolean)[0] || "Empty"}
                                             </span>
@@ -177,17 +184,18 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                                             <Select
                                                 value={mapping[h] ?? "skip"}
                                                 onValueChange={(v) =>
-                                                    setMapping((prev) => ({ ...prev, [h]: v as ImportField }))
+                                                    setMapping((prev) => ({...prev, [h]: v as ImportField}))
                                                 }
                                             >
                                                 <SelectTrigger className={cn(
                                                     "w-full max-w-[280px] h-11 transition-all",
                                                     isMapped ? "border-primary/40 bg-primary/5 focus:ring-primary" : "bg-background"
                                                 )}>
-                                                    <SelectValue placeholder="Select field..." />
+                                                    <SelectValue placeholder="Select field..."/>
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="skip" className="text-muted-foreground italic font-medium">
+                                                    <SelectItem value="skip"
+                                                                className="text-muted-foreground italic font-medium">
                                                         — Do not import —
                                                     </SelectItem>
                                                     {(Object.keys(IMPORT_FIELD_LABELS) as ImportField[]).map((f) => (
@@ -207,17 +215,19 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between border-t bg-background px-8 py-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10">
+            <div
+                className="flex items-center justify-between border-t bg-background px-8 py-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10">
                 <Button variant="ghost" onClick={() => setStep(0)} className="rounded-full h-12 px-6 text-base">
-                    <ArrowLeft className="mr-2 size-5" /> Back
+                    <ArrowLeft className="mr-2 size-5"/> Back
                 </Button>
                 <div className="flex items-center gap-8">
                     <div className="flex items-center gap-2 text-base text-muted-foreground">
-                        <Database className="size-5" />
-                        <span className="font-semibold text-foreground">{totalRows.toLocaleString()}</span> rows detected
+                        <Database className="size-5"/>
+                        <span className="font-semibold text-foreground">{totalRows.toLocaleString()}</span> rows
+                        detected
                     </div>
                     <Button size="lg" onClick={() => setStep(2)} className="px-8 rounded-full h-12 text-base">
-                        Continue to Settings <ArrowRight className="ml-2 size-5" />
+                        Continue to Settings <ArrowRight className="ml-2 size-5"/>
                     </Button>
                 </div>
             </div>
@@ -232,7 +242,9 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
 
                     <div className="text-center space-y-3">
                         <h2 className="text-3xl font-bold tracking-tight">Import Settings</h2>
-                        <p className="text-lg text-muted-foreground">Configure how your <strong className="text-foreground">{totalRows.toLocaleString()}</strong> contacts should be saved.</p>
+                        <p className="text-lg text-muted-foreground">Configure how your <strong
+                            className="text-foreground">{totalRows.toLocaleString()}</strong> contacts should be saved.
+                        </p>
                     </div>
 
                     <div className="space-y-6">
@@ -252,16 +264,19 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                                 )}
                             >
                                 <div className="flex items-center justify-between">
-                                    <div className={cn("rounded-full p-3", mergeStrategy === "fill" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                                        <CopyPlus className="size-6" />
+                                    <div
+                                        className={cn("rounded-full p-3", mergeStrategy === "fill" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                                        <CopyPlus className="size-6"/>
                                     </div>
-                                    <RadioGroupItem value="fill" id="ms-fill" className="sr-only" />
-                                    {mergeStrategy === "fill" && <Check className="size-6 text-primary" strokeWidth={3} />}
+                                    <RadioGroupItem value="fill" id="ms-fill" className="sr-only"/>
+                                    {mergeStrategy === "fill" &&
+                                        <Check className="size-6 text-primary" strokeWidth={3}/>}
                                 </div>
                                 <div className="space-y-2">
                                     <span className="block text-lg font-semibold text-foreground">Fill Blanks</span>
                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Safest option. Only populates data if the field is currently empty. Existing data will never be overwritten.
+                                        Safest option. Only populates data if the field is currently empty. Existing
+                                        data will never be overwritten.
                                     </p>
                                 </div>
                             </label>
@@ -274,16 +289,19 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                                 )}
                             >
                                 <div className="flex items-center justify-between">
-                                    <div className={cn("rounded-full p-3", mergeStrategy === "overwrite" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                                        <RefreshCcw className="size-6" />
+                                    <div
+                                        className={cn("rounded-full p-3", mergeStrategy === "overwrite" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                                        <RefreshCcw className="size-6"/>
                                     </div>
-                                    <RadioGroupItem value="overwrite" id="ms-overwrite" className="sr-only" />
-                                    {mergeStrategy === "overwrite" && <Check className="size-6 text-primary" strokeWidth={3} />}
+                                    <RadioGroupItem value="overwrite" id="ms-overwrite" className="sr-only"/>
+                                    {mergeStrategy === "overwrite" &&
+                                        <Check className="size-6 text-primary" strokeWidth={3}/>}
                                 </div>
                                 <div className="space-y-2">
                                     <span className="block text-lg font-semibold text-foreground">Overwrite All</span>
                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Destructive action. Replaces existing database records with the new data from this import file.
+                                        Destructive action. Replaces existing database records with the new data from
+                                        this import file.
                                     </p>
                                 </div>
                             </label>
@@ -295,11 +313,12 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                             <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
                                 Organization (Optional)
                             </Label>
-                            <p className="text-base text-muted-foreground">Automatically group these imported contacts into a segment.</p>
+                            <p className="text-base text-muted-foreground">Automatically group these imported contacts
+                                into a segment.</p>
                         </div>
                         <Select value={addToSegmentId} onValueChange={setAddToSegmentId}>
                             <SelectTrigger className="h-14 text-base rounded-xl bg-muted/20">
-                                <SelectValue placeholder="Select a segment…" />
+                                <SelectValue placeholder="Select a segment…"/>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="none" className="font-medium">No segment</SelectItem>
@@ -315,12 +334,13 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between border-t bg-background px-8 py-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10">
+            <div
+                className="flex items-center justify-between border-t bg-background px-8 py-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10">
                 <Button variant="ghost" onClick={() => setStep(1)} className="rounded-full h-12 px-6 text-base">
-                    <ArrowLeft className="mr-2 size-5" /> Back
+                    <ArrowLeft className="mr-2 size-5"/> Back
                 </Button>
                 <Button size="lg" onClick={() => setStep(3)} className="px-8 rounded-full h-12 text-base">
-                    Continue to Review <ArrowRight className="ml-2 size-5" />
+                    Continue to Review <ArrowRight className="ml-2 size-5"/>
                 </Button>
             </div>
         </div>,
@@ -330,16 +350,18 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
         // ─────────────────────────────────────────────────────────
         <div key="review" className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="flex-1 overflow-hidden px-8 py-6 flex flex-col items-center">
-                <div className="w-full max-w-6xl h-full rounded-2xl border border-border shadow-sm flex flex-col bg-card overflow-hidden">
+                <div
+                    className="w-full max-w-6xl h-full rounded-2xl border border-border shadow-sm flex flex-col bg-card overflow-hidden">
 
                     <div className="bg-muted/30 px-6 py-4 border-b flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="p-1.5 bg-primary/10 rounded-md text-primary">
-                                <TableProperties className="size-4" />
+                                <TableProperties className="size-4"/>
                             </div>
                             <h3 className="font-semibold text-foreground">Data Preview</h3>
                         </div>
-                        <div className="text-sm text-muted-foreground font-medium bg-background px-3 py-1 rounded-full border shadow-sm">
+                        <div
+                            className="text-sm text-muted-foreground font-medium bg-background px-3 py-1 rounded-full border shadow-sm">
                             Showing {preview.length} sample rows
                         </div>
                     </div>
@@ -352,7 +374,8 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                                 {mappedHeaders.map(h => (
                                     <th key={h} className="px-6 py-4 font-semibold text-foreground">
                                         {IMPORT_FIELD_LABELS[mapping[h] as ImportField]}
-                                        <span className="block text-xs font-normal text-muted-foreground mt-0.5">from: {h}</span>
+                                        <span
+                                            className="block text-xs font-normal text-muted-foreground mt-0.5">from: {h}</span>
                                     </th>
                                 ))}
                             </tr>
@@ -371,7 +394,8 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                                                 {cellData ? (
                                                     cellData
                                                 ) : (
-                                                    <span className="text-muted-foreground/50 italic text-xs">null</span>
+                                                    <span
+                                                        className="text-muted-foreground/50 italic text-xs">null</span>
                                                 )}
                                             </td>
                                         );
@@ -384,12 +408,14 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between border-t bg-background px-8 py-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10">
+            <div
+                className="flex items-center justify-between border-t bg-background px-8 py-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10">
                 <Button variant="ghost" onClick={() => setStep(2)} className="rounded-full h-12 px-6 text-base">
-                    <ArrowLeft className="mr-2 size-5" /> Back
+                    <ArrowLeft className="mr-2 size-5"/> Back
                 </Button>
-                <Button size="lg" onClick={handleRunImport} disabled={pending} className="px-10 rounded-full h-12 text-base font-semibold">
-                    {pending ? <Loader2 className="mr-2 size-5 animate-spin" /> : null}
+                <Button size="lg" onClick={handleRunImport} disabled={pending}
+                        className="px-10 rounded-full h-12 text-base font-semibold">
+                    {pending ? <Loader2 className="mr-2 size-5 animate-spin"/> : null}
                     Submit {totalRows.toLocaleString()} Contacts
                 </Button>
             </div>
@@ -401,16 +427,19 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
         <div key="result" className="flex flex-col h-full animate-in zoom-in-95 duration-500">
             <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8 text-center">
                 <div className="relative">
-                    <div className="absolute inset-0 animate-ping rounded-full bg-green-500/20" />
-                    <div className="relative flex size-32 items-center justify-center rounded-full bg-green-500/10 text-green-500 shadow-sm border border-green-500/20">
-                        <Check className="size-14" strokeWidth={3} />
+                    <div className="absolute inset-0 animate-ping rounded-full bg-green-500/20"/>
+                    <div
+                        className="relative flex size-32 items-center justify-center rounded-full bg-green-500/10 text-green-500 shadow-sm border border-green-500/20">
+                        <Check className="size-14" strokeWidth={3}/>
                     </div>
                 </div>
 
                 <div className="space-y-4 max-w-lg">
                     <h3 className="text-4xl font-bold tracking-tight text-foreground">Import Queued</h3>
                     <p className="text-lg text-muted-foreground">
-                        <strong className="text-foreground font-semibold">{result?.totalRows.toLocaleString()}</strong> contacts are being processed in the background. You can safely close this window.
+                        <strong
+                            className="text-foreground font-semibold">{result?.totalRows.toLocaleString()}</strong> contacts
+                        are being processed in the background. You can safely close this window.
                     </p>
                 </div>
             </div>
@@ -444,7 +473,7 @@ export function ImportWizard({ segments, onDone, onCancel }: Props) {
                                                 : "bg-muted text-muted-foreground border-2 border-transparent"
                                     )}
                                 >
-                                    {isCompleted ? <Check className="size-5" strokeWidth={3} /> : i + 1}
+                                    {isCompleted ? <Check className="size-5" strokeWidth={3}/> : i + 1}
                                 </div>
                                 <span className={cn(
                                     "text-sm font-semibold transition-colors hidden sm:block text-center",

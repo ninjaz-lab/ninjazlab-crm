@@ -237,7 +237,7 @@ export function CampaignForm({
                             <Label>When should this be sent?</Label>
                             <Select value={sendMode} onValueChange={(v) => setSendMode(v as SendMode)}>
                                 <SelectTrigger>
-                                    <SelectValue />
+                                    <SelectValue/>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="draft">Keep as Draft</SelectItem>

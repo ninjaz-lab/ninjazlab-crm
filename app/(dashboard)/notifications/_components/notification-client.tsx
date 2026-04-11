@@ -22,7 +22,7 @@ interface Props {
     initialNotifications: NotificationData[];
 }
 
-export function NotificationClient({ initialNotifications = [] }: Props) {
+export function NotificationClient({initialNotifications = []}: Props) {
     const clearUnread = useAppStore((state) => state.clearUnread);
 
     // On mount, clear the Zustand badge and mark them read in the database
