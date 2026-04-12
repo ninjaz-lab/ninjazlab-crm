@@ -237,7 +237,6 @@ export function TemplateEditor({templateId, defaultValues}: Props) {
 
                 {/* Left Pane: Code Editor */}
                 <div className="w-1/2 flex flex-col border-r">
-                    {/* 🚩 FIXED: Added strict h-12 and px-4 for perfect height alignment */}
                     <div className="flex items-center justify-between px-4 h-12 border-b bg-muted/20 shrink-0">
                         <span className="text-sm font-bold flex items-center gap-2">
                             <Code className="size-4"/> HTML Code
@@ -271,7 +270,6 @@ export function TemplateEditor({templateId, defaultValues}: Props) {
 
                 {/* Right Pane: Live Preview */}
                 <div className="w-1/2 flex flex-col bg-muted/10">
-                    {/* 🚩 FIXED: Added strict h-12 and px-4 for perfect height alignment */}
                     <div className="flex items-center justify-between px-4 h-12 border-b bg-muted/20 shrink-0">
                         <span className="text-sm font-bold flex items-center gap-2">
                             <Eye className="size-4"/> Live Preview
