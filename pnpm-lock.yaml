@@ -71,6 +71,9 @@ importers:
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
+      react-email-editor:
+        specifier: ^1.8.0
+        version: 1.8.0(react@19.2.4)
       react-hook-form:
         specifier: ^7.72.1
         version: 7.72.1(react@19.2.4)
@@ -2471,6 +2474,9 @@ packages:
     resolution: {integrity: sha512-XJ9UD9+bbDo4a4epraTwG3TsNPeiB9aShrUneAVXy8q4LuwowN+qu89/6ByLMINqvIMeI9H9hOHQtg/ijrYXzQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@unlayer/types@1.399.0':
+    resolution: {integrity: sha512-ytOAqRQPQBhq5GV/hO9FYn79CIBJUV+wQA/MJkwdbJHMpX2zJduksnQRidl8/sz8sRBfL5orbatoXFgBMKRKiA==}
+
   '@unrs/resolver-binding-android-arm-eabi@1.11.1':
     resolution: {integrity: sha512-ppLRUgHVaGRWUx0R0Ut06Mjo9gBaBkg3v/8AxusGLhsIotbBLuRk51rAzqLC8gq6NyyAojEXglNjzf6R948DNw==}
     cpu: [arm]
@@ -4513,6 +4519,12 @@ packages:
     resolution: {integrity: sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==}
     peerDependencies:
       react: ^19.2.4
+
+  react-email-editor@1.8.0:
+    resolution: {integrity: sha512-wauG/fES4k3VueIYVvsnxL+6+AAOw8oG3r1QlQclnC2aErpsjJSDmYgQRmDBhkts0QTKJf4uPiXOd3OxPv50OA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>=15'
 
   react-hook-form@7.72.1:
     resolution: {integrity: sha512-RhwBoy2ygeVZje+C+bwJ8g0NjTdBmDlJvAUHTxRjTmSUKPYsKfMphkS2sgEMotsY03bP358yEYlnUeZy//D9Ig==}
@@ -7620,6 +7632,8 @@ snapshots:
       '@typescript-eslint/types': 8.58.0
       eslint-visitor-keys: 5.0.1
 
+  '@unlayer/types@1.399.0': {}
+
   '@unrs/resolver-binding-android-arm-eabi@1.11.1':
     optional: true
 
@@ -9673,6 +9687,11 @@ snapshots:
     dependencies:
       react: 19.2.4
       scheduler: 0.27.0
+
+  react-email-editor@1.8.0(react@19.2.4):
+    dependencies:
+      '@unlayer/types': 1.399.0
+      react: 19.2.4
 
   react-hook-form@7.72.1(react@19.2.4):
     dependencies:

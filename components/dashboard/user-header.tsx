@@ -38,19 +38,29 @@ export function UserHeader() {
 
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
-            currentPath += `/${segment}`;
 
-            // Skip dashboard in the loop since we hardcode it as the root crumb
-            if (segment === "dashboard")
-                continue;
-
-            // 1. Group "Marketing" and "Email" into one clean crumb
+            // 1. Group "Marketing" and "Email" into one smart crumb
             if (segment === "marketing" && segments[i + 1] === "email") {
-                crumbs.push({label: "Email Marketing", href: "/marketing/email"});
-                i++; // skip 'email'
+                let href = "/marketing/email";
+
+                // Look ahead in the URL to see if we are in templates or campaigns!
+                if (segments.includes("templates"))
+                    href += "?tab=templates";
+                else if (segments.includes("campaigns"))
+                    href += "?tab=campaigns";
+
+                crumbs.push({label: "Email Marketing", href});
+
+                // Skip the 'email' segment since we combined them into one crumb
+                i++;
                 currentPath += `/email`;
                 continue;
             }
+
+            currentPath += `/${segment}`;
+
+            if (segment === "dashboard")
+                continue;
 
             // 2. Handle Templates specific routing
             if (segment === "templates") {

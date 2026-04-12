@@ -21,12 +21,18 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
     published: "default",
 };
 
-export default async function EmailMarketingPage() {
+export default async function EmailMarketingPage({searchParams}: {
+    searchParams: Promise<{ tab?: string }>;
+}) {
     noStore();
     const [campaigns, templates] = await Promise.all([
         fetchEmailCampaigns(),
         fetchEmailTemplates(),
     ]);
+
+    const {tab} = await searchParams;
+    const validTabs = ["campaigns", "templates"];
+    const activeTab = validTabs.includes(tab as string) ? tab : "campaigns";
 
     const totalSent = campaigns.reduce((s, c) => s + (c.sentCount ?? 0), 0);
     const totalOpened = campaigns.reduce((s, c) => s + (c.openedCount ?? 0), 0);
@@ -94,7 +100,7 @@ export default async function EmailMarketingPage() {
                 </Card>
             </div>
 
-            <Tabs defaultValue="campaigns">
+            <Tabs defaultValue={activeTab}>
                 <TabsList>
                     <TabsTrigger value="campaigns">
                         <Mail className="size-4 mr-1"/>
