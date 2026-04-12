@@ -48,6 +48,7 @@ import {
     Upload,
     UserPlus
 } from "lucide-react";
+import {TablePagination} from "@/components/table-pagination";
 
 type ImportJob = Awaited<ReturnType<typeof getImportJobs>>[number];
 
@@ -99,8 +100,8 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
         navigate({page: newPage});
     }
 
-    function changePageSize(newSize: string) {
-        navigate({pageSize: Number(newSize), page: 1});
+    function changePageSize(newSize: number) {
+        navigate({pageSize: newSize, page: 1});
     }
 
     const toggleSelect = useCallback((id: string) => {
@@ -267,49 +268,14 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
                     </TableBody>
                 </Table>
 
-                <div
-                    className="px-6 py-4 border-t bg-muted/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                            Total {total.toLocaleString()} Records
-                        </p>
+                <TablePagination
+                    total={total}
+                    page={page}
+                    pageSize={pageSize}
+                    onPageChange={changePage}
+                    onPageSizeChange={changePageSize}
+                />
 
-                        <div className="flex items-center gap-2">
-                            <p className="text-xs font-medium text-muted-foreground">Rows per page</p>
-                            <Select
-                                value={String(pageSize)}
-                                onValueChange={changePageSize}
-                            >
-                                <SelectTrigger className="h-8 w-[70px] text-xs">
-                                    <SelectValue placeholder={pageSize}/>
-                                </SelectTrigger>
-                                <SelectContent side="top">
-                                    {[10, 20, 50, 100].map((size) => (
-                                        <SelectItem key={size} value={String(size)}>
-                                            {size}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-bold text-muted-foreground">
-                            Page {page} of {totalPages}
-                        </span>
-                        <div className="flex gap-1">
-                            <Button variant="outline" size="icon" className="size-8" disabled={page <= 1}
-                                    onClick={() => changePage(page - 1)}>
-                                <ChevronLeft className="size-4"/>
-                            </Button>
-                            <Button variant="outline" size="icon" className="size-8" disabled={page >= totalPages}
-                                    onClick={() => changePage(page + 1)}>
-                                <ChevronRight className="size-4"/>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* Create dialog */}
