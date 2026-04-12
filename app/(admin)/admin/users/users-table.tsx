@@ -6,6 +6,7 @@ import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {ChevronLeft, ChevronRight, Search} from "lucide-react";
 import {UserDetailSheet} from "./user-detail-sheet";
 import {useRouter, useSearchParams} from "next/navigation";
@@ -43,6 +44,13 @@ export function UsersTable({
     function changePage(newPage: number) {
         const params = new URLSearchParams(searchParams);
         params.set("page", newPage.toString());
+        router.push(`?${params.toString()}`);
+    }
+
+    function changePageSize(newSize: string) {
+        const params = new URLSearchParams(searchParams);
+        params.set("pageSize", newSize);
+        params.set("page", "1"); // Reset to page 1 when size changes
         router.push(`?${params.toString()}`);
     }
 
@@ -147,10 +155,33 @@ export function UsersTable({
                     </TableBody>
                 </Table>
 
-                <div className="px-6 py-4 border-t bg-muted/10 flex items-center justify-between">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                        Total {total} Records
-                    </p>
+                <div
+                    className="px-6 py-4 border-t bg-muted/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                            Total {total} Records
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                            <p className="text-xs font-medium text-muted-foreground">Rows per page</p>
+                            <Select
+                                value={String(pageSize)}
+                                onValueChange={changePageSize}
+                            >
+                                <SelectTrigger className="h-8 w-[70px] text-xs">
+                                    <SelectValue placeholder={pageSize}/>
+                                </SelectTrigger>
+                                <SelectContent side="top">
+                                    {[10, 20, 50, 100].map((size) => (
+                                        <SelectItem key={size} value={String(size)}>
+                                            {size}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
                     <div className="flex items-center gap-4">
                         <span className="text-xs font-bold text-muted-foreground">
                             Page {page} of {totalPages}

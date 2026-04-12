@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Checkbox} from "@/components/ui/checkbox";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {
     addAudiencesToList,
     type AudienceListRow,
@@ -65,8 +66,6 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
     const router = useRouter();
     const [pending, startTransition] = useTransition();
 
-    const [searchVal, setSearchVal] = useState(search);
-
     const [createOpen, setCreateOpen] = useState(false);
     const [editAudience, setEditAudience] = useState<AudienceRow | null>(null);
     const [importOpen, setImportOpen] = useState(false);
@@ -77,12 +76,12 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
     const [addToSegmentOpen, setAddToSegmentOpen] = useState(false);
     const [addToSegmentTarget, setAddToSegmentTarget] = useState("");
 
-    const totalPages = Math.ceil(total / pageSize);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const isImporting = importJobs.some((j) => j.status === "queued" || j.status === "processing");
 
     function navigate(params: Record<string, string | number>) {
         const sp = new URLSearchParams();
-        if (searchVal) sp.set("search", searchVal);
+        if (search) sp.set("search", search);
         if (segmentId) sp.set("segmentId", segmentId);
         sp.set("page", String(page));
         sp.set("pageSize", String(pageSize));
@@ -92,9 +91,16 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
         router.push(`/audience?${sp.toString()}`);
     }
 
-    function handleSearch(e: React.FormEvent) {
-        e.preventDefault();
-        navigate({search: searchVal, page: 1});
+    function handleSearch(term: string) {
+        navigate({search: term, page: 1});
+    }
+
+    function changePage(newPage: number) {
+        navigate({page: newPage});
+    }
+
+    function changePageSize(newSize: string) {
+        navigate({pageSize: Number(newSize), page: 1});
     }
 
     const toggleSelect = useCallback((id: string) => {
@@ -107,7 +113,7 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
 
     const toggleAll = useCallback(() => {
         setSelected((prev) =>
-            prev.size === audiences.length ? new Set() : new Set(audiences.map((c) => c.id))
+            prev.size === audiences.length && audiences.length > 0 ? new Set() : new Set(audiences.map((c) => c.id))
         );
     }, [audiences]);
 
@@ -145,24 +151,19 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
 
     return (
         <div className="space-y-4">
-            {/* Toolbar */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex gap-2 flex-1">
-                    {/* 🚩 The dropdown has been completely removed */}
-                    <form onSubmit={handleSearch} className="flex gap-2 flex-1 max-w-sm">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground"/>
-                            <Input
-                                className="pl-8"
-                                placeholder="Search audience…"
-                                value={searchVal}
-                                onChange={(e) => setSearchVal(e.target.value)}
-                            />
-                        </div>
-                        <Button type="submit" variant="outline">Search</Button>
-                    </form>
+            {/* Header: Search + Actions + Top Pagination */}
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div className="relative max-w-sm flex-1 w-full">
+                    <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground"/>
+                    <Input
+                        placeholder="Search audience..."
+                        className="pl-8 bg-background"
+                        defaultValue={search ?? ""}
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
                 </div>
-                <div className="flex gap-2">
+
+                <div className="flex flex-wrap items-center gap-2">
                     {selected.size > 0 && (
                         <>
                             <Button variant="outline" size="sm" onClick={() => setAddToSegmentOpen(true)}>
@@ -173,103 +174,141 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
                             </Button>
                         </>
                     )}
-                    <Button variant="outline" onClick={() => setImportOpen(true)} disabled={isImporting}
+                    <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} disabled={isImporting}
                             title={isImporting ? "Import already in progress" : undefined}>
                         <Upload className="size-4 mr-1"/> {isImporting ? "Importing…" : "Import"}
                     </Button>
-                    <Button onClick={() => setCreateOpen(true)}>
+                    <Button size="sm" onClick={() => setCreateOpen(true)}>
                         <Plus className="size-4 mr-1"/> Add contact
                     </Button>
+
+                    <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground ml-2">
+                        <span>{page} / {totalPages}</span>
+                        <div className="flex gap-1">
+                            <Button variant="outline" size="icon" className="size-8" disabled={page <= 1}
+                                    onClick={() => changePage(page - 1)}>
+                                <ChevronLeft className="size-4"/>
+                            </Button>
+                            <Button variant="outline" size="icon" className="size-8" disabled={page >= totalPages}
+                                    onClick={() => changePage(page + 1)}>
+                                <ChevronRight className="size-4"/>
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* Table */}
-            <div className="rounded-md border bg-card">
-                <table className="w-full text-sm">
-                    <thead className="bg-muted/50 border-b">
-                    <tr>
-                        <th className="w-10 p-3">
-                            <Checkbox
-                                checked={audiences.length > 0 && selected.size === audiences.length}
-                                onCheckedChange={toggleAll}
-                            />
-                        </th>
-                        <th className="p-3 text-left font-medium">Name</th>
-                        <th className="p-3 text-left font-medium hidden md:table-cell">Email</th>
-                        <th className="p-3 text-left font-medium hidden lg:table-cell">Phone</th>
-                        <th className="p-3 text-left font-medium hidden xl:table-cell">Source</th>
-                        <th className="w-10 p-3"/>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {audiences.length === 0 ? (
-                        <tr>
-                            <td colSpan={7} className="p-10 text-center text-muted-foreground">
-                                No audiences found. Import a file or add one manually.
-                            </td>
-                        </tr>
-                    ) : (
-                        audiences.map((c) => (
-                            <tr key={c.id} className="border-t hover:bg-muted/30 transition-colors">
-                                <td className="p-3">
-                                    <Checkbox
-                                        checked={selected.has(c.id)}
-                                        onCheckedChange={() => toggleSelect(c.id)}
-                                    />
-                                </td>
-                                <td className="p-3 font-medium">{fullName(c)}</td>
-                                <td className="p-3 text-muted-foreground hidden md:table-cell">{c.email ?? "—"}</td>
-                                <td className="p-3 text-muted-foreground hidden lg:table-cell">{c.phone ?? "—"}</td>
-                                <td className="p-3 hidden xl:table-cell">
-                                    <Badge variant="outline" className="text-xs capitalize">{c.source}</Badge>
-                                </td>
-                                <td className="p-3">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="size-8">
-                                                <MoreHorizontal className="size-4"/>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => setEditAudience(c)}>
-                                                <Pencil className="size-4 mr-2"/> Edit
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator/>
-                                            <DropdownMenuItem
-                                                className="text-destructive"
-                                                onClick={() => setDeleteId(c.id)}
-                                            >
-                                                <Trash2 className="size-4 mr-2"/> Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </td>
-                            </tr>
-                        ))
-                    )}
-                    </tbody>
-                </table>
-            </div>
+            <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                <Table>
+                    <TableHeader className="bg-muted/30">
+                        <TableRow>
+                            <TableHead className="w-[50px] text-center">
+                                <Checkbox
+                                    checked={audiences.length > 0 && selected.size === audiences.length}
+                                    onCheckedChange={toggleAll}
+                                />
+                            </TableHead>
+                            <TableHead className="font-bold">Name</TableHead>
+                            <TableHead className="font-bold hidden md:table-cell">Email</TableHead>
+                            <TableHead className="font-bold hidden lg:table-cell">Phone</TableHead>
+                            <TableHead className="font-bold hidden xl:table-cell">Source</TableHead>
+                            <TableHead className="w-12"/>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {audiences.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                    No audiences found. Import a file or add one manually.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            audiences.map((c) => (
+                                <TableRow key={c.id} className="hover:bg-muted/40 transition-colors group">
+                                    <TableCell className="text-center">
+                                        <Checkbox
+                                            checked={selected.has(c.id)}
+                                            onCheckedChange={() => toggleSelect(c.id)}
+                                        />
+                                    </TableCell>
+                                    <TableCell className="font-medium">{fullName(c)}</TableCell>
+                                    <TableCell
+                                        className="text-muted-foreground hidden md:table-cell">{c.email ?? "—"}</TableCell>
+                                    <TableCell
+                                        className="text-muted-foreground hidden lg:table-cell">{c.phone ?? "—"}</TableCell>
+                                    <TableCell className="hidden xl:table-cell">
+                                        <Badge variant="outline" className="text-xs capitalize">{c.source}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="size-8">
+                                                    <MoreHorizontal className="size-4"/>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => setEditAudience(c)}>
+                                                    <Pencil className="size-4 mr-2"/> Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator/>
+                                                <DropdownMenuItem
+                                                    className="text-destructive"
+                                                    onClick={() => setDeleteId(c.id)}
+                                                >
+                                                    <Trash2 className="size-4 mr-2"/> Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{total.toLocaleString()} contact{total !== 1 ? "s" : ""}</span>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline" size="icon" className="size-8"
-                        disabled={page <= 1}
-                        onClick={() => navigate({page: page - 1})}
-                    >
-                        <ChevronLeft className="size-4"/>
-                    </Button>
-                    <span>Page {page} of {totalPages || 1}</span>
-                    <Button
-                        variant="outline" size="icon" className="size-8"
-                        disabled={page >= totalPages}
-                        onClick={() => navigate({page: page + 1})}
-                    >
-                        <ChevronRight className="size-4"/>
-                    </Button>
+                <div
+                    className="px-6 py-4 border-t bg-muted/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                            Total {total.toLocaleString()} Records
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                            <p className="text-xs font-medium text-muted-foreground">Rows per page</p>
+                            <Select
+                                value={String(pageSize)}
+                                onValueChange={changePageSize}
+                            >
+                                <SelectTrigger className="h-8 w-[70px] text-xs">
+                                    <SelectValue placeholder={pageSize}/>
+                                </SelectTrigger>
+                                <SelectContent side="top">
+                                    {[10, 20, 50, 100].map((size) => (
+                                        <SelectItem key={size} value={String(size)}>
+                                            {size}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <span className="text-xs font-bold text-muted-foreground">
+                            Page {page} of {totalPages}
+                        </span>
+                        <div className="flex gap-1">
+                            <Button variant="outline" size="icon" className="size-8" disabled={page <= 1}
+                                    onClick={() => changePage(page - 1)}>
+                                <ChevronLeft className="size-4"/>
+                            </Button>
+                            <Button variant="outline" size="icon" className="size-8" disabled={page >= totalPages}
+                                    onClick={() => changePage(page + 1)}>
+                                <ChevronRight className="size-4"/>
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -339,7 +378,8 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} disabled={pending}>Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDelete} disabled={pending}
+                                           className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -353,7 +393,8 @@ export function AudienceTable({audiences, total, segments, page, pageSize, searc
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleBulkDelete} disabled={pending}>Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={handleBulkDelete} disabled={pending}
+                                           className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
