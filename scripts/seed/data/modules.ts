@@ -1,8 +1,8 @@
-import {db} from "@/lib/db"; // Adjust path to your db instance
-import {appModule} from "@/lib/db/schema";
+import {db} from "@/lib/db";
 import {USER_ROLES} from "@/lib/enums";
+import {module} from "@/lib/db/schema";
 
-export async function seedAppModules() {
+export async function seedModules() {
     console.log("🌱 Seeding comprehensive app modules...");
 
     const modules = [
@@ -75,16 +75,25 @@ export async function seedAppModules() {
             scope: USER_ROLES.ADMIN,
             exact: false,
             description: "Set unit prices for email and SMS actions.",
-        }
+        },
+        {
+            key: "admin_access_control",
+            title: "Access Control",
+            href: "/admin/modules",
+            iconName: "ShieldCheck",
+            scope: USER_ROLES.ADMIN,
+            exact: false,
+            description: "Grant or revoke module access for specific users.",
+        },
     ];
 
     for (const mod of modules) {
-        await db.insert(appModule)
+        await db.insert(module)
             .values({
                 ...mod,
             })
             .onConflictDoUpdate({
-                target: appModule.key,
+                target: module.key,
                 set: {
                     title: mod.title,
                     href: mod.href,

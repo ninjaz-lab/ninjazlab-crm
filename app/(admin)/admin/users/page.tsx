@@ -2,7 +2,7 @@ import {unstable_noStore as noStore} from "next/cache";
 import {headers} from "next/headers";
 import {fetchAllUsersWithWallets} from "@/lib/actions/admin";
 import {auth} from "@/lib/auth";
-import {UsersTable} from "./users-table";
+import {UsersTable} from "./_components/users-table";
 
 export default async function AdminUsersPage({
                                                  searchParams,

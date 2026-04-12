@@ -7,7 +7,6 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Badge} from "@/components/ui/badge";
-import {Card, CardContent} from "@/components/ui/card";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,} from "@/components/ui/dialog";
 import {
@@ -32,7 +31,21 @@ import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandL
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import {Check, ChevronsUpDown, Globe, Info, MoreHorizontal, Pencil, Plus, Search, Trash2, User} from "lucide-react";
+import {
+    ArrowUpRight,
+    Calendar,
+    Check,
+    ChevronsUpDown,
+    CircleDollarSign,
+    Globe,
+    Info,
+    MoreHorizontal,
+    Pencil,
+    Plus,
+    Search,
+    Trash2,
+    User
+} from "lucide-react";
 import {TRANSACTION_MODULE_LABELS, TRANSACTION_MODULES, USER_ROLES, UserRole} from "@/lib/enums";
 import {TablePagination} from "@/components/table-pagination";
 import {toast} from "sonner";
@@ -69,13 +82,20 @@ function StatusBadge({effectiveFrom}: { effectiveFrom: Date }) {
     const now = new Date();
     const d = new Date(effectiveFrom);
     if (d <= now)
-        return <Badge
-            variant="outline"
-            className="text-emerald-600 border-emerald-200 bg-emerald-50 rounded-full font-bold">
-            Active
-        </Badge>;
+        return (
+            <Badge
+                variant="outline"
+                className="text-[10px] uppercase font-bold text-emerald-600 border-emerald-200 bg-emerald-50 rounded-full"
+            >
+                <Check className="size-3 mr-1"/> Active
+            </Badge>
+        );
 
-    return <Badge variant="secondary" className="rounded-full font-bold">Scheduled</Badge>;
+    return (
+        <Badge variant="secondary" className="text-[10px] uppercase font-bold rounded-full">
+            <Calendar className="size-3 mr-1"/> Scheduled
+        </Badge>
+    );
 }
 
 function RuleTable({
@@ -110,12 +130,12 @@ function RuleTable({
     const [ruleToDelete, setRuleToDelete] = useState<Rule | null>(null);
 
     return (
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <div className="rounded-xl border bg-card shadow-md overflow-hidden transition-all">
             <div
-                className="p-6 pb-4 border-b bg-muted/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                className="p-6 pb-4 border-b bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h3 className="text-lg font-bold tracking-tight">{title}</h3>
-                    <p className="text-sm text-muted-foreground">{description}</p>
+                    <h3 className="text-lg font-black tracking-tight">{title}</h3>
+                    <p className="text-sm font-medium text-muted-foreground">{description}</p>
                 </div>
                 {headerAction && (
                     <div className="w-full sm:w-auto">
@@ -125,23 +145,31 @@ function RuleTable({
             </div>
 
             <Table>
-                <TableHeader className="bg-muted/30">
-                    <TableRow>
-                        <TableHead className="w-[60px] text-center font-bold">#</TableHead>
-                        <TableHead className="font-bold">{firstColumnHeader}</TableHead>
-                        <TableHead className="font-bold">Module</TableHead>
-                        <TableHead className="font-bold">Unit Price</TableHead>
-                        <TableHead className="font-bold">Effective From</TableHead>
-                        <TableHead className="font-bold">Status</TableHead>
-                        <TableHead className="font-bold">Note</TableHead>
+                <TableHeader className="bg-muted/40">
+                    <TableRow className="hover:bg-transparent">
+                        <TableHead
+                            className="w-[60px] text-center font-bold text-xs uppercase tracking-tighter">#</TableHead>
+                        <TableHead
+                            className="font-bold text-xs uppercase tracking-tighter">{firstColumnHeader}</TableHead>
+                        <TableHead className="font-bold text-xs uppercase tracking-tighter">Module</TableHead>
+                        <TableHead className="font-bold text-xs uppercase tracking-tighter">Unit Price</TableHead>
+                        <TableHead className="font-bold text-xs uppercase tracking-tighter">Status</TableHead>
+                        <TableHead className="font-bold text-xs uppercase tracking-tighter">Effective From</TableHead>
                         <TableHead className="w-12"/>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {rules.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                No pricing rules found.
+                            <TableCell colSpan={7} className="py-20">
+                                <div className="flex flex-col items-center justify-center text-center">
+                                    <div className="p-4 bg-muted/50 rounded-full mb-4">
+                                        <CircleDollarSign className="size-10 text-muted-foreground/40"/>
+                                    </div>
+                                    <h3 className="text-lg font-bold">No pricing rules found</h3>
+                                    <p className="text-sm text-muted-foreground">Add a new rule to override system
+                                        defaults.</p>
+                                </div>
                             </TableCell>
                         </TableRow>
                     ) : (
@@ -149,78 +177,95 @@ function RuleTable({
                             const rowNumber = (page - 1) * pageSize + index + 1;
 
                             return (
-                                <TableRow key={r.id} className="hover:bg-muted/40 transition-colors group">
+                                <TableRow key={r.id} className="group transition-colors hover:bg-muted/30">
                                     <TableCell className="text-center text-xs font-mono text-muted-foreground">
                                         {rowNumber}
                                     </TableCell>
                                     <TableCell>
                                         {r.userId ? (
                                             <div className="flex items-center gap-3">
-                                                <Avatar className="size-8 border shadow-sm">
+                                                <Avatar
+                                                    className="size-9 border-2 border-background shadow-sm group-hover:border-primary/20 transition-all">
                                                     <AvatarImage src={r.userImage || undefined}/>
-                                                    <AvatarFallback className="text-[10px] font-bold">
+                                                    <AvatarFallback
+                                                        className="text-[10px] font-bold bg-primary/5 text-primary">
                                                         {r.userName?.slice(0, 2).toUpperCase() || "US"}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="font-bold text-sm leading-none mb-1">{r.userName}</p>
-                                                    <p className="text-xs text-muted-foreground">{r.userEmail}</p>
+                                                    <p className="font-bold text-sm tracking-tight leading-none mb-1">{r.userName}</p>
+                                                    <p className="text-[11px] text-muted-foreground font-medium">{r.userEmail}</p>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-3">
-                                                <Avatar className="size-8 border shadow-sm bg-primary/5">
-                                                    <AvatarFallback className="bg-transparent text-primary">
-                                                        <Globe className="size-4"/>
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <span className="text-sm font-bold text-primary">System Default</span>
+                                                <div
+                                                    className="size-9 rounded-full border-2 border-background bg-primary/10 flex items-center justify-center text-primary shadow-sm">
+                                                    <Globe className="size-4"/>
+                                                </div>
+                                                <span className="text-sm font-black tracking-tight text-primary">System Global</span>
                                             </div>
                                         )}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className="text-[10px] uppercase font-bold">
+                                        <Badge variant="outline"
+                                               className="text-[10px] uppercase font-black bg-background/50 border-muted-foreground/20">
                                             {TRANSACTION_MODULE_LABELS[r.module] ?? r.module}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
-                                        <span className="font-mono text-sm font-black text-foreground">
-                                            {formatPricingAmount(r.unitPrice)} MYR
-                                        </span>
-                                        <span
-                                            className="text-[10px] text-muted-foreground uppercase font-bold ml-1"> / {r.action}</span>
-                                    </TableCell>
-                                    <TableCell className="text-xs font-mono font-medium text-muted-foreground">
-                                        {new Date(r.effectiveFrom).toLocaleString(undefined, {
-                                            dateStyle: 'medium',
-                                            timeStyle: 'short'
-                                        })}
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-1">
+                                                <span className="font-mono text-sm font-black text-foreground">
+                                                    {formatPricingAmount(r.unitPrice)}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-muted-foreground">MYR</span>
+                                            </div>
+                                            <span
+                                                className="text-[10px] text-muted-foreground font-medium lowercase italic">per {r.action}</span>
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <StatusBadge effectiveFrom={new Date(r.effectiveFrom)}/>
                                     </TableCell>
-                                    <TableCell
-                                        className="text-xs font-medium text-muted-foreground max-w-[180px] truncate">
-                                        {r.note ?? "—"}
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-foreground">
+                                                {new Date(r.effectiveFrom).toLocaleDateString(undefined, {dateStyle: 'medium'})}
+                                            </span>
+                                            <span className="text-[10px] font-mono text-muted-foreground">
+                                                {new Date(r.effectiveFrom).toLocaleTimeString(undefined, {timeStyle: 'short'})}
+                                            </span>
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="size-8">
+                                                <Button variant="ghost" size="icon" className="size-8 rounded-full">
                                                     <MoreHorizontal className="size-4"/>
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => onEdit(r)} disabled={isPending}>
-                                                    <Pencil className="size-4 mr-2"/> Edit
+                                            <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuItem onClick={() => onEdit(r)} disabled={isPending}
+                                                                  className="font-bold">
+                                                    <Pencil className="size-4 mr-2 text-primary"/> Edit Rule
                                                 </DropdownMenuItem>
+                                                {r.note && (
+                                                    <>
+                                                        <DropdownMenuSeparator/>
+                                                        <div
+                                                            className="px-2 py-1.5 text-[10px] text-muted-foreground italic">
+                                                            Note: {r.note}
+                                                        </div>
+                                                    </>
+                                                )}
                                                 <DropdownMenuSeparator/>
                                                 <DropdownMenuItem
-                                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                    className="text-destructive font-bold focus:bg-destructive/10 focus:text-destructive"
                                                     onClick={() => setRuleToDelete(r)}
                                                     disabled={isPending}
                                                 >
-                                                    <Trash2 className="size-4 mr-2"/> Delete
+                                                    <Trash2 className="size-4 mr-2"/> Delete Rule
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -253,14 +298,14 @@ function RuleTable({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel className="font-bold">Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={() => {
                             if (ruleToDelete) {
                                 onDelete(ruleToDelete.id);
                                 setRuleToDelete(null);
                             }
                         }} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold">
-                            Delete
+                            Confirm Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -331,10 +376,9 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
         }
 
         const newEffectiveDate = new Date(effectiveFrom);
-        newEffectiveDate.setSeconds(0, 0); // Ignore seconds for a perfect comparison
+        newEffectiveDate.setSeconds(0, 0);
 
         const isDuplicate = rules.some(r => {
-            // If editing, ignore the rule we are currently updating
             if (editingRuleId && r.id === editingRuleId)
                 return false;
 
@@ -342,7 +386,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
             const isSameModule = r.module === module;
 
             const existingDate = new Date(r.effectiveFrom);
-            existingDate.setSeconds(0, 0); // Ignore seconds on existing rule
+            existingDate.setSeconds(0, 0);
 
             return isSameUser && isSameModule && newEffectiveDate.getTime() === existingDate.getTime();
         });
@@ -399,7 +443,6 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
     const filteredUserRules = useMemo(() => {
         const overrides = rules.filter((r) => !!r.userId);
 
-        // 1. Filter by search query
         const filtered = searchQuery
             ? overrides.filter((r) => {
                 const q = searchQuery.toLowerCase();
@@ -409,7 +452,6 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
             })
             : overrides;
 
-        // 2. Sort Alphabetically by User Name
         return filtered.sort((a, b) => {
             const nameA = a.userName || "";
             const nameB = b.userName || "";
@@ -432,43 +474,70 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
 
     return (
         <div className="space-y-6">
-            <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 shadow-sm">
-                <CardContent className="flex gap-3 py-4">
-                    <Info className="size-4 text-blue-600 mt-0.5 shrink-0"/>
-                    <div className="text-sm text-blue-800 dark:text-blue-300">
-                        <strong>How pricing works:</strong> When a campaign sends, the system charges the user's wallet.
-                        User-specific overrides take priority over default rates. The most recent rule where
-                        <em> Effective From</em> ≤ now is used.
-                    </div>
-                </CardContent>
-            </Card>
+            <div
+                className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-xl border shadow-sm min-h-[72px]">
+                <div className="flex-1 w-full sm:max-w-md flex items-center">
+                    {activeTab === "overrides" ? (
+                        /* 🔍 Search Bar for Overrides */
+                        <div className="relative w-full animate-in fade-in slide-in-from-left-2 duration-300">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/>
+                            <Input
+                                placeholder="Filter overrides by name or email..."
+                                className="pl-9 bg-background border-muted-foreground/20 focus-visible:ring-primary/30 h-10"
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                            />
+                        </div>
+                    ) : (
+                        /* 📊 Stats Summary for Global Rates */
+                        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2 duration-300">
+                            <div className="p-2 bg-primary/5 rounded-lg border border-primary/10">
+                                <CircleDollarSign className="size-5 text-primary"/>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-sm font-black tracking-tight">Active Global Rates</span>
+                                <span className="text-[11px] text-muted-foreground font-medium italic">
+                                    System-wide defaults for {defaultRules.length} modules
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
 
-            <div className="flex justify-end">
-                <Button onClick={() => {
-                    resetForm();
-                    setDialogOpen(true);
-                }} className="font-bold shadow-sm">
-                    <Plus className="size-4 mr-2"/>
-                    Add Pricing Rule
-                </Button>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    {activeTab === "defaults" && (
+                        <div
+                            className="hidden lg:flex items-center gap-2 text-[10px] font-bold text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border border-dashed">
+                            <Info className="size-3"/>
+                            <span>Global rates apply to everyone</span>
+                        </div>
+                    )}
+                    <Button onClick={() => {
+                        resetForm();
+                        setDialogOpen(true);
+                    }} className="w-full sm:w-auto font-black uppercase tracking-tighter shadow-lg shadow-primary/20">
+                        <Plus className="size-4 mr-2"/>
+                        Create Rule
+                    </Button>
+                </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-                <TabsList className="grid w-full max-w-[400px] grid-cols-2">
-                    <TabsTrigger value="defaults" className="font-bold">
-                        <Globe className="size-4 mr-2"/>
-                        System Defaults
+                <TabsList className="bg-muted/50 p-1 rounded-xl w-fit">
+                    <TabsTrigger value="defaults"
+                                 className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                        <Globe className="size-4 mr-2"/> Global Rates
                     </TabsTrigger>
-                    <TabsTrigger value="overrides" className="font-bold">
-                        <User className="size-4 mr-2"/>
-                        User Overrides
+                    <TabsTrigger value="overrides"
+                                 className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                        <User className="size-4 mr-2"/> Custom Overrides
                     </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="defaults" className="mt-0 outline-none">
                     <RuleTable
-                        title="System Default Pricing"
-                        description="Applies to all users unless they have a custom override."
+                        title="Global Pricing"
+                        description="Default unit rates applied to all standard accounts."
                         rules={paginatedDefaultRules}
                         total={defaultRules.length}
                         page={page}
@@ -487,8 +556,8 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
 
                 <TabsContent value="overrides" className="mt-0 outline-none">
                     <RuleTable
-                        title="User-Specific Overrides"
-                        description="Custom enterprise rates or discounts for individual users."
+                        title="User Overrides"
+                        description="Bespoke pricing for enterprise or high-volume partners."
                         rules={paginatedUserRules}
                         total={filteredUserRules.length}
                         page={page}
@@ -502,17 +571,6 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                         onDelete={handleDelete}
                         isPending={isPending}
                         firstColumnHeader="User"
-                        headerAction={
-                            <div className="relative w-full sm:w-[300px]">
-                                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground"/>
-                                <Input
-                                    placeholder="Search by name, email, or note..."
-                                    className="pl-8 bg-background"
-                                    value={searchQuery}
-                                    onChange={handleSearchChange}
-                                />
-                            </div>
-                        }
                     />
                 </TabsContent>
             </Tabs>
@@ -525,15 +583,26 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                     setDialogOpen(true);
                 }
             }}>
-                <DialogContent className="sm:max-w-xl">
-                    <DialogHeader>
-                        <DialogTitle>{editingRuleId ? "Edit Pricing Rule" : "Add Pricing Rule"}</DialogTitle>
+                <DialogContent className="sm:max-w-xl p-0 overflow-hidden gap-0">
+                    <DialogHeader className="p-6 bg-muted/20 border-b">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-xl">
+                                <ArrowUpRight className="size-6 text-primary"/>
+                            </div>
+                            <div>
+                                <DialogTitle className="text-xl font-black tracking-tighter">
+                                    {editingRuleId ? "Update Pricing Rule" : "New Pricing Rule"}
+                                </DialogTitle>
+                                <p className="text-sm text-muted-foreground font-medium">Configure a new billing rate
+                                    for the platform.</p>
+                            </div>
+                        </div>
                     </DialogHeader>
 
-                    <div className="space-y-6 pt-2">
-                        <div className="space-y-3">
-                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Applies
-                                To</Label>
+                    <div className="p-6 space-y-8">
+                        <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select
+                                Application Scope</Label>
                             <div className="grid grid-cols-2 gap-4">
                                 <Button
                                     type="button"
@@ -541,15 +610,15 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                     disabled={!!editingRuleId}
                                     onClick={() => setScope("default")}
                                     className={cn(
-                                        "h-24 flex flex-col items-center justify-center gap-2 transition-all",
+                                        "h-28 flex flex-col items-center justify-center gap-2 transition-all border-2",
                                         scope === "default"
-                                            ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20 shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                                        editingRuleId && "opacity-50 cursor-not-allowed"
+                                            ? "border-primary bg-primary/5 text-primary shadow-inner"
+                                            : "text-muted-foreground hover:border-muted-foreground/50",
+                                        editingRuleId && "opacity-50"
                                     )}
                                 >
-                                    <Globe className="size-6"/>
-                                    <span className="font-bold">System Default</span>
+                                    <Globe className="size-8"/>
+                                    <span className="font-black uppercase text-xs">Global Rate</span>
                                 </Button>
                                 <Button
                                     type="button"
@@ -557,47 +626,42 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                     disabled={!!editingRuleId}
                                     onClick={() => setScope(USER_ROLES.USER)}
                                     className={cn(
-                                        "h-24 flex flex-col items-center justify-center gap-2 transition-all",
+                                        "h-28 flex flex-col items-center justify-center gap-2 transition-all border-2",
                                         scope === USER_ROLES.USER
-                                            ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20 shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                                        editingRuleId && "opacity-50 cursor-not-allowed"
+                                            ? "border-primary bg-primary/5 text-primary shadow-inner"
+                                            : "text-muted-foreground hover:border-muted-foreground/50",
+                                        editingRuleId && "opacity-50"
                                     )}
                                 >
-                                    <User className="size-6"/>
-                                    <span className="font-bold">Specific User</span>
+                                    <User className="size-8"/>
+                                    <span className="font-black uppercase text-xs">User Override</span>
                                 </Button>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {scope === USER_ROLES.USER && (
-                                <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
-                                    <Label>User</Label>
+                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                    <Label className="text-xs font-bold">Target Account</Label>
                                     <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
                                         <PopoverTrigger asChild>
                                             <Button
                                                 variant="outline"
                                                 role="combobox"
-                                                aria-expanded={comboboxOpen}
                                                 disabled={!!editingRuleId}
-                                                className={cn(
-                                                    "w-full justify-between font-normal bg-background shadow-sm",
-                                                    !selectedUserId && "text-muted-foreground",
-                                                    editingRuleId && "opacity-50 cursor-not-allowed"
-                                                )}
+                                                className="w-full justify-between font-bold bg-muted/20 border-none h-11"
                                             >
                                                 {selectedUserId
                                                     ? users.find((user) => user.id === selectedUserId)?.name
-                                                    : "Search for a user..."}
+                                                    : "Search users..."}
                                                 <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50"/>
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[400px] p-0" align="start">
+                                        <PopoverContent className="w-[300px] p-0" align="start">
                                             <Command>
-                                                <CommandInput placeholder="Search user by name..."/>
+                                                <CommandInput placeholder="Type name..."/>
                                                 <CommandList>
-                                                    <CommandEmpty>No user found.</CommandEmpty>
+                                                    <CommandEmpty>No results found.</CommandEmpty>
                                                     <CommandGroup>
                                                         {users.map((user) => (
                                                             <CommandItem
@@ -609,14 +673,8 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                                                 }}
                                                             >
                                                                 <Check
-                                                                    className={cn(
-                                                                        "mr-2 size-4",
-                                                                        selectedUserId === user.id ? "opacity-100" : "opacity-0"
-                                                                    )}
-                                                                />
-                                                                <span className="font-medium">{user.name}</span>
-                                                                <span
-                                                                    className="text-muted-foreground ml-2 text-xs">({user.email})</span>
+                                                                    className={cn("mr-2 size-4", selectedUserId === user.id ? "opacity-100" : "opacity-0")}/>
+                                                                {user.name}
                                                             </CommandItem>
                                                         ))}
                                                     </CommandGroup>
@@ -628,16 +686,16 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                             )}
 
                             <div className="space-y-2">
-                                <Label>Module</Label>
+                                <Label className="text-xs font-bold">Marketing Module</Label>
                                 <Select value={module} onValueChange={setModule} disabled={!!editingRuleId}>
-                                    <SelectTrigger className={editingRuleId ? "opacity-50" : ""}>
+                                    <SelectTrigger className="font-bold bg-muted/20 border-none h-11">
                                         <SelectValue/>
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.values(TRANSACTION_MODULES)
                                             .filter((m) => m !== TRANSACTION_MODULES.SYSTEM)
                                             .map((m) => (
-                                                <SelectItem key={m} value={m}>
+                                                <SelectItem key={m} value={m} className="font-medium">
                                                     {TRANSACTION_MODULE_LABELS[m] || m}
                                                 </SelectItem>
                                             ))}
@@ -646,26 +704,27 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 border rounded-xl bg-muted/10">
+                        <div
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 rounded-2xl bg-muted/30 border-2 border-dashed border-muted-foreground/20">
                             <div className="space-y-2">
-                                <Label>Unit Price (MYR per action)</Label>
+                                <Label className="text-xs font-bold text-primary">Unit Price (MYR)</Label>
                                 <div className="relative">
-                                    <span
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">MYR</span>
                                     <Input
-                                        className="pl-10 font-mono font-bold bg-background shadow-sm"
+                                        className="pl-3 font-mono font-black text-lg bg-background h-12"
                                         value={unitPrice}
                                         onChange={(e) => setUnitPrice(e.target.value)}
                                         placeholder="0.10"
                                     />
+                                    <span
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground bg-muted px-1.5 py-0.5 rounded">MYR</span>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Effective From</Label>
+                                <Label className="text-xs font-bold">Activation Date</Label>
                                 <Input
                                     type="datetime-local"
-                                    className="bg-background shadow-sm"
+                                    className="bg-background font-bold h-12"
                                     value={effectiveFrom}
                                     onChange={(e) => setEffectiveFrom(e.target.value)}
                                 />
@@ -673,28 +732,31 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Internal Note (Optional)</Label>
+                            <Label className="text-xs font-bold">Administrative Note</Label>
                             <Input
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
-                                placeholder="e.g. Enterprise Tier Discount"
-                                className="shadow-sm"
+                                placeholder="e.g. Q4 Promotional Rate"
+                                className="bg-muted/20 border-none h-11 font-medium"
                             />
                         </div>
 
-                        {error && <p className="text-sm font-bold text-destructive">{error}</p>}
+                        {error &&
+                            <p className="text-xs font-black text-destructive bg-destructive/10 p-3 rounded-lg flex items-center gap-2">
+                                <Info className="size-4"/> {error}
+                            </p>}
                     </div>
 
-                    <DialogFooter className="mt-4 pt-4 border-t">
-                        <Button variant="outline" onClick={() => {
+                    <DialogFooter className="p-6 bg-muted/20 border-t gap-3">
+                        <Button variant="ghost" onClick={() => {
                             setDialogOpen(false);
                             resetForm();
-                        }}>
+                        }} className="font-bold">
                             Cancel
                         </Button>
-                        <Button onClick={handleSave} disabled={isPending} className="font-bold min-w-[120px]">
-                            {isPending ? <span
-                                className="animate-pulse">Saving...</span> : (editingRuleId ? "Save Changes" : "Create Rule")}
+                        <Button onClick={handleSave} disabled={isPending}
+                                className="font-black uppercase tracking-tighter px-8">
+                            {isPending ? "Syncing..." : (editingRuleId ? "Apply Changes" : "Confirm Rule")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

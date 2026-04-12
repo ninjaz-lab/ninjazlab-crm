@@ -1,13 +1,13 @@
 import {unstable_noStore as noStore} from "next/cache";
-import {fetchAllAppModules, fetchAllUsersWithPermissions} from "@/lib/actions/admin";
-import {UserModulesManager} from "./user-modules-manager"; // We will create this next!
+import {fetchAllModules, fetchAllUsersWithPermissions} from "@/lib/actions/admin";
+import {ModulesManager} from "./_components/modules-manager";
 
 export default async function AdminModulesPage() {
     noStore();
 
     // Fetch users (with their permissions map) and the actual module definitions
     const users = await fetchAllUsersWithPermissions();
-    const modules = await fetchAllAppModules();
+    const modules = await fetchAllModules();
 
     return (
         <div className="space-y-6">
@@ -19,7 +19,7 @@ export default async function AdminModulesPage() {
             </div>
 
             {/* Pass the data to our interactive client component */}
-            <UserModulesManager users={users} modules={modules}/>
+            <ModulesManager users={users} modules={modules}/>
         </div>
     );
 }

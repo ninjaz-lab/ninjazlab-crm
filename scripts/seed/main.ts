@@ -1,11 +1,11 @@
-import {seedAppModules} from "@/scripts/seed/data/app-modules";
+import {seedModules} from "@/scripts/seed/data/modules";
 import {seedPricingRules} from "@/scripts/seed/data/pricing-rule";
 
 async function main() {
     try {
         console.log("🚀 Starting database seeding...");
 
-        await seedAppModules();
+        await seedModules();
         await seedPricingRules();
 
         console.log("✅ Seeding completed successfully!");

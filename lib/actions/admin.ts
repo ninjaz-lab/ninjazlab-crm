@@ -2,10 +2,10 @@
 
 import {db} from "@/lib/db";
 import {
-    appModule,
     audience,
     marketingCampaign,
     marketingProvider,
+    module,
     pricingRule,
     session,
     user,
@@ -277,9 +277,9 @@ export async function fetchUserTransactions(
 
 // ── Permissions ────────────────────────────────────────────────────────────
 
-export async function fetchAllAppModules() {
+export async function fetchAllModules() {
     await requireAdmin();
-    return db.select().from(appModule).orderBy(appModule.title);
+    return db.select().from(module).orderBy(module.title);
 }
 
 export async function fetchAllUsersWithPermissions() {
@@ -287,7 +287,7 @@ export async function fetchAllUsersWithPermissions() {
     const users = await db.select().from(user).where(eq(user.role, USER_ROLES.USER));
 
     // Fetch all dynamic modules and permissions
-    const allModules = await db.select().from(appModule);
+    const allModules = await db.select().from(module);
     const permissions = await db.select().from(userPermission);
 
     return users.map((u) => {

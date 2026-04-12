@@ -64,7 +64,7 @@ export const verification = pgTable("verification", {
 //  MODULE PERMISSIONS & BILLING
 // ─────────────────────────────────────────────
 
-export const appModule = pgTable("app_module", {
+export const module = pgTable("module", {
     id: uuid("id").defaultRandom().primaryKey(),
     key: text("key").notNull().unique(),
     title: text("title").notNull(),
@@ -84,7 +84,7 @@ export const userPermission = pgTable("user_permission", {
         .references(() => user.id, {onDelete: "cascade"}),
     moduleId: uuid("module_id")
         .notNull()
-        .references(() => appModule.id, {onDelete: "cascade"}),
+        .references(() => module.id, {onDelete: "cascade"}),
     enabled: boolean("enabled").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
