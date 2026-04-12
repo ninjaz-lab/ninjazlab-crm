@@ -62,17 +62,27 @@ const worker = new Worker<ContactImportJobData>(
         const emailToRow = new Map<string, MappedRow>();
         const phoneToRow = new Map<string, MappedRow>();
 
+        const formatName = (name: string) => {
+            return name.replace(
+                /\w\S*/g,
+                (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+            );
+        };
+
         for (const row of rows) {
             const data: Record<string, any> = {};
             for (const [col, field] of Object.entries(mapping)) {
                 if (field !== "skip") {
                     const rawVal = row[col];
-                    const val = rawVal ? sanitizeValue(rawVal).trim() : "";
+                    let val = rawVal ? sanitizeValue(rawVal).trim() : "";
 
                     if (val === "" || val.toLowerCase() === "null")
                         data[field] = null;
-                    else
+                    else {
+                        if (field === "firstName" || field === "lastName")
+                            val = formatName(val);
                         data[field] = val;
+                    }
                 }
             }
 
