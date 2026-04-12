@@ -1,7 +1,7 @@
 import type {Metadata} from "next";
 import {Geist, Geist_Mono, Roboto} from "next/font/google";
 import "./globals.css";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 import {ThemeProvider} from "@/components/theme-provider";
 import {Toaster} from "@/components/ui/sonner";
 
@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
     title: "Ninjazlab - CRM",
-    description: "Admin dashboard for NinjazCRM",
+    description: "Admin user for NinjazCRM",
 };
 
 export default function RootLayout({

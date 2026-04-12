@@ -1,13 +1,12 @@
 import {redirect} from "next/navigation";
-import {auth} from "@/lib/auth";
-import {headers} from "next/headers";
 import {USER_ROLES} from "@/lib/enums";
+import {authenticateUser} from "@/lib/actions/session";
 
 export default async function AuthRedirect() {
-    const session = await auth.api.getSession({headers: await headers()});
+    const session = await authenticateUser();
 
     if (session?.user?.role === USER_ROLES.ADMIN)
         redirect("/admin");
 
-    redirect("/dashboard");
+    redirect("/");
 }

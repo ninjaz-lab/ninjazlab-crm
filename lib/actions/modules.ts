@@ -3,19 +3,18 @@
 import {headers} from "next/headers";
 import {auth} from "@/lib/auth";
 import {db} from "@/lib/db";
-import {appModule, userPermission} from "@/lib/db/schema";
+import {module, userPermission} from "@/lib/db/schema";
 import {and, eq} from "drizzle-orm";
 import {USER_ROLES} from "@/lib/enums";
+import {authenticateUser} from "@/lib/actions/session";
 
 export async function fetchGrantedModules() {
-    const session = await auth.api.getSession({headers: await headers()});
-    if (!session)
-        throw new Error("Unauthorized");
+    const session = await authenticateUser();
 
     const defaultDashboard = {
-        id: "default-dashboard",
+        id: "default-user",
         title: "Dashboard",
-        href: "/dashboard",
+        href: "/",
         iconName: "LayoutDashboard",
         exact: true
     };
@@ -25,30 +24,30 @@ export async function fetchGrantedModules() {
     if (session.user.role === USER_ROLES.ADMIN) {
         // Admins see all modules that have the "user" scope
         grantedModules = await db.select({
-            id: appModule.id,
-            title: appModule.title,
-            href: appModule.href,
-            iconName: appModule.iconName,
-            exact: appModule.exact,
+            id: module.id,
+            title: module.title,
+            href: module.href,
+            iconName: module.iconName,
+            exact: module.exact,
         })
-            .from(appModule)
-            .where(eq(appModule.scope, USER_ROLES.USER));
+            .from(module)
+            .where(eq(module.scope, USER_ROLES.USER));
     } else {
-        // Regular users only see modules joined through userPermission
+        // Regular users only see module joined through userPermission
         grantedModules = await db.select({
-            id: appModule.id,
-            title: appModule.title,
-            href: appModule.href,
-            iconName: appModule.iconName,
-            exact: appModule.exact,
+            id: module.id,
+            title: module.title,
+            href: module.href,
+            iconName: module.iconName,
+            exact: module.exact,
         })
-            .from(appModule)
-            .innerJoin(userPermission, eq(appModule.id, userPermission.moduleId))
+            .from(module)
+            .innerJoin(userPermission, eq(module.id, userPermission.moduleId))
             .where(
                 and(
                     eq(userPermission.userId, session.user.id),
                     eq(userPermission.enabled, true),
-                    eq(appModule.scope, USER_ROLES.USER)
+                    eq(module.scope, USER_ROLES.USER)
                 )
             );
     }
@@ -62,7 +61,7 @@ export async function fetchAdminModules() {
         throw new Error("Unauthorized");
 
     const defaultDashboard = {
-        id: "default-dashboard",
+        id: "default-user",
         title: "Dashboard",
         href: "/admin",
         iconName: "LayoutDashboard",
@@ -70,15 +69,15 @@ export async function fetchAdminModules() {
     };
 
     const modules = await db.select({
-            id: appModule.id,
-            title: appModule.title,
-            href: appModule.href,
-            iconName: appModule.iconName,
-            exact: appModule.exact,
+            id: module.id,
+            title: module.title,
+            href: module.href,
+            iconName: module.iconName,
+            exact: module.exact,
         }
-    ).from(appModule)
-        .where(eq(appModule.scope, USER_ROLES.ADMIN))
-        .orderBy(appModule.title);
+    ).from(module)
+        .where(eq(module.scope, USER_ROLES.ADMIN))
+        .orderBy(module.title);
 
     return [defaultDashboard, ...modules];
 }

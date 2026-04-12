@@ -146,9 +146,8 @@ const worker = new Worker<ContactImportJobData>(
             const phones = chunk.map(r => r.phoneKey).filter(Boolean) as string[];
 
             const conditions = [];
-            if (emails.length > 0) conditions.push(inArray(sql`lower(
-            ${audience.email}
-            )`, emails));
+            if (emails.length > 0) conditions.push(inArray(sql`lower
+                ( ${audience.email})`, emails));
             if (phones.length > 0) conditions.push(inArray(audience.phone, phones));
 
             if (conditions.length > 0) {
@@ -244,27 +243,38 @@ const worker = new Worker<ContactImportJobData>(
         }
 
         // ── Step 5: Apply updates (individual — no lookup overhead) ─────────
-        if (toUpdate.length > 0)
-            console.log(`${logPrefix} ========== Step 5: Applying ${toUpdate.length} updates concurrently ==========`);
-        const UPDATE_CONCURRENCY = 50;
-        for (let i = 0; i < toUpdate.length; i += UPDATE_CONCURRENCY) {
-            const chunk = toUpdate.slice(i, i + UPDATE_CONCURRENCY);
+        if (toUpdate.length > 0) {
+            console.log(`${logPrefix} ========== Step 5: Applying ${toUpdate.length} updates ==========`);
 
-            await Promise.all(chunk.map(updateData =>
-                db.update(audience)
-                    .set({...updateData.patch, updatedAt: new Date()})
-                    .where(eq(audience.id, updateData.id))
-            ));
+            // We can increase this slightly now that it's in a transaction
+            const UPDATE_CHUNK_SIZE = 100;
 
-            // Progress updating logic mapped to chunks
-            if (i % UPDATE_INTERVAL < UPDATE_CONCURRENCY) {
-                const processed = toInsert.length + i + chunk.length;
-                await db
-                    .update(job_import_audience)
-                    .set({processedRows: processed, newCount, updatedCount: i + chunk.length, updatedAt: new Date()})
-                    .where(eq(job_import_audience.id, importJobId));
-                await job.updateProgress(50 + Math.round(((i + chunk.length) / Math.max(toUpdate.length, 1)) * 50));
-                console.log(`${logPrefix} Step 5 Progress - Updated ${i + chunk.length}/${toUpdate.length} ✅`);
+            for (let i = 0; i < toUpdate.length; i += UPDATE_CHUNK_SIZE) {
+                const chunk = toUpdate.slice(i, i + UPDATE_CHUNK_SIZE);
+
+                await db.transaction(async (tx) => {
+                    for (const updateData of chunk) {
+                        await tx.update(audience)
+                            .set({...updateData.patch, updatedAt: new Date()})
+                            .where(eq(audience.id, updateData.id));
+                    }
+                });
+
+                // Progress updating logic
+                if (i % UPDATE_INTERVAL < UPDATE_CHUNK_SIZE) {
+                    const processed = toInsert.length + i + chunk.length;
+                    await db
+                        .update(job_import_audience)
+                        .set({
+                            processedRows: processed,
+                            newCount,
+                            updatedCount: i + chunk.length,
+                            updatedAt: new Date()
+                        })
+                        .where(eq(job_import_audience.id, importJobId));
+                    await job.updateProgress(50 + Math.round(((i + chunk.length) / Math.max(toUpdate.length, 1)) * 50));
+                    console.log(`${logPrefix} Step 5 Progress - Updated ${i + chunk.length}/${toUpdate.length} ✅`);
+                }
             }
         }
 

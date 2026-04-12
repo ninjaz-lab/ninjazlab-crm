@@ -1,10 +1,10 @@
 import {unstable_noStore as noStore} from "next/cache";
-import {getSystemProviders} from "@/lib/actions/admin";
+import {fetchMarketingProviders} from "@/lib/actions/admin/marketing-provider";
 import {SystemProviderForm} from "./system-provider-form";
 
 export default async function AdminSettingsPage() {
     noStore();
-    const providers = await getSystemProviders();
+    const providers = await fetchMarketingProviders();
 
     return (
         <div className="space-y-6 max-w-2xl">

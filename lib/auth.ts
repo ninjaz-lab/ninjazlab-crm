@@ -6,32 +6,47 @@ import * as schema from "@/lib/db/schema";
 import {USER_ROLES} from "@/lib/enums";
 
 export const auth = betterAuth({
-    database: drizzleAdapter(db, {
-        provider: "pg",
-        schema: {
-            user: schema.user,
-            session: schema.session,
-            account: schema.account,
-            verification: schema.verification,
-        },
-    }),
-    emailAndPassword: {
-        enabled: true,
-    },
-    socialProviders: {
-        github: {
-            clientId: process.env.GITHUB_CLIENT_ID as string,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-        },
-        google: {
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-        },
-    },
-    plugins: [
-        admin({
-            defaultRole: USER_ROLES.USER,
-            adminRole: USER_ROLES.ADMIN,
+        database: drizzleAdapter(db, {
+            provider: "pg",
+            schema: {
+                user: schema.user,
+                session: schema.session,
+                account: schema.account,
+                verification: schema.verification,
+            },
         }),
-    ],
-});
+        emailAndPassword: {
+            enabled: true,
+        },
+        emailVerification: {
+            sendOnSignUp: true,
+            async sendVerificationEmail({user, url}: { user: { email: string }; url: string }) {
+                console.log("==========================================");
+                console.log(`🚨 SENDING VERIFICATION EMAIL TO: ${user.email}`);
+                console.log(`🔗 CLICK HERE TO VERIFY: ${url}`);
+                console.log("==========================================");
+            }
+        },
+        socialProviders: {
+            github: {
+                clientId: process.env.GITHUB_CLIENT_ID as string,
+                clientSecret:
+                    process.env.GITHUB_CLIENT_SECRET as string,
+            }
+            ,
+            google: {
+                clientId: process.env.GOOGLE_CLIENT_ID as string,
+                clientSecret:
+                    process.env.GOOGLE_CLIENT_SECRET as string,
+            }
+            ,
+        }
+        ,
+        plugins: [
+            admin({
+                defaultRole: USER_ROLES.USER,
+                adminRole: USER_ROLES.ADMIN,
+            }),
+        ],
+    })
+;

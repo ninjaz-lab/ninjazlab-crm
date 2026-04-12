@@ -1,25 +1,32 @@
 import {unstable_noStore as noStore} from "next/cache";
-import {fetchAllAppModules, fetchAllUsersWithPermissions} from "@/lib/actions/admin";
-import {UserModulesManager} from "./user-modules-manager"; // We will create this next!
+import {fetchAllModules, fetchAllUsersWithPermissions} from "@/lib/actions/admin/module";
+import {ModulesManager} from "./_components/modules-manager";
+import {HugeIcon} from "@/components/huge-icon";
+import {PageHeader} from "@/components/page-header";
 
 export default async function AdminModulesPage() {
     noStore();
 
-    // Fetch users (with their permissions map) and the actual module definitions
     const users = await fetchAllUsersWithPermissions();
-    const modules = await fetchAllAppModules();
+    const modules = await fetchAllModules();
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Module Access</h1>
-                <p className="text-muted-foreground">
-                    Control which features and modules each user can access.
-                </p>
-            </div>
+        <div className="max-w-7xl mx-auto space-y-6 p-2">
 
-            {/* Pass the data to our interactive client component */}
-            <UserModulesManager users={users} modules={modules}/>
+            <PageHeader title="Modules Management"
+                        description="System-wide feature provisioning"
+                        tag="Admin Only"
+                        tagClassName="text-rose-600"
+            >
+                <div
+                    className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
+                    <HugeIcon name="TwoFactorAccessIcon" size={16}/>
+                </div>
+            </PageHeader>
+
+            <ModulesManager users={users}
+                            modules={modules}
+            />
         </div>
     );
 }

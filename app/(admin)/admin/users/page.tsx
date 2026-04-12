@@ -1,8 +1,10 @@
 import {unstable_noStore as noStore} from "next/cache";
 import {headers} from "next/headers";
-import {fetchAllUsersWithWallets} from "@/lib/actions/admin";
+import {fetchAllUsersWithWallets} from "@/lib/actions/admin/users";
 import {auth} from "@/lib/auth";
-import {UsersTable} from "./users-table";
+import {UsersTable} from "./_components/users-table";
+import {HugeIcon} from "@/components/huge-icon";
+import {PageHeader} from "@/components/page-header";
 
 export default async function AdminUsersPage({
                                                  searchParams,
@@ -22,13 +24,20 @@ export default async function AdminUsersPage({
     ]);
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-                <p className="text-muted-foreground">
-                    Manage roles, balances, and system access.
-                </p>
-            </div>
+        <div className="max-w-7xl mx-auto space-y-6 p-2">
+
+            <PageHeader
+                title="User Management"
+                description="Manage roles, balances, and system access"
+                tag="Admin Only"
+                tagClassName="text-rose-600"
+            >
+                <div
+                    className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
+                    <HugeIcon name="AiUserIcon" size={16}/>
+                </div>
+            </PageHeader>
+
             <UsersTable
                 currentUserId={session?.user.id ?? ""}
                 users={users}

@@ -27,18 +27,22 @@
     --color-input: var(--input);
     --color-border: var(--border);
     --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
+
+    --color-destructive-foreground: var(--destructive-foreground);
     --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent-foreground: var(--accent-foreground);
     --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
     --color-card-foreground: var(--card-foreground);
+
+    --color-accent: var(--accent);
+    --color-muted: var(--muted);
+    --color-secondary: var(--secondary);
+    --color-primary: var(--primary);
+    --color-popover: var(--popover);
     --color-card: var(--card);
+
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -62,6 +66,7 @@
     --accent: oklch(0.96 0.002 17.2);
     --accent-foreground: oklch(0.214 0.009 43.1);
     --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.969 0.016 293.756);
     --border: oklch(0.922 0.005 34.3);
     --input: oklch(0.922 0.005 34.3);
     --ring: oklch(0.714 0.014 41.2);
@@ -99,14 +104,10 @@
     --accent: oklch(0.268 0.011 36.5);
     --accent-foreground: oklch(0.986 0.002 67.8);
     --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(0.969 0.016 293.756);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.547 0.021 43.1);
-    --chart-1: oklch(0.811 0.111 293.571);
-    --chart-2: oklch(0.606 0.25 292.717);
-    --chart-3: oklch(0.541 0.281 293.009);
-    --chart-4: oklch(0.491 0.27 292.581);
-    --chart-5: oklch(0.432 0.232 292.759);
     --sidebar: oklch(0.214 0.009 43.1);
     --sidebar-foreground: oklch(0.986 0.002 67.8);
     --sidebar-primary: oklch(0.606 0.25 292.717);
@@ -129,4 +130,11 @@
     html {
         @apply font-sans;
     }
+}
+
+/* --- Global Active Tab Styling --- */
+button[role="tab"][data-state="active"] {
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+    box-shadow: var(--shadow-sm) !important;
 }

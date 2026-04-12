@@ -1,12 +1,44 @@
+// ----- Users
 export const USER_ROLES = {
+    SUPERADMIN: "superadmin",
     ADMIN: "admin",
     USER: "user",
 } as const;
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
+// ----- Audiences
+export const AUDIENCE_SOURCE = {
+    MANUAL: "manual",
+    IMPORT: "import",
+    API: "api",
+} as const;
+
+export const CHANNEL_STATUS = {
+    SUBSCRIBED: "subscribed",
+    UNSUBSCRIBED: "unsubscribed",
+    BOUNCED: "bounced",       // Email/Phone is dead or invalid
+    COMPLAINED: "complained", // User marked the email as SPAM
+} as const;
+
+// BULLMQ
+export const IMPORT_JOB_STATUS = {
+    QUEUED: "queued",
+    PROCESSING: "processing",
+    DONE: "done",
+    FAILED: "failed",
+} as const;
+
+// ----- Wallets
 export const WALLET_TYPES = {
     MAIN: "main",
+} as const;
+
+// ----- Wallet Transactions
+export const TRANSACTION_STATUS = {
+    PENDING: "pending",
+    COMPLETED: "completed",
+    FAILED: "failed",
 } as const;
 
 export const TRANSACTION_TYPES = {
@@ -28,6 +60,7 @@ export const TRANSACTION_MODULE_LABELS: Record<string, string> = {
     // [TRANSACTION_MODULES.PUSH_NOTIFICATION]: "Push Notifications Marketing",
 };
 
+// ----- Campaigns
 export const CAMPAIGN_STATUS = {
     DRAFT: "draft",
     PUBLISHED: "published",

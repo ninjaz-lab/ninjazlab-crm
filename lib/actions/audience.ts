@@ -2,20 +2,19 @@
 
 import {randomUUID} from "crypto";
 import {and, asc, count, desc, eq, ilike, inArray, or, sql} from "drizzle-orm";
-import * as XLSX from "xlsx";
 import {db} from "@/lib/db";
-import {audience, audienceList, audienceListMember, job_import_audience} from "@/lib/db/schema";
-import {type ImportField, SegmentRule} from "@/lib/audience-utils";
-import {getAudienceImportQueue} from "@/lib/queue";
+import {audience, audienceList, audienceListMember} from "@/lib/db/schema";
+import {SegmentRule} from "@/lib/audience-utils";
 import {revalidatePath} from "next/cache";
 import {buildDynamicSegmentQuery} from "@/lib/segments";
 import {getSession} from "@/lib/session";
+import {CHANNEL_STATUS} from "@/lib/enums";
 
 // ─── Audience CRUD ─────────────────────────────────────────────────────────────
 
 export type AudienceRow = typeof audience.$inferSelect;
 
-export async function getAudiences(opts?: {
+export async function fetchAudiences(opts?: {
     search?: string;
     listId?: string;
     page?: number;
@@ -267,106 +266,28 @@ export async function removeAudienceFromList(listId: string, audienceId: string)
         .update(audienceList)
         .set({
             count: sql`GREATEST
-            (
-            ${audienceList.count}
-            -
-            1,
-            0
-            )`, updatedAt: new Date()
+            ( ${audienceList.count} -
+                1,
+                0)`, updatedAt: new Date()
         })
         .where(eq(audienceList.id, listId));
     revalidatePath("/audiences");
 }
 
-// ─── Import ────────────────────────────────────────────────────────────────────
-
-/** Parse Excel/CSV and return headers + first 5 preview rows */
-export async function parseImportFile(formData: FormData) {
-    const file = formData.get("file") as File;
-    if (!file)
-        throw new Error("No file provided");
-
-    const buf = Buffer.from(await file.arrayBuffer());
-    const wb = XLSX.read(buf, {type: "buffer"});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, {
-        defval: "",
-        raw: false,
-    });
-    if (rows.length === 0)
-        throw new Error("File is empty");
-
-    const headers = Object.keys(rows[0]);
-    const previewLimit = parseInt(process.env.AUDIENCE_IMPORT_PREVIEW_ROWS ?? "5", 10);
-
-    // Slice the rows based on the environment variable
-    const preview = rows
-        .slice(0, previewLimit)
-        .map((row) => headers.map((h) => row[h]));
-
-    return {
-        headers,
-        preview,
-        totalRows: rows.length
-    };
-}
-
-/** Parse file, store rows in DB, enqueue background job — returns immediately */
-export async function queueAudienceImport(formData: FormData) {
+export async function fetchUnsubscribedCounts() {
     const session = await getSession();
-    const file = formData.get("file") as File;
-    if (!file) throw new Error("No file provided");
-    const mapping: Record<string, ImportField> = JSON.parse(formData.get("mapping") as string);
-    const mergeStrategy = formData.get("mergeStrategy") as "fill" | "overwrite";
-    const addToListId = (formData.get("addToListId") as string) || undefined;
-
-    // Parse the file now (fast) — worker processes rows in background
-    const buf = Buffer.from(await file.arrayBuffer());
-    const wb = XLSX.read(buf, {type: "buffer"});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, {defval: "", raw: false});
-
-    if (rows.length === 0) throw new Error("File is empty");
-
-    // Save job record with parsed rows
-    const jobId = randomUUID();
-    await db.insert(job_import_audience).values({
-        id: jobId,
-        userId: session.user.id,
-        fileName: file.name,
-        totalRows: rows.length,
-        rows: rows as unknown as Record<string, unknown>[],
-        mapping: mapping as unknown as Record<string, unknown>,
-        mergeStrategy,
-        addToListId: addToListId ?? null,
-        updatedAt: new Date(),
-    });
-
-    // Enqueue — worker picks this up and processes in background
-    await getAudienceImportQueue().add("import", {importJobId: jobId}, {jobId});
-
-    revalidatePath("/audiences");
-    return {jobId, totalRows: rows.length};
-}
-
-/** Get all import jobs for the current user (recent 10) */
-export async function getImportJobs() {
-    const session = await getSession();
-    return db
+    const result = await db
         .select({
-            id: job_import_audience.id,
-            status: job_import_audience.status,
-            fileName: job_import_audience.fileName,
-            totalRows: job_import_audience.totalRows,
-            processedRows: job_import_audience.processedRows,
-            newCount: job_import_audience.newCount,
-            updatedCount: job_import_audience.updatedCount,
-            skippedCount: job_import_audience.skippedCount,
-            error: job_import_audience.error,
-            createdAt: job_import_audience.createdAt,
+            emailUnsubscribe: sql<number>`cast
+                (count(case when ${audience.emailStatus} = ${CHANNEL_STATUS.UNSUBSCRIBED} then 1 end) as int)`,
+            phoneUnsubscribe: sql<number>`cast
+                (count(case when ${audience.phoneStatus} = ${CHANNEL_STATUS.UNSUBSCRIBED} then 1 end) as int)`
         })
-        .from(job_import_audience)
-        .where(eq(job_import_audience.userId, session.user.id))
-        .orderBy(desc(job_import_audience.createdAt))
-        .limit(10);
+        .from(audience)
+        .where(eq(audience.userId, session.user.id));
+
+    return result[0] || {
+        emailUnsubscribe: 0,
+        phoneUnsubscribe: 0
+    };
 }

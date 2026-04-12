@@ -1,24 +1,36 @@
 import {unstable_noStore as noStore} from "next/cache";
-import {fetchAllUsers, getAllPricingRules} from "@/lib/actions/admin";
-import {PricingManager} from "./pricing-manager";
+import {PricingManager} from "./_components/pricing-manager";
+import {HugeIcon} from "@/components/huge-icon";
+import {fetchAllUsers} from "@/lib/actions/admin/users";
+import {fetchAllPricingRules} from "@/lib/actions/admin/pricing";
+import {PageHeader} from "@/components/page-header";
 
 export default async function AdminPricingPage() {
     noStore();
     const [rules, users] = await Promise.all([
-        getAllPricingRules(),
+        fetchAllPricingRules(),
         fetchAllUsers(),
     ]);
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Pricing Rules</h1>
-                <p className="text-muted-foreground">
-                    Set default send rates and per-user overrides. Scheduled effective dates let you plan price changes
-                    in advance.
-                </p>
-            </div>
-            <PricingManager rules={rules} users={users}/>
+        <div className="max-w-7xl mx-auto space-y-6 p-2">
+
+            <PageHeader
+                title="Pricing Management"
+                description="Global module rates and user overrides"
+                tag="Admin Only"
+                tagClassName="text-rose-600"
+            >
+                <div
+                    className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
+                    <HugeIcon name="MoneyBag02Icon" size={16}/>
+                </div>
+            </PageHeader>
+
+            <PricingManager
+                rules={rules}
+                users={users}
+            />
         </div>
     );
 }

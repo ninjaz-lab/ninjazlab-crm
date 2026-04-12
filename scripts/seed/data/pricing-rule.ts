@@ -5,7 +5,7 @@ import {randomUUID} from "crypto";
 import {isNull} from "drizzle-orm";
 
 export async function seedPricingRules() {
-    console.log("🌱 Starting pricing rule seed...");
+    console.log("     🌱 Starting pricing rule seed...");
 
     const defaultRules = [
         {
@@ -38,5 +38,5 @@ export async function seedPricingRules() {
         await db.insert(pricingRule).values(rule);
     }
 
-    console.log("✅ Pricing rules seeded successfully!");
+    console.log("     Pricing rules table seeded successfully! ✅");
 }

@@ -12,8 +12,8 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {ThemeToggle} from "@/components/theme-toggle";
 import {NotificationBell} from "@/components/notification-bell";
+import {useSession} from "@/lib/auth-client";
 
 const routeLabels: Record<string, string> = {
     "/admin": "Dashboard",
@@ -24,6 +24,7 @@ const routeLabels: Record<string, string> = {
 
 export function AdminHeader() {
     const pathname = usePathname();
+    const {data: session} = useSession();
 
     const generateBreadcrumbs = () => {
         const segments = pathname.split("/").filter(Boolean);
@@ -34,11 +35,9 @@ export function AdminHeader() {
             const segment = segments[i];
             currentPath += `/${segment}`;
 
-            // Skip 'admin' in the loop since we hardcode it as the root crumb
             if (segment === "admin")
                 continue;
 
-            // Check if we have a nice label for it, otherwise auto-capitalize the word
             crumbs.push({
                 label: routeLabels[currentPath] || segment.charAt(0).toUpperCase() + segment.slice(1),
                 href: currentPath
@@ -51,7 +50,7 @@ export function AdminHeader() {
 
     return (
         <header
-            className="flex h-16 w-full shrink-0 items-center justify-between border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background transition-[height] duration-300 ease-in-out">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1"/>
                 <Separator orientation="vertical" className="mr-2 h-4"/>
@@ -77,7 +76,6 @@ export function AdminHeader() {
                                 </React.Fragment>
                             ))
                         ) : (
-                            // Fallback if they are exactly on the /admin dashboard
                             <>
                                 <BreadcrumbSeparator className="hidden md:block"/>
                                 <BreadcrumbItem>
@@ -85,16 +83,13 @@ export function AdminHeader() {
                                 </BreadcrumbItem>
                             </>
                         )}
-
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
 
-            <div className="flex items-center gap-2">
-                <NotificationBell/>
-                <ThemeToggle/>
+            <div className="flex items-center gap-2 pr2">
+                {session?.user?.id && <NotificationBell userId={session.user.id}/>}
             </div>
-
         </header>
     );
 }
