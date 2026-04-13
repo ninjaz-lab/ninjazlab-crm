@@ -29,7 +29,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {signOut, useSession} from "@/lib/auth-client";
 import {useModuleStore} from "@/lib/store/modules-store";
 import {fetchAdminModules} from "@/lib/actions/modules";
-import {HugeIcon} from "@/components/HugeIcon";
+import {HugeIcon} from "@/components/huge-icon";
 import {cn} from "@/lib/utils";
 
 function AdminNavUser() {
@@ -151,10 +151,10 @@ export function AdminSidebar() {
                                 <div
                                     className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
                                     <span
-                                        className="truncate font-black tracking-tighter text-lg uppercase">Ninjaz</span>
+                                        className="truncate font-black tracking-tighter text-lg uppercase">Ninjazlab</span>
                                     <span
                                         className="truncate text-[10px] font-black uppercase tracking-widest text-rose-600/80 -mt-1">
-                                        Control
+                                        ADMIN
                                     </span>
                                 </div>
                             </Link>
@@ -167,7 +167,7 @@ export function AdminSidebar() {
                 <SidebarGroup>
                     <SidebarGroupLabel
                         className="text-[10px] font-black uppercase tracking-widest px-4 opacity-50 group-data-[collapsible=icon]:hidden">
-                        System Management
+                        Admin Panel
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>

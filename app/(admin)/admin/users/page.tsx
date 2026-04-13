@@ -3,6 +3,7 @@ import {headers} from "next/headers";
 import {fetchAllUsersWithWallets} from "@/lib/actions/admin";
 import {auth} from "@/lib/auth";
 import {UsersTable} from "./_components/users-table";
+import {HugeIcon} from "@/components/huge-icon";
 
 export default async function AdminUsersPage({
                                                  searchParams,
@@ -22,13 +23,23 @@ export default async function AdminUsersPage({
     ]);
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-                <p className="text-muted-foreground">
-                    Manage roles, balances, and system access.
-                </p>
+        <div className="max-w-7xl mx-auto space-y-6 p-2">
+            <div className="flex items-end justify-between border-b pb-4">
+                <div className="space-y-0.5">
+                    <h1 className="text-xl font-black tracking-tight uppercase">User Management</h1>
+                    <p className="text-xs font-medium text-muted-foreground">
+                        Manage roles, balances, and system access • <span
+                        className="text-rose-600 uppercase font-black tracking-widest text-[9px]">Admin Only</span>
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <div
+                        className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
+                        <HugeIcon name="UserGroupIcon" size={16}/>
+                    </div>
+                </div>
             </div>
+
             <UsersTable
                 currentUserId={session?.user.id ?? ""}
                 users={users}

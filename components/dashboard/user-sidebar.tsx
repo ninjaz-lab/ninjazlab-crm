@@ -30,7 +30,7 @@ import {signOut, useSession} from "@/lib/auth-client";
 import {useModuleStore} from "@/lib/store/modules-store";
 import {fetchGrantedModules} from "@/lib/actions/modules";
 import {USER_ROLES} from "@/lib/enums";
-import {HugeIcon} from "@/components/HugeIcon";
+import {HugeIcon} from "@/components/huge-icon";
 import {cn} from "@/lib/utils";
 
 function NavUser() {
@@ -154,10 +154,10 @@ export function UserSidebar() {
                                 <div
                                     className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
                                     <span
-                                        className="truncate font-black tracking-tighter text-lg uppercase">Ninjaz</span>
+                                        className="truncate font-black tracking-tighter text-lg uppercase">Ninjazlab</span>
                                     <span
                                         className="truncate text-[10px] font-black uppercase tracking-widest text-emerald-600/80 -mt-1">
-                                        Marketing
+                                        USER
                                     </span>
                                 </div>
                             </Link>

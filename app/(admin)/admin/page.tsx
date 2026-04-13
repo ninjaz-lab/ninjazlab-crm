@@ -3,7 +3,7 @@ import {db} from "@/lib/db";
 import {user, userPermission, wallets, walletTransaction} from "@/lib/db/schema";
 import {and, count, eq, gte, lt, sql} from "drizzle-orm";
 import {Card, CardContent} from "@/components/ui/card";
-import {HugeIcon} from "@/components/HugeIcon";
+import {HugeIcon} from "@/components/huge-icon";
 import {USER_ROLES, WALLET_TYPES} from "@/lib/enums";
 import {cn, formatAmount} from "@/lib/utils";
 import {Progress} from "@/components/ui/progress";
