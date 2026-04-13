@@ -31,25 +31,11 @@ import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandL
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import {
-    ArrowUpRight,
-    Calendar,
-    Check,
-    ChevronsUpDown,
-    CircleDollarSign,
-    Globe,
-    Info,
-    MoreHorizontal,
-    Pencil,
-    Plus,
-    Search,
-    Trash2,
-    User
-} from "lucide-react";
 import {TRANSACTION_MODULE_LABELS, TRANSACTION_MODULES, USER_ROLES, UserRole} from "@/lib/enums";
 import {TablePagination} from "@/components/table-pagination";
 import {toast} from "sonner";
 import {cn} from "@/lib/utils";
+import {HugeIcon} from "@/components/HugeIcon";
 
 type Rule = {
     id: string;
@@ -87,13 +73,13 @@ function StatusBadge({effectiveFrom}: { effectiveFrom: Date }) {
                 variant="outline"
                 className="text-[10px] uppercase font-bold text-emerald-600 border-emerald-200 bg-emerald-50 rounded-full"
             >
-                <Check className="size-3 mr-1"/> Active
+                <HugeIcon name="Tick01Icon" size={12} className="mr-1"/> Active
             </Badge>
         );
 
     return (
         <Badge variant="secondary" className="text-[10px] uppercase font-bold rounded-full">
-            <Calendar className="size-3 mr-1"/> Scheduled
+            <HugeIcon name="Calendar03Icon" size={12} className="mr-1"/> Scheduled
         </Badge>
     );
 }
@@ -164,11 +150,12 @@ function RuleTable({
                             <TableCell colSpan={7} className="py-20">
                                 <div className="flex flex-col items-center justify-center text-center">
                                     <div className="p-4 bg-muted/50 rounded-full mb-4">
-                                        <CircleDollarSign className="size-10 text-muted-foreground/40"/>
+                                        <HugeIcon name="AiMoneyIcon" size={40}/>
                                     </div>
                                     <h3 className="text-lg font-bold">No pricing rules found</h3>
-                                    <p className="text-sm text-muted-foreground">Add a new rule to override system
-                                        defaults.</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Add a new rule to override system defaults.
+                                    </p>
                                 </div>
                             </TableCell>
                         </TableRow>
@@ -201,7 +188,7 @@ function RuleTable({
                                             <div className="flex items-center gap-3">
                                                 <div
                                                     className="size-9 rounded-full border-2 border-background bg-primary/10 flex items-center justify-center text-primary shadow-sm">
-                                                    <Globe className="size-4"/>
+                                                    <HugeIcon name="GlobalIcon" size={16}/>
                                                 </div>
                                                 <span className="text-sm font-black tracking-tight text-primary">System Global</span>
                                             </div>
@@ -242,13 +229,16 @@ function RuleTable({
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="size-8 rounded-full">
-                                                    <MoreHorizontal className="size-4"/>
+                                                    <HugeIcon name="MoreHorizontalIcon" size={16}/>
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48">
                                                 <DropdownMenuItem onClick={() => onEdit(r)} disabled={isPending}
                                                                   className="font-bold">
-                                                    <Pencil className="size-4 mr-2 text-primary"/> Edit Rule
+                                                    <HugeIcon
+                                                        name="PencilEdit01Icon"
+                                                        size={14}
+                                                        className="mr-2 text-primary"/> Edit Rule
                                                 </DropdownMenuItem>
                                                 {r.note && (
                                                     <>
@@ -265,7 +255,8 @@ function RuleTable({
                                                     onClick={() => setRuleToDelete(r)}
                                                     disabled={isPending}
                                                 >
-                                                    <Trash2 className="size-4 mr-2"/> Delete Rule
+                                                    <HugeIcon name="Delete02Icon" size={14} className="mr-2"/>
+                                                    Delete Rule
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -480,7 +471,10 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                     {activeTab === "overrides" ? (
                         /* 🔍 Search Bar for Overrides */
                         <div className="relative w-full animate-in fade-in slide-in-from-left-2 duration-300">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/>
+                            <HugeIcon
+                                name="Search01Icon"
+                                size={18}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/>
                             <Input
                                 placeholder="Filter overrides by name or email..."
                                 className="pl-9 bg-background border-muted-foreground/20 focus-visible:ring-primary/30 h-10"
@@ -492,7 +486,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                         /* 📊 Stats Summary for Global Rates */
                         <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2 duration-300">
                             <div className="p-2 bg-primary/5 rounded-lg border border-primary/10">
-                                <CircleDollarSign className="size-5 text-primary"/>
+                                <HugeIcon name="MoneyBag02Icon" size={20}/>
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-sm font-black tracking-tight">Active Global Rates</span>
@@ -508,7 +502,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                     {activeTab === "defaults" && (
                         <div
                             className="hidden lg:flex items-center gap-2 text-[10px] font-bold text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border border-dashed">
-                            <Info className="size-3"/>
+                            <HugeIcon name="InformationCircleIcon" size={14}/>
                             <span>Global rates apply to everyone</span>
                         </div>
                     )}
@@ -516,7 +510,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                         resetForm();
                         setDialogOpen(true);
                     }} className="w-full sm:w-auto font-black uppercase tracking-tighter shadow-lg shadow-primary/20">
-                        <Plus className="size-4 mr-2"/>
+                        <HugeIcon name="PlusSignIcon" size={16} className="mr-2"/>
                         Create Rule
                     </Button>
                 </div>
@@ -526,11 +520,11 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                 <TabsList className="bg-muted/50 p-1 rounded-xl w-fit">
                     <TabsTrigger value="defaults"
                                  className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                        <Globe className="size-4 mr-2"/> Global Rates
+                        <HugeIcon name="GlobalIcon" size={14} className="mr-2"/> Global Rates
                     </TabsTrigger>
                     <TabsTrigger value="overrides"
                                  className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                        <User className="size-4 mr-2"/> Custom Overrides
+                        <HugeIcon name="UserIcon" size={14} className="mr-2"/> Custom Overrides
                     </TabsTrigger>
                 </TabsList>
 
@@ -587,22 +581,24 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                     <DialogHeader className="p-6 bg-muted/20 border-b">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-primary/10 rounded-xl">
-                                <ArrowUpRight className="size-6 text-primary"/>
+                                <HugeIcon name="ArrowUpRight01Icon" size={24}/>
                             </div>
                             <div>
                                 <DialogTitle className="text-xl font-black tracking-tighter">
                                     {editingRuleId ? "Update Pricing Rule" : "New Pricing Rule"}
                                 </DialogTitle>
-                                <p className="text-sm text-muted-foreground font-medium">Configure a new billing rate
-                                    for the platform.</p>
+                                <p className="text-sm text-muted-foreground font-medium">
+                                    Configure a new billing rate for the platform.
+                                </p>
                             </div>
                         </div>
                     </DialogHeader>
 
                     <div className="p-6 space-y-8">
                         <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select
-                                Application Scope</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                Select Application Scope
+                            </Label>
                             <div className="grid grid-cols-2 gap-4">
                                 <Button
                                     type="button"
@@ -617,7 +613,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                         editingRuleId && "opacity-50"
                                     )}
                                 >
-                                    <Globe className="size-8"/>
+                                    <HugeIcon name="GlobalIcon" size={32}/>
                                     <span className="font-black uppercase text-xs">Global Rate</span>
                                 </Button>
                                 <Button
@@ -633,7 +629,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                         editingRuleId && "opacity-50"
                                     )}
                                 >
-                                    <User className="size-8"/>
+                                    <HugeIcon name="UserIcon" size={32}/>
                                     <span className="font-black uppercase text-xs">User Override</span>
                                 </Button>
                             </div>
@@ -654,7 +650,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                                 {selectedUserId
                                                     ? users.find((user) => user.id === selectedUserId)?.name
                                                     : "Search users..."}
-                                                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50"/>
+                                                <HugeIcon name="Sorting05Icon" size={14} className="ml-2 opacity-50"/>
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-[300px] p-0" align="start">
@@ -672,8 +668,11 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                                                                     setComboboxOpen(false);
                                                                 }}
                                                             >
-                                                                <Check
-                                                                    className={cn("mr-2 size-4", selectedUserId === user.id ? "opacity-100" : "opacity-0")}/>
+                                                                <HugeIcon
+                                                                    name="Tick01Icon"
+                                                                    size={14}
+                                                                    className={cn("mr-2", selectedUserId === user.id ? "opacity-100" : "opacity-0")}
+                                                                />
                                                                 {user.name}
                                                             </CommandItem>
                                                         ))}
@@ -743,7 +742,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
 
                         {error &&
                             <p className="text-xs font-black text-destructive bg-destructive/10 p-3 rounded-lg flex items-center gap-2">
-                                <Info className="size-4"/> {error}
+                                <HugeIcon name="InformationCircleIcon" size={14}/> {error}
                             </p>}
                     </div>
 
@@ -754,8 +753,11 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                         }} className="font-bold">
                             Cancel
                         </Button>
-                        <Button onClick={handleSave} disabled={isPending}
-                                className="font-black uppercase tracking-tighter px-8">
+                        <Button
+                            onClick={handleSave}
+                            disabled={isPending}
+                            className="font-black uppercase tracking-tighter px-8"
+                        >
                             {isPending ? "Syncing..." : (editingRuleId ? "Apply Changes" : "Confirm Rule")}
                         </Button>
                     </DialogFooter>

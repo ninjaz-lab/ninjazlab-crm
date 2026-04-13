@@ -3,7 +3,7 @@ import {USER_ROLES} from "@/lib/enums";
 import {module} from "@/lib/db/schema";
 
 export async function seedModules() {
-    console.log("🌱 Seeding comprehensive app modules...");
+    console.log("     🌱 Seeding comprehensive app modules...");
 
     const modules = [
         // ─────────────────────────────────────────────
@@ -13,7 +13,7 @@ export async function seedModules() {
             key: "audience",
             title: "Audience",
             href: "/audience",
-            iconName: "Users",
+            iconName: "UserGroupIcon",
             scope: USER_ROLES.USER,
             exact: false,
             description: "Manage your contacts, lists, and segments.",
@@ -22,7 +22,7 @@ export async function seedModules() {
             key: "email_marketing",
             title: "Email Marketing",
             href: "/marketing/email",
-            iconName: "Mail",
+            iconName: "Mail02Icon",
             scope: USER_ROLES.USER,
             exact: false,
             description: "Create and send email campaigns.",
@@ -31,7 +31,7 @@ export async function seedModules() {
             key: "sms_marketing",
             title: "SMS Marketing",
             href: "/marketing/sms",
-            iconName: "MessageSquare",
+            iconName: "Message02Icon",
             scope: USER_ROLES.USER,
             exact: false,
             description: "Send bulk SMS messages to your audience.",
@@ -40,7 +40,7 @@ export async function seedModules() {
             key: "whatsapp_marketing",
             title: "WhatsApp Marketing",
             href: "/marketing/whatsapp",
-            iconName: "MessageCircle",
+            iconName: "WhatsappIcon",
             scope: USER_ROLES.USER,
             exact: false,
             description: "Engage customers via WhatsApp messages.",
@@ -49,7 +49,7 @@ export async function seedModules() {
             key: "wallet_billing",
             title: "Wallet & Billing",
             href: "/dashboard/billing",
-            iconName: "Wallet",
+            iconName: "Wallet02Icon",
             scope: USER_ROLES.USER,
             exact: false,
             description: "Top up your balance and view transaction history.",
@@ -62,7 +62,7 @@ export async function seedModules() {
             key: "admin_users",
             title: "User Management",
             href: "/admin/users",
-            iconName: "UsersRound",
+            iconName: "AiUserIcon",
             scope: USER_ROLES.ADMIN,
             exact: false,
             description: "Manage system users and their permissions.",
@@ -71,7 +71,7 @@ export async function seedModules() {
             key: "admin_pricing",
             title: "Pricing Rules",
             href: "/admin/pricing",
-            iconName: "CircleDollarSign",
+            iconName: "MoneyBag02Icon",
             scope: USER_ROLES.ADMIN,
             exact: false,
             description: "Set unit prices for email and SMS actions.",
@@ -80,7 +80,7 @@ export async function seedModules() {
             key: "admin_access_control",
             title: "Access Control",
             href: "/admin/modules",
-            iconName: "ShieldCheck",
+            iconName: "TwoFactorAccessIcon",
             scope: USER_ROLES.ADMIN,
             exact: false,
             description: "Grant or revoke module access for specific users.",
@@ -106,5 +106,5 @@ export async function seedModules() {
             });
     }
 
-    console.log("✅ Modules table synced and restored.");
+    console.log("     Modules table seeded successfully! ✅");
 }

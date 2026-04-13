@@ -4,18 +4,6 @@ import {useEffect, useState} from "react";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import {
-    BadgeCheck,
-    BookUser,
-    ChevronsUpDown,
-    Database,
-    LayoutDashboard,
-    LogOut,
-    LucideIcon,
-    Mail,
-    Settings,
-    Shield
-} from "lucide-react";
-import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
@@ -42,13 +30,8 @@ import {signOut, useSession} from "@/lib/auth-client";
 import {useModuleStore} from "@/lib/store/modules-store";
 import {fetchGrantedModules} from "@/lib/actions/modules";
 import {USER_ROLES} from "@/lib/enums";
-
-const USER_ICON_MAP: Record<string, LucideIcon> = {
-    LayoutDashboard,
-    BookUser,
-    Settings,
-    Mail
-};
+import {HugeIcon} from "@/components/HugeIcon";
+import {cn} from "@/lib/utils";
 
 function NavUser() {
     const {data: session} = useSession();
@@ -58,12 +41,7 @@ function NavUser() {
     const email = session?.user?.email ?? "";
     const image = session?.user?.image ?? "";
     const role = session?.user?.role ?? USER_ROLES.USER;
-    const initials = name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
+    const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
     async function handleSignOut() {
         await signOut();
@@ -79,65 +57,61 @@ function NavUser() {
                             size="lg"
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
-                            <Avatar className="size-8 rounded-lg">
+                            {/* Removed the border here to save precious pixels in collapsed mode */}
+                            <Avatar className="h-8 w-8 rounded-lg">
                                 <AvatarImage src={image} alt={name}/>
-                                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+                                <AvatarFallback className="rounded-lg bg-primary/5 text-primary font-bold">
+                                    {initials}
+                                </AvatarFallback>
                             </Avatar>
-                            <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-medium">{name}</span>
+                            <div
+                                className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                                <span className="truncate font-bold">{name}</span>
                                 <span className="truncate text-xs text-muted-foreground">{email}</span>
                             </div>
-                            <ChevronsUpDown className="ml-auto size-4"/>
+                            <HugeIcon name="Sorting05Icon" size={16}
+                                      className="ml-auto opacity-50 group-data-[collapsible=icon]:hidden"/>
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl shadow-xl border-muted-foreground/20"
                         side="bottom"
                         align="end"
                         sideOffset={4}
                     >
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar className="size-8 rounded-lg">
+                                <Avatar className="h-8 w-8 rounded-lg">
                                     <AvatarImage src={image} alt={name}/>
                                     <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-medium">{name}</span>
+                                    <span className="truncate font-bold">{name}</span>
                                     <span className="truncate text-xs text-muted-foreground">{email}</span>
                                 </div>
                             </div>
                         </DropdownMenuLabel>
-
                         <DropdownMenuSeparator/>
-
                         <DropdownMenuGroup>
-
-                            {/* Setting */}
-                            <DropdownMenuItem onClick={() => router.push("/settings")}>
-                                <BadgeCheck className="size-4 mr-2"/>
+                            <DropdownMenuItem onClick={() => router.push("/settings")}
+                                              className="font-bold cursor-pointer">
+                                <HugeIcon name="Settings02Icon" size={16} className="mr-2 text-muted-foreground"/>
                                 Settings
                             </DropdownMenuItem>
-
-
-                            {/* Switch to Admin */}
                             {role === USER_ROLES.ADMIN && (
-                                <DropdownMenuItem onClick={() => router.push("/admin")}>
-                                    <Shield className="size-4 mr-2"/>
+                                <DropdownMenuItem onClick={() => router.push("/admin")}
+                                                  className="font-bold text-rose-600 cursor-pointer">
+                                    <HugeIcon name="Shield01Icon" size={16} className="mr-2"/>
                                     Admin Dashboard
                                 </DropdownMenuItem>
                             )}
-
                         </DropdownMenuGroup>
-
                         <DropdownMenuSeparator/>
-
-                        {/* Sign out */}
-                        <DropdownMenuItem onClick={handleSignOut}>
-                            <LogOut className="size-4"/>
+                        <DropdownMenuItem onClick={handleSignOut}
+                                          className="font-bold text-destructive focus:bg-destructive/10 cursor-pointer">
+                            <HugeIcon name="Logout01Icon" size={16} className="mr-2"/>
                             Sign out
                         </DropdownMenuItem>
-
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>
@@ -147,16 +121,13 @@ function NavUser() {
 
 export function UserSidebar() {
     const pathname = usePathname();
-
     const {userModules, setUserModules} = useModuleStore();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         async function loadModules() {
             try {
-                if (userModules.length === 0)
-                    setIsLoading(true);
-
+                if (userModules.length === 0) setIsLoading(true);
                 const modules = await fetchGrantedModules();
                 setUserModules(modules);
             } catch (error) {
@@ -166,23 +137,28 @@ export function UserSidebar() {
             }
         }
 
-        loadModules();
+        void loadModules();
     }, [userModules.length, setUserModules]);
 
     return (
-        <Sidebar collapsible="icon">
-            <SidebarHeader>
+        <Sidebar collapsible="icon" className="border-r">
+            <SidebarHeader className="pt-4">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
                             <Link href="/dashboard">
                                 <div
-                                    className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                    <Database className="size-4"/>
+                                    className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 shrink-0">
+                                    <HugeIcon name="Database01Icon" size={18} variant="solid"/>
                                 </div>
-                                <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">NinjazCRM</span>
-                                    <span className="truncate text-xs text-muted-foreground">Admin</span>
+                                <div
+                                    className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+                                    <span
+                                        className="truncate font-black tracking-tighter text-lg uppercase">Ninjaz</span>
+                                    <span
+                                        className="truncate text-[10px] font-black uppercase tracking-widest text-emerald-600/80 -mt-1">
+                                        Marketing
+                                    </span>
                                 </div>
                             </Link>
                         </SidebarMenuButton>
@@ -192,26 +168,36 @@ export function UserSidebar() {
 
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Platform</SidebarGroupLabel>
+                    <SidebarGroupLabel
+                        className="text-[10px] font-black uppercase tracking-widest px-4 opacity-50 group-data-[collapsible=icon]:hidden">
+                        Admin Panel
+                    </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {isLoading ? (
-                                <div className="px-4 py-2 text-xs text-muted-foreground animate-pulse">
-                                    Loading modules...
+                                <div className="space-y-2 p-2">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="h-8 w-full animate-pulse rounded-md bg-muted/50"/>
+                                    ))}
                                 </div>
                             ) : (
                                 userModules.map((item) => {
-                                    const isActive = item.exact
-                                        ? pathname === item.href
-                                        : pathname.startsWith(item.href);
-
-                                    const IconComponent = USER_ICON_MAP[item.iconName] || Settings;
+                                    const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
                                     return (
                                         <SidebarMenuItem key={item.id}>
-                                            <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={isActive}
+                                                tooltip={item.title}
+                                                className="font-bold hover:bg-primary/5 active:scale-[0.98] transition-all"
+                                            >
                                                 <Link href={item.href}>
-                                                    <IconComponent/>
+                                                    <HugeIcon
+                                                        name={item.iconName}
+                                                        size={18}
+                                                        className={cn(isActive ? "text-primary" : "text-muted-foreground")}
+                                                    />
                                                     <span>{item.title}</span>
                                                 </Link>
                                             </SidebarMenuButton>
@@ -222,15 +208,11 @@ export function UserSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-
-                {/* You can optionally make this Marketing section dynamic too,
-                    or leave it static if everyone gets it! */}
             </SidebarContent>
 
             <SidebarFooter>
                 <NavUser/>
             </SidebarFooter>
-
             <SidebarRail/>
         </Sidebar>
     );

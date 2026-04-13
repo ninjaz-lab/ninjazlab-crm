@@ -11,29 +11,10 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/c
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@/components/ui/sheet";
 import {TablePagination} from "@/components/table-pagination";
 import {Progress} from "@/components/ui/progress";
-import {
-    CheckCircle2,
-    DollarSign,
-    Filter,
-    LayoutDashboard,
-    type LucideIcon,
-    Mail,
-    Search,
-    Settings,
-    Shield,
-    ShieldCheck,
-    ToggleLeft,
-    Users,
-    XCircle,
-    Zap
-} from "lucide-react";
 import {cn} from "@/lib/utils";
 import {USER_ROLES} from "@/lib/enums";
 import {toast} from "sonner";
-
-const ICON_MAP: Record<string, LucideIcon> = {
-    LayoutDashboard, Users, Wallet: Users, ToggleLeft, DollarSign, Settings, Mail
-};
+import {HugeIcon} from "@/components/HugeIcon";
 
 export function ModulesManager({users, modules}: { users: any[], modules: any[] }) {
     const [isPending, startTransition] = useTransition();
@@ -81,13 +62,17 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
     const bulkUpdate = (enable: boolean) => {
         if (!selectedUser) return;
         startTransition(async () => {
-            for (const m of modules) {
-                if (selectedUser.permissions[m.id] !== enable)
-                    await setModulePermission(selectedUser.id, m.id, enable);
+            try {
+                for (const m of modules) {
+                    if (selectedUser.permissions[m.id] !== enable)
+                        await setModulePermission(selectedUser.id, m.id, enable);
+                }
+                const updatedPerms = Object.fromEntries(modules.map(m => [m.id, enable]));
+                setSelectedUser({...selectedUser, permissions: updatedPerms});
+                toast.success(enable ? "All modules granted" : "All modules revoked");
+            } catch (e) {
+                toast.error("Bulk update failed");
             }
-            const updatedPerms = Object.fromEntries(modules.map(m => [m.id, enable]));
-            setSelectedUser({...selectedUser, permissions: updatedPerms});
-            toast.success(enable ? "All modules granted" : "All modules revoked");
         });
     };
 
@@ -97,7 +82,10 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
             <div
                 className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-xl border shadow-sm">
                 <div className="relative w-full sm:max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/>
+                    <HugeIcon
+                        name="Search01Icon"
+                        size={18}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/>
                     <Input
                         placeholder="Search users by name or email..."
                         className="pl-9 bg-background border-muted-foreground/20 focus-visible:ring-primary/30"
@@ -109,7 +97,7 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                     />
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
-                    <Filter className="size-4"/>
+                    <HugeIcon name="FilterIcon" size={18}/>
                     <span>Showing {filteredUsers.length} Users</span>
                 </div>
             </div>
@@ -119,11 +107,15 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                 <Table>
                     <TableHeader className="bg-muted/40">
                         <TableRow className="hover:bg-transparent">
-                            <TableHead className="w-[60px] text-center font-bold">#</TableHead>
-                            <TableHead className="font-bold">User Information</TableHead>
-                            <TableHead className="font-bold">Account Role</TableHead>
-                            <TableHead className="font-bold">Module Coverage</TableHead>
-                            <TableHead className="w-[150px] text-right">Actions</TableHead>
+                            <TableHead
+                                className="w-[60px] text-center font-bold uppercase text-[10px] tracking-widest">#</TableHead>
+                            <TableHead className="font-bold uppercase text-[10px] tracking-widest">User
+                                Information</TableHead>
+                            <TableHead className="font-bold uppercase text-[10px] tracking-widest">Account
+                                Role</TableHead>
+                            <TableHead className="font-bold uppercase text-[10px] tracking-widest">Module
+                                Coverage</TableHead>
+                            <TableHead className="w-[150px] text-right"/>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -149,7 +141,10 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                                                 {activeCount === modules.length && (
                                                     <div
                                                         className="absolute -top-1 -right-1 bg-emerald-500 rounded-full p-0.5 border-2 border-background">
-                                                        <Zap className="size-2 text-white fill-white"/>
+                                                        <HugeIcon
+                                                            name="ZapIcon"
+                                                            size={10}
+                                                            className="text-white fill-white"/>
                                                     </div>
                                                 )}
                                             </div>
@@ -199,7 +194,7 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                 {filteredUsers.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <div className="p-4 bg-muted/50 rounded-full mb-4">
-                            <Users className="size-10 text-muted-foreground/40"/>
+                            <HugeIcon name="UserGroupIcon" size={40} className="text-muted-foreground/40"/>
                         </div>
                         <h3 className="text-lg font-bold">No users found</h3>
                         <p className="text-sm text-muted-foreground">Try adjusting your search query.</p>
@@ -224,12 +219,12 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                     className="w-full sm:max-w-md p-0 flex flex-col gap-0 border-l shadow-2xl overflow-hidden">
                     <SheetHeader className="p-6 border-b bg-muted/10 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-8 opacity-5">
-                            <Shield className="size-32 rotate-12"/>
+                            <HugeIcon name="Shield01Icon" size={120} className="rotate-12"/>
                         </div>
                         <div className="relative z-10 space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="p-2.5 bg-primary/10 rounded-xl">
-                                    <ShieldCheck className="size-6 text-primary"/>
+                                    <HugeIcon name="Shield02Icon" size={24} className="text-primary"/>
                                 </div>
                                 <Badge variant="secondary" className="font-black uppercase text-[10px]">
                                     {selectedUser?.role}
@@ -248,8 +243,10 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                     {/* Quick Search & Bulk Actions */}
                     <div className="p-4 border-b bg-background sticky top-0 z-20 space-y-3">
                         <div className="relative">
-                            <Search
-                                className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground"/>
+                            <HugeIcon
+                                name="Search01Icon"
+                                size={16}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/>
                             <Input
                                 placeholder="Search modules..."
                                 className="h-9 pl-9 text-xs bg-muted/30 border-none focus-visible:ring-1"
@@ -265,7 +262,7 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                                 onClick={() => bulkUpdate(true)}
                                 disabled={isPending}
                             >
-                                <CheckCircle2 className="size-3"/> Grant All
+                                <HugeIcon name="Tick01Icon" size={14}/> Grant All
                             </Button>
                             <Button
                                 variant="outline"
@@ -274,7 +271,7 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                                 onClick={() => bulkUpdate(false)}
                                 disabled={isPending}
                             >
-                                <XCircle className="size-3"/> Revoke All
+                                <HugeIcon name="Cancel01Icon" size={14}/> Revoke All
                             </Button>
                         </div>
                     </div>
@@ -283,7 +280,6 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                     <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
                         {filteredModules.map((module) => {
                             const isEnabled = selectedUser?.permissions[module.id] ?? false;
-                            const Icon = ICON_MAP[module.iconName] || Settings;
 
                             return (
                                 <div
@@ -302,7 +298,7 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                                                 ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
                                                 : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/10"
                                         )}>
-                                            <Icon className="size-5" strokeWidth={isEnabled ? 2.5 : 2}/>
+                                            <HugeIcon name={module.iconName} size={20} strokeWidth={2.5}/>
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="font-bold text-sm tracking-tight">{module.title}</span>
@@ -325,8 +321,11 @@ export function ModulesManager({users, modules}: { users: any[], modules: any[] 
                     </div>
 
                     <div className="p-6 border-t bg-muted/5 flex-shrink-0">
-                        <Button variant="default" onClick={() => setSelectedUser(null)}
-                                className="w-full font-bold shadow-xl">
+                        <Button
+                            variant="default"
+                            onClick={() => setSelectedUser(null)}
+                            className="w-full font-bold shadow-xl"
+                        >
                             Finish Configuration
                         </Button>
                     </div>
