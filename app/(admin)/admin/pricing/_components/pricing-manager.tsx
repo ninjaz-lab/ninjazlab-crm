@@ -26,7 +26,7 @@ import {toast} from "sonner";
 import {cn} from "@/lib/utils";
 import {HugeIcon} from "@/components/huge-icon";
 import {DataTable} from "@/components/data-table";
-import {getPricingColumns} from "./columns";
+import {getColumns} from "./columns";
 
 type Rule = {
     id: string;
@@ -166,8 +166,8 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
     const overridesRules = useMemo(() => rules.filter((r) => !!r.userId), [rules]);
 
     // Data Table Configurations
-    const defaultCols = useMemo(() => getPricingColumns(handleEdit, setRuleToDelete, isPending, true), [isPending]);
-    const overrideCols = useMemo(() => getPricingColumns(handleEdit, setRuleToDelete, isPending, false), [isPending]);
+    const defaultCols = useMemo(() => getColumns(handleEdit, setRuleToDelete, isPending, true), [isPending]);
+    const overrideCols = useMemo(() => getColumns(handleEdit, setRuleToDelete, isPending, false), [isPending]);
 
     const overridesFilterFn = (row: any, columnId: string, filterValue: string) => {
         const q = filterValue.toLowerCase();
@@ -177,38 +177,41 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
         return name.includes(q) || email.includes(q) || note.includes(q);
     };
 
+    // 🚩 Reusable Action Slot Component
+    const CreateRuleAction = (
+        <Button
+            onClick={() => {
+                resetForm();
+                setDialogOpen(true);
+            }}
+            className="w-full sm:w-auto font-black uppercase tracking-tighter shadow-lg shadow-primary/20"
+        >
+            <HugeIcon name="PlusSignIcon" size={16} className="mr-2"/>
+            Create Rule
+        </Button>
+    );
+
     return (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <TabsList className="bg-muted/50 p-1 rounded-xl w-fit">
-                    <TabsTrigger value="defaults"
-                                 className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                        <HugeIcon name="GlobalIcon" size={14} className="mr-2"/> Global Rates
-                    </TabsTrigger>
-                    <TabsTrigger value="overrides"
-                                 className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                        <HugeIcon name="UserIcon" size={14} className="mr-2"/> Custom Overrides
-                    </TabsTrigger>
-                </TabsList>
-
-                <Button
-                    onClick={() => {
-                        resetForm();
-                        setDialogOpen(true);
-                    }}
-                    className="w-full sm:w-auto font-black uppercase tracking-tighter shadow-lg shadow-primary/20"
-                >
-                    <HugeIcon name="PlusSignIcon" size={16} className="mr-2"/>
-                    Create Rule
-                </Button>
-            </div>
+            {/* 🚩 Tabs are alone now, the button moved to the Table's action slot */}
+            <TabsList className="bg-muted/50 p-1 rounded-xl w-fit">
+                <TabsTrigger value="defaults"
+                             className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <HugeIcon name="GlobalIcon" size={14} className="mr-2"/> Global Rates
+                </TabsTrigger>
+                <TabsTrigger value="overrides"
+                             className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    <HugeIcon name="UserIcon" size={14} className="mr-2"/> Custom Overrides
+                </TabsTrigger>
+            </TabsList>
 
             <TabsContent value="defaults" className="m-0 outline-none">
                 <DataTable
                     columns={defaultCols}
                     data={defaultRules}
                     hideSearch={true}
+                    actionSlot={CreateRuleAction} // 🚩 Pushes cleanly to the right
                 />
             </TabsContent>
 
@@ -218,6 +221,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                     data={overridesRules}
                     searchPlaceholder="Filter users by name, email or notes..."
                     globalFilterFn={overridesFilterFn}
+                    actionSlot={CreateRuleAction} // 🚩 Sits cleanly opposite the search bar
                 />
             </TabsContent>
 

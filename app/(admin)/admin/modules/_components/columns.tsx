@@ -17,9 +17,10 @@ export const getColumns = (
         id: "index",
         header: () => <div className="text-center font-bold uppercase text-[10px] tracking-widest w-[60px]">#</div>,
         cell: ({row, table}) => {
-            const pagination = table.getState().pagination;
-            const index = (pagination.pageIndex * pagination.pageSize) + row.index + 1;
-            return <div className="text-center font-mono text-xs text-muted-foreground">{index}</div>;
+            const sortedIndex = table.getSortedRowModel().flatRows.findIndex(
+                (r) => r.original.id === row.original.id
+            );
+            return <div className="text-center font-mono text-xs text-muted-foreground">{sortedIndex + 1}</div>;
         },
     },
     {

@@ -1,6 +1,7 @@
 import {unstable_noStore as noStore} from "next/cache";
 import {fetchAllModules, fetchAllUsersWithPermissions} from "@/lib/actions/admin";
 import {ModulesManager} from "./_components/modules-manager";
+import {HugeIcon} from "@/components/huge-icon";
 
 export default async function AdminModulesPage() {
     noStore();
@@ -18,9 +19,18 @@ export default async function AdminModulesPage() {
                         className="text-rose-600 uppercase font-black tracking-widest text-[9px]">Admin Only</span>
                     </p>
                 </div>
+                <div className="flex gap-2">
+                    <div
+                        className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
+                        <HugeIcon name="TwoFactorAccessIcon" size={16}/>
+                    </div>
+                </div>
             </div>
 
-            <ModulesManager users={users} modules={modules}/>
+            <ModulesManager
+                users={users}
+                modules={modules}
+            />
         </div>
     );
 }

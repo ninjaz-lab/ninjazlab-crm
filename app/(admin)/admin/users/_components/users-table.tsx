@@ -74,7 +74,8 @@ export function UsersTable({
                 userId={detailUserId}
                 open={!!detailUserId}
                 onOpenChangeAction={(open) => {
-                    if (!open) setDetailUserId(null);
+                    if (!open)
+                        setDetailUserId(null);
                 }}
             />
         </div>

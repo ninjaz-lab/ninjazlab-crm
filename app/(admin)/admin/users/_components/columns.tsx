@@ -16,10 +16,11 @@ export const getColumns = (
     {
         id: "index",
         header: () => <div className="text-center font-bold uppercase text-[10px] tracking-widest w-[60px]">#</div>,
-        cell: ({row}) => {
-            const index = (pageIndex * pageSize) + row.index + 1;
+        cell: ({row, table}) => {
+            const visualIndex = table.getRowModel().rows.findIndex((r) => r.id === row.id);
+            const index = (pageIndex * pageSize) + visualIndex + 1;
             return <div className="text-center font-mono text-xs text-muted-foreground">{index}</div>;
-        },
+        }
     },
     {
         accessorKey: "name",
@@ -81,7 +82,7 @@ export const getColumns = (
                 <Button variant="ghost" onClick={() => column.toggleSorting(isSorted === "asc")}
                         className="-ml-4 h-8 text-[10px] font-bold uppercase tracking-widest hover:bg-muted/50 data-[active=true]:text-primary"
                         data-active={!!isSorted}>
-                    Account Role
+                    Role
                     <HugeIcon
                         name={isSorted ? (isSorted === "asc" ? "ArrowUp01Icon" : "ArrowDown01Icon") : "Sorting05Icon"}
                         size={14}
@@ -169,9 +170,11 @@ export const getColumns = (
         header: () => <div className="w-10"/>,
         cell: () => (
             <div
-                className="size-8 rounded-full bg-muted/0 group-hover:bg-primary/10 flex items-center justify-center transition-all ml-auto">
-                <HugeIcon name="ArrowUpRight01Icon" size={16}
-                          className="text-muted-foreground group-hover:text-primary transition-all opacity-0 group-hover:opacity-100"/>
+                className="size-8 rounded-full bg-muted/30 group-hover:bg-primary/10 flex items-center justify-center transition-all ml-auto">
+                <HugeIcon
+                    name="ArrowUpRight01Icon"
+                    size={16}
+                    className="text-muted-foreground group-hover:text-primary transition-all"/>
             </div>
         ),
     },

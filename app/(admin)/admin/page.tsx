@@ -139,11 +139,18 @@ export default async function AdminDashboardPage() {
         <div className="max-w-7xl mx-auto space-y-6 p-2">
             <div className="flex items-end justify-between border-b pb-4">
                 <div className="space-y-0.5">
-                    <h1 className="text-xl font-black tracking-tight uppercase">Platform Command</h1>
+                    <h1 className="text-xl font-black tracking-tight uppercase">Admin Dashboard</h1>
                     <p className="text-xs font-medium text-muted-foreground">
-                        System-wide monitoring • <span
-                        className="text-emerald-600 uppercase font-black tracking-widest text-[9px] animate-pulse">Live Sync</span>
+                        System-wide monitoring •
+                        <span
+                            className="text-emerald-600 uppercase font-black tracking-widest text-[9px] animate-pulse">Live Sync</span>
                     </p>
+                </div>
+                <div className="flex gap-2">
+                    <div
+                        className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
+                        <HugeIcon name="DashboardCircleIcon" size={16}/>
+                    </div>
                 </div>
             </div>
 
