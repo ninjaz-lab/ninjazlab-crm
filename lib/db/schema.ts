@@ -1,5 +1,13 @@
 import {boolean, decimal, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid,} from "drizzle-orm/pg-core";
-import {CAMPAIGN_STATUS, USER_ROLES, WALLET_TYPES} from "@/lib/enums";
+import {
+    AUDIENCE_SOURCE,
+    CAMPAIGN_STATUS,
+    CHANNEL_STATUS,
+    IMPORT_JOB_STATUS,
+    TRANSACTION_STATUS,
+    USER_ROLES,
+    WALLET_TYPES
+} from "@/lib/enums";
 
 // ─────────────────────────────────────────────
 // AUTH TABLES
@@ -112,15 +120,13 @@ export const notification = pgTable("notification", {
     title: text("title").notNull(),
     message: text("message").notNull(),
     actionUrl: text("action_url"), // Optional link (e.g., "/audience" or "/billing")
-    readAt: timestamp("read_at"), // Null means unread!
+    isRead: boolean("is_read").default(false).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // ─────────────────────────────────────────────
 // AUDIENCE (CRM) — Single Source of Truth
 // ─────────────────────────────────────────────
-
-export type AudienceSource = "manual" | "import" | "api";
 
 export const audience = pgTable("audience", {
     id: uuid("id").defaultRandom().primaryKey(),
@@ -140,10 +146,16 @@ export const audience = pgTable("audience", {
     customFields: jsonb("custom_fields").default({}),
 
     // Marketing status flags right on the audience
-    emailStatus: text("email_status").notNull().default("subscribed"), // subscribed, unsubscribed, bounced
-    phoneStatus: text("phone_status").notNull().default("subscribed"), // subscribed, unsubscribed, bounced
+    emailStatus: text("email_status")
+        .$type<typeof CHANNEL_STATUS[keyof typeof CHANNEL_STATUS]>()
+        .notNull()
+        .default(CHANNEL_STATUS.SUBSCRIBED),
+    phoneStatus: text("phone_status")
+        .$type<typeof CHANNEL_STATUS[keyof typeof CHANNEL_STATUS]>()
+        .notNull()
+        .default(CHANNEL_STATUS.SUBSCRIBED),
 
-    source: text("source").notNull().default("manual"), // AudienceSource
+    source: text("source").notNull().default(AUDIENCE_SOURCE.MANUAL), // AudienceSource
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -177,14 +189,12 @@ export const audienceListMember = pgTable("audience_list_member", {
     addedAt: timestamp("added_at").notNull().defaultNow(),
 });
 
-export type ImportJobStatus = "queued" | "processing" | "done" | "failed";
-
 export const job_import_audience = pgTable("job_import_audience", {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
         .notNull()
         .references(() => user.id, {onDelete: "cascade"}),
-    status: text("status").notNull().default("queued"), // ImportJobStatus
+    status: text("status").notNull().default(IMPORT_JOB_STATUS.QUEUED),
     fileName: text("file_name").notNull().default("import"),
     totalRows: integer("total_rows").notNull().default(0),
     processedRows: integer("processed_rows").notNull().default(0),
@@ -420,13 +430,18 @@ export const wallets = pgTable("wallets", {
 
 export const walletTransaction = pgTable("wallet_transaction", {
     id: uuid("id").defaultRandom().primaryKey(),
-    walletId: uuid("wallet_id") // Link directly to the specific wallet
+    walletId: uuid("wallet_id") // Link directly to the specific billing
         .notNull()
         .references(() => wallets.id, {onDelete: "cascade"}),
     userId: text("user_id")
         .notNull()
         .references(() => user.id, {onDelete: "cascade"}),
-    amount: decimal("amount", {precision: 12, scale: 2}).notNull(),
+    amount: decimal("amount", {precision: 12, scale: 2})
+        .notNull(),
+    status: text("status").$type<typeof TRANSACTION_STATUS[keyof typeof TRANSACTION_STATUS]>()
+        .default(TRANSACTION_STATUS.PENDING),
+    receiptUrl: text("receipt_url"),
+
     type: text("type").notNull(), // 'credit' | 'debit'
     module: text("module"),
 
@@ -436,6 +451,11 @@ export const walletTransaction = pgTable("wallet_transaction", {
     units: integer("units"),
 
     note: text("note"),
+
+    // Invoicing
+    invoiceNumber: text("invoice_number"),
+    invoiceUrl: text("invoice_url"),
+
     createdAt: timestamp("created_at").notNull().defaultNow(),
     createdBy: text("created_by").references(() => user.id),
 });

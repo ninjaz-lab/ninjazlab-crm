@@ -12,19 +12,20 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {ThemeToggle} from "@/components/theme-toggle";
-import {NotificationBell} from "@/components/notification-bell";
 import {useAppStore} from "@/lib/store/app-store";
+import {NotificationBell} from "@/components/notification-bell";
+import {useSession} from "@/lib/auth-client";
 
 const routeLabels: Record<string, string> = {
     "/audience": "Audience",
-    "/dashboard": "Dashboard",
+    "/": "Dashboard",
     "/settings": "Settings",
 };
 
 export function UserHeader() {
     const pathname = usePathname();
     const dynamicName = useAppStore((state) => state.dynamicName);
+    const {data: session} = useSession();
 
     const generateBreadcrumbs = () => {
         const segments = pathname.split("/").filter(Boolean);
@@ -114,7 +115,7 @@ export function UserHeader() {
 
                         {/* Always show root */}
                         <BreadcrumbItem className="hidden md:block">
-                            <BreadcrumbLink href="/dashboard">NinjazCRM</BreadcrumbLink>
+                            <BreadcrumbLink href="/">NinjazCRM</BreadcrumbLink>
                         </BreadcrumbItem>
 
                         {/* Map over dynamically generated crumbs */}
@@ -137,9 +138,8 @@ export function UserHeader() {
                 </Breadcrumb>
             </div>
 
-            <div className="flex items-center gap-2">
-                <NotificationBell/>
-                <ThemeToggle/>
+            <div className="flex items-center gap-2 pr-2">
+                {session?.user?.id && <NotificationBell userId={session.user.id} />}
             </div>
         </header>
     );

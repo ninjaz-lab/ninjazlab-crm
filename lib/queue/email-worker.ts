@@ -228,7 +228,7 @@ async function processEmailBlast(job: Job<EmailBlastJobData>) {
         })
         .where(eq(marketingCampaign.id, campaignId));
 
-    // Deduct from user's wallet for successful sends
+    // Deduct from user's billing for successful sends
     if (sentCount > 0) {
         try {
             const {chargeForSend} = await import("@/lib/pricing");

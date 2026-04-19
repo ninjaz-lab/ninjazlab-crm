@@ -2,7 +2,7 @@
 
 import React, {useMemo, useState, useTransition} from "react";
 import {useRouter} from "next/navigation";
-import {createPricingRule, deletePricingRule, updatePricingRule} from "@/lib/actions/admin";
+import {createPricingRule, deletePricingRule, updatePricingRule} from "@/lib/actions/admin/pricing";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
@@ -23,7 +23,7 @@ import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandL
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {TRANSACTION_MODULE_LABELS, TRANSACTION_MODULES, USER_ROLES, UserRole} from "@/lib/enums";
 import {toast} from "sonner";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 import {HugeIcon} from "@/components/huge-icon";
 import {DataTable} from "@/components/data-table";
 import {getColumns} from "./columns";
@@ -177,7 +177,6 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
         return name.includes(q) || email.includes(q) || note.includes(q);
     };
 
-    // 🚩 Reusable Action Slot Component
     const CreateRuleAction = (
         <Button
             onClick={() => {
@@ -194,7 +193,6 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
     return (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
 
-            {/* 🚩 Tabs are alone now, the button moved to the Table's action slot */}
             <TabsList className="bg-muted/50 p-1 rounded-xl w-fit">
                 <TabsTrigger value="defaults"
                              className="font-bold rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
@@ -211,7 +209,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                     columns={defaultCols}
                     data={defaultRules}
                     hideSearch={true}
-                    actionSlot={CreateRuleAction} // 🚩 Pushes cleanly to the right
+                    actionSlot={CreateRuleAction}
                 />
             </TabsContent>
 
@@ -221,7 +219,7 @@ export function PricingManager({rules, users}: { rules: Rule[]; users: DbUser[] 
                     data={overridesRules}
                     searchPlaceholder="Filter users by name, email or notes..."
                     globalFilterFn={overridesFilterFn}
-                    actionSlot={CreateRuleAction} // 🚩 Sits cleanly opposite the search bar
+                    actionSlot={CreateRuleAction} 
                 />
             </TabsContent>
 

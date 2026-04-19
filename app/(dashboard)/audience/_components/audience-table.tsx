@@ -32,8 +32,8 @@ import {
     type AudienceRow,
     deleteAudience,
     deleteAudiences,
-    getImportJobs,
 } from "@/lib/actions/audience";
+import {fetchImportJobs} from "@/lib/actions/job_import_audience";
 import {AudienceForm} from "./audience-form";
 import {ImportWizard} from "./import-wizard";
 import {
@@ -50,7 +50,7 @@ import {
 } from "lucide-react";
 import {TablePagination} from "@/components/table-pagination";
 
-type ImportJob = Awaited<ReturnType<typeof getImportJobs>>[number];
+type ImportJob = Awaited<ReturnType<typeof fetchImportJobs>>[number];
 
 interface Props {
     audiences: AudienceRow[];

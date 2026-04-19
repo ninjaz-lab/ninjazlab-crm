@@ -17,19 +17,19 @@ export async function getAvailableFields() {
         {id: "lastName", label: "Last Name", type: "standard" as const, inputType: "text" as const},
         {id: "email", label: "Email Address", type: "standard" as const, inputType: "text" as const},
         {id: "phone", label: "Phone Number", type: "standard" as const, inputType: "text" as const},
-        {id: "state", label: "State / Province", type: "standard" as const, inputType: "select" as const},
+        {id: "state", label: "State", type: "standard" as const, inputType: "select" as const},
         {id: "city", label: "City", type: "standard" as const, inputType: "select" as const},
         {id: "country", label: "Country", type: "standard" as const, inputType: "select" as const},
         {id: "source", label: "Import Source", type: "standard" as const, inputType: "select" as const}
     ];
 
     const result = await db.execute(sql`
-        SELECT DISTINCT jsonb_object_keys(${audience.customFields}) as key
+        SELECT DISTINCT jsonb_object_keys(${audience.customFields}::jsonb) as key
         FROM ${audience}
         WHERE ${audience.userId} = ${session.user.id}
     `);
 
-    const customFields = result.rows.map((r) => ({
+    const customFields = result.map((r) => ({
         id: String(r.key),
         label: String(r.key).charAt(0).toUpperCase() + String(r.key).slice(1),
         type: "custom" as const
@@ -89,7 +89,7 @@ export async function getDistinctFieldValues(
               AND ${audience.customFields}->>${fieldId} IS NOT NULL
         `);
 
-        return results.rows.map(r => String(r.value)).filter(v => v.trim() !== "");
+        return results.map(r => String(r.value)).filter(v => v.trim() !== "");
     }
 }
 

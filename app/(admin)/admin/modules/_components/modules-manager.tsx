@@ -1,13 +1,13 @@
 "use client";
 
 import {useMemo, useState, useTransition} from "react";
-import {setModulePermission} from "@/lib/actions/admin";
+import {setModulePermission} from "@/lib/actions/admin/module";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {Switch} from "@/components/ui/switch";
 import {Input} from "@/components/ui/input";
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@/components/ui/sheet";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 import {toast} from "sonner";
 import {HugeIcon} from "@/components/huge-icon";
 import {DataTable} from "@/components/data-table";

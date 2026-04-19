@@ -6,7 +6,7 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Button} from "@/components/ui/button";
 import {HugeIcon} from "@/components/huge-icon";
 import {DataTable} from "@/components/data-table";
-import {getColumns, getTemplateColumns} from "./columns";
+import {getColumns, getTemplateColumns} from "../templates/_components/columns";
 
 export function EmailMarketingTabs({
                                        campaigns,

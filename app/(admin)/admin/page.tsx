@@ -5,8 +5,10 @@ import {and, count, eq, gte, lt, sql} from "drizzle-orm";
 import {Card, CardContent} from "@/components/ui/card";
 import {HugeIcon} from "@/components/huge-icon";
 import {USER_ROLES, WALLET_TYPES} from "@/lib/enums";
-import {cn, formatAmount} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
+import {formatAmount} from "@/lib/utils/transactions";
 import {Progress} from "@/components/ui/progress";
+import {PageHeader} from "@/components/page-header";
 
 // Helper for percentage calculations
 function calculateTrend(current: number, previous: number) {
@@ -36,19 +38,19 @@ async function getStats() {
 
     // 3. System Liquidity
     const [totalBalanceRes] = await db.select({
-        sum: sql<string>`coalesce(sum(
-        ${wallets.balance}
-        ),
-        '0'
-        )`
+        sum: sql<string>`coalesce
+        (sum(
+            ${wallets.balance}
+            ),
+            '0')`
     }).from(wallets).where(eq(wallets.walletType, WALLET_TYPES.MAIN));
 
     const [netChangeRes] = await db.select({
-        sum: sql<string>`coalesce(sum(
-        ${walletTransaction.amount}
-        ),
-        '0'
-        )`
+        sum: sql<string>`coalesce
+        (sum(
+            ${walletTransaction.amount}
+            ),
+            '0')`
     })
         .from(walletTransaction)
         .where(gte(walletTransaction.createdAt, thirtyDaysAgo));
@@ -137,22 +139,18 @@ export default async function AdminDashboardPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 p-2">
-            <div className="flex items-end justify-between border-b pb-4">
-                <div className="space-y-0.5">
-                    <h1 className="text-xl font-black tracking-tight uppercase">Admin Dashboard</h1>
-                    <p className="text-xs font-medium text-muted-foreground">
-                        System-wide monitoring •
-                        <span
-                            className="text-emerald-600 uppercase font-black tracking-widest text-[9px] animate-pulse">Live Sync</span>
-                    </p>
+
+            <PageHeader
+                title="Admin Dashboard"
+                description="System-wide monitoring"
+                tag="Admin Only"
+                tagClassName="text-rose-600"
+            >
+                <div
+                    className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
+                    <HugeIcon name="DashboardCircleIcon" size={16}/>
                 </div>
-                <div className="flex gap-2">
-                    <div
-                        className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
-                        <HugeIcon name="DashboardCircleIcon" size={16}/>
-                    </div>
-                </div>
-            </div>
+            </PageHeader>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {statsConfig.map((item) => (

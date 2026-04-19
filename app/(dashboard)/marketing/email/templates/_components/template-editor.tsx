@@ -22,7 +22,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 import {useAppStore} from "@/lib/store/app-store";
 
 const STARTER_HTML = `<!DOCTYPE html>

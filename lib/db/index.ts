@@ -1,13 +1,7 @@
-import {neonConfig, Pool} from "@neondatabase/serverless";
-import {drizzle} from "drizzle-orm/neon-serverless";
-import ws from "ws";
+import {drizzle} from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
-// This tells Neon to use the 'ws' package for WebSockets in Node.js
-if (typeof window === "undefined") {
-    neonConfig.webSocketConstructor = ws;
-}
+const client = postgres(process.env.DATABASE_URL!, {prepare: false});
 
-const pool = new Pool({connectionString: process.env.DATABASE_URL});
-
-// This instance now supports .transaction()
-export const db = drizzle(pool);
+// This instance fully supports .transaction() and standard queries
+export const db = drizzle(client);

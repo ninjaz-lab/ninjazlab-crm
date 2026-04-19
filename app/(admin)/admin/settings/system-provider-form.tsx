@@ -1,7 +1,11 @@
 "use client";
 
 import {useState, useTransition} from "react";
-import {createSystemProvider, deleteSystemProvider, setDefaultProvider,} from "@/lib/actions/admin";
+import {
+    createMarketingProvider,
+    deleteMarketingProvider,
+    setMarketingProvider,
+} from "@/lib/actions/admin/marketing-provider";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
@@ -89,7 +93,7 @@ export function SystemProviderForm({providers}: { providers: Provider[] }) {
 
     function handleSave() {
         startTransition(async () => {
-            await createSystemProvider({
+            await createMarketingProvider({
                 channel: "email",
                 name,
                 type: providerType,
@@ -112,13 +116,13 @@ export function SystemProviderForm({providers}: { providers: Provider[] }) {
 
     function handleDelete(id: string) {
         startTransition(async () => {
-            await deleteSystemProvider(id);
+            await deleteMarketingProvider(id);
         });
     }
 
     function handleSetDefault(id: string) {
         startTransition(async () => {
-            await setDefaultProvider(id, "email");
+            await setMarketingProvider(id, "email");
             setSuccess("Default provider updated.");
             setTimeout(() => setSuccess(""), 3000);
         });

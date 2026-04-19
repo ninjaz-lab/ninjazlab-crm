@@ -3,6 +3,7 @@
 import {useEffect, useState} from "react";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
+import {useTheme} from "next-themes";
 import {
     Sidebar,
     SidebarContent,
@@ -30,11 +31,12 @@ import {signOut, useSession} from "@/lib/auth-client";
 import {useModuleStore} from "@/lib/store/modules-store";
 import {fetchAdminModules} from "@/lib/actions/modules";
 import {HugeIcon} from "@/components/huge-icon";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 
 function AdminNavUser() {
     const {data: session} = useSession();
     const router = useRouter();
+    const {setTheme, theme} = useTheme();
 
     const name = session?.user?.name ?? "Admin";
     const email = session?.user?.email ?? "";
@@ -90,24 +92,45 @@ function AdminNavUser() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator/>
                         <DropdownMenuGroup>
-                            <DropdownMenuItem onClick={() => router.push("/settings")}
-                                              className="font-bold cursor-pointer">
+                            <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
                                 <HugeIcon name="Settings02Icon" size={16} className="mr-2 text-muted-foreground"/>
-                                Settings
+                                Account settings
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push("/dashboard")}
-                                              className="font-bold text-emerald-600 cursor-pointer">
+                            <DropdownMenuItem onClick={() => router.push("/")}
+                                              className="text-emerald-600 cursor-pointer">
                                 <HugeIcon name="DashboardCircleIcon" size={16} className="mr-2"/>
                                 User Dashboard
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator/>
-                        <DropdownMenuItem
-                            onClick={handleSignOut}
-                            className="font-bold text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30 cursor-pointer"
-                        >
+
+                        <DropdownMenuGroup>
+                            <DropdownMenuLabel
+                                className="font-normal text-xs text-muted-foreground py-1">Theme</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer pl-6 relative">
+                                {theme === "dark" &&
+                                    <span className="absolute left-2 flex h-1.5 w-1.5 rounded-full bg-foreground"/>}
+                                Dark
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTheme("light")}
+                                              className="cursor-pointer pl-6 relative">
+                                {theme === "light" &&
+                                    <span className="absolute left-2 flex h-1.5 w-1.5 rounded-full bg-foreground"/>}
+                                Light
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTheme("system")}
+                                              className="cursor-pointer pl-6 relative">
+                                {theme === "system" &&
+                                    <span className="absolute left-2 flex h-1.5 w-1.5 rounded-full bg-foreground"/>}
+                                System
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+
+                        <DropdownMenuSeparator/>
+                        <DropdownMenuItem onClick={handleSignOut}
+                                          className="text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30 cursor-pointer">
                             <HugeIcon name="Logout01Icon" size={16} className="mr-2"/>
-                            Sign out
+                            Log out
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -153,9 +176,7 @@ export function AdminSidebar() {
                                     <span
                                         className="truncate font-black tracking-tighter text-lg uppercase">Ninjazlab</span>
                                     <span
-                                        className="truncate text-[10px] font-black uppercase tracking-widest text-rose-600/80 -mt-1">
-                                        ADMIN
-                                    </span>
+                                        className="truncate text-[10px] font-black uppercase tracking-widest text-rose-600/80 -mt-1">ADMIN</span>
                                 </div>
                             </Link>
                         </SidebarMenuButton>
@@ -189,11 +210,8 @@ export function AdminSidebar() {
                                                 className="font-bold hover:bg-rose-500/5 active:scale-[0.98] transition-all"
                                             >
                                                 <Link href={item.href}>
-                                                    <HugeIcon
-                                                        name={item.iconName}
-                                                        size={18}
-                                                        className={cn(isActive ? "text-rose-600" : "text-muted-foreground")}
-                                                    />
+                                                    <HugeIcon name={item.iconName} size={18}
+                                                              className={cn(isActive ? "text-rose-600" : "text-muted-foreground")}/>
                                                     <span>{item.title}</span>
                                                 </Link>
                                             </SidebarMenuButton>

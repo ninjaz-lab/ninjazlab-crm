@@ -3,7 +3,7 @@ import {USER_ROLES} from "@/lib/enums";
 import {module} from "@/lib/db/schema";
 
 export async function seedModules() {
-    console.log("     🌱 Seeding comprehensive app modules...");
+    console.log("     🌱 Seeding comprehensive modules...");
 
     const modules = [
         // ─────────────────────────────────────────────
@@ -48,7 +48,7 @@ export async function seedModules() {
         {
             key: "wallet_billing",
             title: "Wallet & Billing",
-            href: "/dashboard/billing",
+            href: "/billing",
             iconName: "Wallet02Icon",
             scope: USER_ROLES.USER,
             exact: false,
@@ -59,7 +59,7 @@ export async function seedModules() {
         // ADMIN SCOPE MODULES
         // ─────────────────────────────────────────────
         {
-            key: "admin_users",
+            key: "admin_users_management",
             title: "User Management",
             href: "/admin/users",
             iconName: "AiUserIcon",
@@ -68,8 +68,8 @@ export async function seedModules() {
             description: "Manage system users and their permissions.",
         },
         {
-            key: "admin_pricing_manager",
-            title: "Pricing Manager",
+            key: "admin_pricing_management",
+            title: "Pricing Management",
             href: "/admin/pricing",
             iconName: "MoneyBag02Icon",
             scope: USER_ROLES.ADMIN,
@@ -77,9 +77,18 @@ export async function seedModules() {
             description: "Set unit prices for marketing modules.",
         },
         {
-            key: "admin_modules_manager",
-            title: "Modules Manager",
+            key: "admin_modules_management",
+            title: "Modules Management",
             href: "/admin/modules",
+            iconName: "TwoFactorAccessIcon",
+            scope: USER_ROLES.ADMIN,
+            exact: false,
+            description: "Grant or revoke module access for specific users.",
+        },
+        {
+            key: "admin_billing_management",
+            title: "Billing Management",
+            href: "/admin/billing",
             iconName: "TwoFactorAccessIcon",
             scope: USER_ROLES.ADMIN,
             exact: false,

@@ -70,14 +70,14 @@ export async function chargeForSend(params: {
     const amountStr = totalCost.toFixed(2);
 
     await db.transaction(async (tx) => {
-        // 1. Find the target wallet
+        // 1. Find the target billing
         const [wallet] = await tx
             .select()
             .from(wallets)
             .where(and(eq(wallets.userId, userId), eq(wallets.walletType, WALLET_TYPES.MAIN)))
             .limit(1);
 
-        if (!wallet) throw new Error("User has no main wallet configured.");
+        if (!wallet) throw new Error("User has no main billing configured.");
 
         // 2. Record Debit Transaction (Absolute value in 'amount', type 'debit')
         await tx.insert(walletTransaction).values({

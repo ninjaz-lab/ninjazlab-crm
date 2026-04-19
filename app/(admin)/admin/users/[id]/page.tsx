@@ -1,4 +1,4 @@
-import {fetchUserFullDetails} from "@/lib/actions/admin";
+import {fetchUserFullDetails} from "@/lib/actions/admin/users";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";

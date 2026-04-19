@@ -4,7 +4,7 @@ import {fetchEmailCampaignById} from "@/lib/actions/email-marketing";
 import {Badge} from "@/components/ui/badge";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
-import {CampaignActions} from "../../_components/campaign-actions";
+import {CampaignActions} from "../_components/campaign-actions";
 import {AlertTriangle, CheckCircle, Eye, Mail, MousePointerClick, Users,} from "lucide-react";
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {

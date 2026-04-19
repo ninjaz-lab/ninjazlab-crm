@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {type AudienceListRow, deleteAudienceList} from "@/lib/actions/audience";
 import {Pencil, Plus, Trash2, Users} from "lucide-react";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 import {SegmentBuilder} from "./segment-builder";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 

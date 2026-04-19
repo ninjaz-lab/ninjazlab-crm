@@ -6,16 +6,15 @@ import {db} from "@/lib/db";
 import {module, userPermission} from "@/lib/db/schema";
 import {and, eq} from "drizzle-orm";
 import {USER_ROLES} from "@/lib/enums";
+import {authenticateUser} from "@/lib/actions/session";
 
 export async function fetchGrantedModules() {
-    const session = await auth.api.getSession({headers: await headers()});
-    if (!session)
-        throw new Error("Unauthorized");
+    const session = await authenticateUser();
 
     const defaultDashboard = {
         id: "default-dashboard",
         title: "Dashboard",
-        href: "/dashboard",
+        href: "/",
         iconName: "LayoutDashboard",
         exact: true
     };

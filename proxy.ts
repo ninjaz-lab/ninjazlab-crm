@@ -27,12 +27,16 @@ export async function proxy(request: NextRequest) {
                 {headers: {cookie: request.headers.get("cookie") ?? ""}}
             );
             const session = await sessionRes.json();
+
+            if (!session || !session.user)
+                return NextResponse.next();
+
             const dest = session?.user?.role === USER_ROLES.ADMIN
                 ? "/admin/accounts"
-                : "/dashboard";
+                : "/";
             return NextResponse.redirect(new URL(dest, request.url));
         } catch {
-            return NextResponse.redirect(new URL("/dashboard", request.url));
+            return NextResponse.next();
         }
     }
 
@@ -48,7 +52,7 @@ export async function proxy(request: NextRequest) {
             );
             const session = await sessionRes.json();
             if (session?.user?.role !== USER_ROLES.ADMIN)
-                return NextResponse.redirect(new URL("/dashboard", request.url));
+                return NextResponse.redirect(new URL("/", request.url));
         } catch {
             return NextResponse.redirect(new URL("/login", request.url));
         }

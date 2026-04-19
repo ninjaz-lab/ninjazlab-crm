@@ -5,7 +5,7 @@ import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {HugeIcon} from "@/components/huge-icon";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
 import {TemplateRowActions} from "./template-row-actions";
 

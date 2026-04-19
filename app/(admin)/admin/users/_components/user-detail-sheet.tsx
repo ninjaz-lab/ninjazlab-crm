@@ -1,14 +1,7 @@
 "use client";
 
 import {useCallback, useEffect, useState} from "react";
-import {
-    adjustBalance,
-    banUser,
-    fetchUserFullDetails,
-    fetchUserTransactions,
-    setUserRole,
-    unbanUser
-} from "@/lib/actions/admin";
+import {adjustWalletBalance, fetchWalletTransactions} from "@/lib/actions/admin/wallet";
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@/components/ui/sheet";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
@@ -30,11 +23,13 @@ import {
     Wallet
 } from "lucide-react";
 import {format} from "date-fns";
-import {cn, formatAmount} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
+import {formatAmount} from "@/lib/utils/transactions";
 import {toast} from "sonner";
 import {Badge} from "@/components/ui/badge";
 import {USER_ROLES} from "@/lib/enums";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import {banUser, fetchUserFullDetails, setUserRole, unbanUser} from "@/lib/actions/admin/users";
 
 export function UserDetailSheet({userId, open, onOpenChangeAction}: {
     userId: string | null; open: boolean; onOpenChangeAction: (open: boolean) => void;
@@ -67,7 +62,7 @@ export function UserDetailSheet({userId, open, onOpenChangeAction}: {
         if (!userId) return;
         setTxLoading(true);
         try {
-            const res = await fetchUserTransactions(userId, txPage, parseInt(pageSize));
+            const res = await fetchWalletTransactions(userId, txPage, parseInt(pageSize));
             setTransactions(res.transactions);
             setTotalTx(res.total);
         } finally {
@@ -93,7 +88,7 @@ export function UserDetailSheet({userId, open, onOpenChangeAction}: {
         if (isNaN(amt) || amt <= 0) return toast.error("Invalid amount");
         setIsAdjusting(true);
         try {
-            await adjustBalance(userId!, amt, type, adjustNote);
+            await adjustWalletBalance(userId!, amt, type, adjustNote);
             toast.success(`${type} successful`);
             setAdjustAmt("");
             setAdjustNote("");

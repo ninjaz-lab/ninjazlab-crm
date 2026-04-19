@@ -1,9 +1,4 @@
-import {type ClassValue, clsx} from "clsx"
-import {twMerge} from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs))
-}
+import {TRANSACTION_TYPES} from "@/lib/enums";
 
 export function formatAmount(amount: number | string): string {
     const num = typeof amount === "string" ? parseFloat(amount) : amount;
@@ -16,4 +11,10 @@ export function formatAmount(amount: number | string): string {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     }).format(num);
+}
+
+export function fetchAmountColor(type: string): string {
+    return type === TRANSACTION_TYPES.CREDIT
+        ? "text-emerald-600"
+        : "text-rose-600";
 }

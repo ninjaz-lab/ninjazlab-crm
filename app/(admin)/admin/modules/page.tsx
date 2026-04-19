@@ -1,7 +1,8 @@
 import {unstable_noStore as noStore} from "next/cache";
-import {fetchAllModules, fetchAllUsersWithPermissions} from "@/lib/actions/admin";
+import {fetchAllModules, fetchAllUsersWithPermissions} from "@/lib/actions/admin/module";
 import {ModulesManager} from "./_components/modules-manager";
 import {HugeIcon} from "@/components/huge-icon";
+import {PageHeader} from "@/components/page-header";
 
 export default async function AdminModulesPage() {
     noStore();
@@ -11,21 +12,18 @@ export default async function AdminModulesPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 p-2">
-            <div className="flex items-end justify-between border-b pb-4">
-                <div className="space-y-0.5">
-                    <h1 className="text-xl font-black tracking-tight uppercase">Modules Manager</h1>
-                    <p className="text-xs font-medium text-muted-foreground">
-                        System-wide feature provisioning • <span
-                        className="text-rose-600 uppercase font-black tracking-widest text-[9px]">Admin Only</span>
-                    </p>
+
+            <PageHeader
+                title="Modules Management"
+                description="System-wide feature provisioning"
+                tag="Admin Only"
+                tagClassName="text-rose-600"
+            >
+                <div
+                    className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
+                    <HugeIcon name="TwoFactorAccessIcon" size={16}/>
                 </div>
-                <div className="flex gap-2">
-                    <div
-                        className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
-                        <HugeIcon name="TwoFactorAccessIcon" size={16}/>
-                    </div>
-                </div>
-            </div>
+            </PageHeader>
 
             <ModulesManager
                 users={users}

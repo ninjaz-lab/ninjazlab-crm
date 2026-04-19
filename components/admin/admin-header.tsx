@@ -12,8 +12,8 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {ThemeToggle} from "@/components/theme-toggle";
 import {NotificationBell} from "@/components/notification-bell";
+import {useSession} from "@/lib/auth-client";
 
 const routeLabels: Record<string, string> = {
     "/admin": "Dashboard",
@@ -24,6 +24,7 @@ const routeLabels: Record<string, string> = {
 
 export function AdminHeader() {
     const pathname = usePathname();
+    const {data: session} = useSession();
 
     const generateBreadcrumbs = () => {
         const segments = pathname.split("/").filter(Boolean);
@@ -86,9 +87,8 @@ export function AdminHeader() {
                 </Breadcrumb>
             </div>
 
-            <div className="flex items-center gap-2">
-                <NotificationBell/>
-                <ThemeToggle/>
+            <div className="flex items-center gap-2 pr2">
+                {session?.user?.id && <NotificationBell userId={session.user.id}/>}
             </div>
         </header>
     );

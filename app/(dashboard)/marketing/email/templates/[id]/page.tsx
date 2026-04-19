@@ -2,7 +2,7 @@ import {unstable_noStore as noStore} from "next/cache";
 import {notFound} from "next/navigation";
 import {fetchEmailTemplateById} from "@/lib/actions/email-template";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
-import {TemplateEditorV2} from "@/app/(dashboard)/marketing/email/_components/template-editor-v2";
+import {TemplateEditorV2} from "@/app/(dashboard)/marketing/email/templates/_components/template-editor-v2";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {ArrowLeft} from "lucide-react";

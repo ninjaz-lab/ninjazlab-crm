@@ -3,10 +3,11 @@
 import {useState, useTransition} from "react";
 import {Button} from "@/components/ui/button";
 import {Label} from "@/components/ui/label";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
-import {type AudienceListRow, parseImportFile, queueAudienceImport} from "@/lib/actions/audience";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {IMPORT_FIELD_LABELS, type ImportField, suggestMapping} from "@/lib/audience-utils";
+import {type AudienceListRow} from "@/lib/actions/audience";
+import {parseImportFile, queueAudienceImport} from "@/lib/actions/job_import_audience";
 import {
     ArrowLeft,
     ArrowRight,
@@ -19,7 +20,7 @@ import {
     TableProperties,
     UploadCloud
 } from "lucide-react";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 
 // Expanded to 5 steps
 const STEPS = ["Upload", "Map Columns", "Settings", "Review", "Import"];

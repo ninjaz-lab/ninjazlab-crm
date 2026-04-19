@@ -1,7 +1,7 @@
 "use client";
 
 import {useState} from "react";
-import {setModulePermission} from "@/lib/actions/admin";
+import {setModulePermission} from "@/lib/actions/admin/module";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {Switch} from "@/components/ui/switch";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";

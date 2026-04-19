@@ -66,7 +66,11 @@ export function TemplateEditorV2({templateId, defaultValues}: Props) {
     const onReady: EmailEditorProps['onReady'] = (unlayer) => {
         if (defaultValues?.jsonBody) {
             try {
-                unlayer.loadDesign(defaultValues.jsonBody);
+                const designToLoad = typeof defaultValues.jsonBody === 'string'
+                    ? JSON.parse(defaultValues.jsonBody)
+                    : defaultValues.jsonBody;
+
+                unlayer.loadDesign(designToLoad);
             } catch (err) {
                 console.error("Failed to load design:", err);
                 toast.error("Could not load previous layout.");
@@ -110,7 +114,7 @@ export function TemplateEditorV2({templateId, defaultValues}: Props) {
                             subject,
                             previewText,
                             htmlBody: html,
-                            jsonBody: design,
+                            jsonBody: stringifiedDesign,
                             status: saveStatus
                         });
                         setStatus(saveStatus);
@@ -123,7 +127,7 @@ export function TemplateEditorV2({templateId, defaultValues}: Props) {
                             subject,
                             previewText,
                             htmlBody: html,
-                            jsonBody: design
+                            jsonBody: stringifiedDesign
                         });
                         setIsDirty(false);
                         toast.success("Template created successfully.");

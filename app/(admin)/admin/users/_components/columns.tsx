@@ -4,7 +4,8 @@ import {ColumnDef} from "@tanstack/react-table";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import {cn, formatAmount} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
+import {formatAmount} from "@/lib/utils/transactions";
 import {USER_ROLES} from "@/lib/enums";
 import {HugeIcon} from "@/components/huge-icon";
 

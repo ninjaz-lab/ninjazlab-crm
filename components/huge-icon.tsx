@@ -3,7 +3,7 @@
 import * as React from "react";
 import {HugeiconsIcon} from "@hugeicons/react";
 import * as AllIcons from "@hugeicons/core-free-icons";
-import {cn} from "@/lib/utils";
+import {cn} from "@/lib/utils/utils";
 
 interface HugeIconProps extends Omit<React.ComponentProps<typeof HugeiconsIcon>, "icon"> {
     name: string;
