@@ -34,33 +34,22 @@ export const WALLET_TYPES = {
     MAIN: "main",
 } as const;
 
-// ----- Wallet Transactions
-export const TRANSACTION_STATUS = {
-    PENDING: "pending",
-    COMPLETED: "completed",
-    FAILED: "failed",
-} as const;
-
-export const TRANSACTION_TYPES = {
-    CREDIT: "credit",
-    DEBIT: "debit",
-} as const;
-
-export const TRANSACTION_MODULES = {
-    SYSTEM: "system_adjustment",
-    EMAIL: "email_marketing",
-    SMS: "sms_marketing",
-    // PUSH_NOTIFICATION: "push_notification_marketing"
-} as const;
-
-export const TRANSACTION_MODULE_LABELS: Record<string, string> = {
-    [TRANSACTION_MODULES.SYSTEM]: "System Adjustment",
-    [TRANSACTION_MODULES.EMAIL]: "Email Marketing",
-    [TRANSACTION_MODULES.SMS]: "SMS Marketing",
-    // [TRANSACTION_MODULES.PUSH_NOTIFICATION]: "Push Notifications Marketing",
-};
-
 // ----- Campaigns
+export const CAMPAIGN_TYPE = {
+    EMAIL: "email",
+    SMS: "sms",
+} as const;
+
+export type CampaignType = typeof CAMPAIGN_TYPE[keyof typeof CAMPAIGN_TYPE];
+
+export const SMS_PROVIDER = {
+    MACROKIOSK: "macrokiosk",
+} as const;
+
+export const EMAIL_PROVIDER = {
+    SES: "ses",
+} as const;
+
 export const CAMPAIGN_STATUS = {
     DRAFT: "draft",
     PUBLISHED: "published",
@@ -72,6 +61,38 @@ export const CAMPAIGN_STATUS = {
 } as const;
 
 export type CampaignStatus = typeof CAMPAIGN_STATUS[keyof typeof CAMPAIGN_STATUS];
+
+export const CAMPAIGN_SEND_MODE = {
+    NOW: "now",
+    SCHEDULE: "schedule",
+} as const;
+
+// ----- Wallet Transactions
+export const TRANSACTION_STATUS = {
+    PENDING: "pending",
+    APPROVED: "approved",
+    REJECTED: "rejected",
+    FAILED: "failed",
+} as const;
+
+export const TRANSACTION_TYPES = {
+    CREDIT: "credit",
+    DEBIT: "debit",
+} as const;
+
+export const TRANSACTION_CAMPAIGN = {
+    SYSTEM: "system_adjustment",
+    EMAIL: CAMPAIGN_TYPE.EMAIL,
+    SMS: CAMPAIGN_TYPE.SMS,
+    // PUSH_NOTIFICATION: "push_notification_marketing"
+} as const;
+
+export const TRANSACTION_MODULE_LABELS: Record<string, string> = {
+    [TRANSACTION_CAMPAIGN.SYSTEM]: "System Adjustment",
+    [TRANSACTION_CAMPAIGN.EMAIL]: "Email Campaign",
+    [TRANSACTION_CAMPAIGN.SMS]: "SMS Campaign",
+    // [TRANSACTION_MODULES.PUSH_NOTIFICATION]: "Push Notifications Campaigns",
+};
 
 // Pagination defaults
 export const PAGINATION = {

@@ -1,7 +1,7 @@
 import {cn} from "@/lib/utils/utils";
 import React from "react";
 
-interface PageHeaderProps {
+interface Props {
     title: string;
     description: string;
     tag?: string;
@@ -10,14 +10,7 @@ interface PageHeaderProps {
     className?: string;
 }
 
-export function PageHeader({
-                               title,
-                               description,
-                               tag,
-                               tagClassName = "text-primary",
-                               children,
-                               className
-                           }: PageHeaderProps) {
+export function PageHeader({title, description, tag, tagClassName = "text-primary", children, className}: Props) {
     return (
         <div className={cn("flex items-end justify-between border-b pb-4", className)}>
             <div className="space-y-0.5">

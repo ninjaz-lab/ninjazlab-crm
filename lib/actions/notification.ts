@@ -6,6 +6,7 @@ import {notification, user} from "@/lib/db/schema";
 import {getSession} from "@/lib/session";
 import {USER_ROLES} from "@/lib/enums";
 import {revalidatePath} from "next/cache";
+import {Routes} from "@/lib/constants/routes";
 
 export async function fetchUnreadNotificationCount() {
     const session = await getSession();
@@ -50,7 +51,7 @@ export async function markNotificationAsRead(id: string) {
             )
         );
 
-    revalidatePath("/", "layout");
+    revalidatePath(Routes.HOME, "layout");
 }
 
 export async function markAllNotificationsAsRead() {
@@ -66,7 +67,7 @@ export async function markAllNotificationsAsRead() {
                 eq(notification.isRead, false)
             )
         );
-    revalidatePath("/", "layout");
+    revalidatePath(Routes.HOME, "layout");
 
     return results;
 }
@@ -81,7 +82,7 @@ export async function clearNotification(id: string) {
             eq(notification.userId, session.user.id)
         )
     );
-    revalidatePath("/", "layout");
+    revalidatePath(Routes.HOME, "layout");
 }
 
 export async function clearAllNotifications() {
@@ -91,7 +92,7 @@ export async function clearAllNotifications() {
     await db.delete(notification).where(
         eq(notification.userId, session.user.id)
     );
-    revalidatePath("/", "layout");
+    revalidatePath(Routes.HOME, "layout");
 }
 
 /**

@@ -42,9 +42,8 @@ export default async function SettingsPage() {
     return (
         <div className="max-w-7xl mx-auto space-y-6 p-2">
 
-            <PageHeader
-                title="Settings"
-                description="Manage your account, workspace, and billing preferences."
+            <PageHeader title="Settings"
+                        description="Manage your account, workspace, and billing preferences."
             >
                 <div
                     className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">

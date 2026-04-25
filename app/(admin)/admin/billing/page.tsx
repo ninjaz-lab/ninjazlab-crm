@@ -1,6 +1,6 @@
 import {unstable_noStore as noStore} from "next/cache";
 import {fetchAllTransactions} from "@/lib/actions/admin/billing";
-import {AdminBillingTable} from "./_components/admin-billing-manager";
+import {BillingDashboard} from "./_components/billing-dashboard";
 import {PageHeader} from "@/components/page-header";
 import {HugeIcon} from "@/components/huge-icon";
 
@@ -11,8 +11,8 @@ export default async function AdminBillingPage() {
     return (
         <div className="max-w-7xl mx-auto space-y-6 p-2">
 
-            <PageHeader title="Billing Management"
-                        description="Review and approve manual wallet top-ups across all users"
+            <PageHeader title="Billing"
+                        description="Manage system billing, invoices, and tenant subscriptions"
                         tag="Admin Only"
                         tagClassName="text-rose-600"
             >
@@ -22,7 +22,7 @@ export default async function AdminBillingPage() {
                 </div>
             </PageHeader>
 
-            <AdminBillingTable transactions={transactions}/>
+            <BillingDashboard transactions={transactions}/>
 
         </div>
     );

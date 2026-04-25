@@ -4,12 +4,12 @@ import {Badge} from "@/components/ui/badge";
 import {USER_ROLES} from "@/lib/enums";
 import {cn} from "@/lib/utils/utils";
 
-interface RoleBadgeProps {
+interface Props {
     role: string | undefined;
     className?: string;
 }
 
-export function RoleBadge({role, className}: RoleBadgeProps) {
+export function RoleBadge({role, className}: Props) {
     const isAdmin = role?.toUpperCase() === USER_ROLES.ADMIN.toUpperCase();
 
     return (

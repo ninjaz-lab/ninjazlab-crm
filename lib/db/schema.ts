@@ -96,15 +96,17 @@ export const userPermission = pgTable("user_permission", {
     enabled: boolean("enabled").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (table) => ({
+    userModuleUniqueIdx: uniqueIndex("user_module_unique_idx").on(table.userId, table.moduleId),
+}));
 
 export const pricingRule = pgTable("pricing_rule", {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id").references(() => user.id, {onDelete: "cascade"}), // null = default
-    module: text("module").notNull(),   // 'email_marketing' | 'sms_marketing' | 'push_marketing'
+    campaign: text("campaign").notNull(),   // 'email_marketing' | 'sms_marketing' | 'push_marketing'
     action: text("action").notNull().default("send"), // 'send' — expand later
     unitPrice: decimal("unit_price", {precision: 10, scale: 6}).notNull(), // e.g. '0.001000'
-    currency: text("currency").notNull().default("USD"),
+    currency: text("currency").notNull().default("MYR"),
     effectiveFrom: timestamp("effective_from").notNull(), // when this rate activates
     note: text("note"),                 // admin note, e.g. "Enterprise tier — Q2 2026"
     createdBy: text("created_by").references(() => user.id),
@@ -119,7 +121,7 @@ export const notification = pgTable("notification", {
     type: text("type").notNull(), // e.g., 'import_success', 'billing_alert', 'system'
     title: text("title").notNull(),
     message: text("message").notNull(),
-    actionUrl: text("action_url"), // Optional link (e.g., "/audience" or "/billing")
+    actionUrl: text("action_url"),
     isRead: boolean("is_read").default(false).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -430,12 +432,13 @@ export const wallets = pgTable("wallets", {
 
 export const walletTransaction = pgTable("wallet_transaction", {
     id: uuid("id").defaultRandom().primaryKey(),
-    walletId: uuid("wallet_id") // Link directly to the specific billing
-        .notNull()
-        .references(() => wallets.id, {onDelete: "cascade"}),
     userId: text("user_id")
         .notNull()
         .references(() => user.id, {onDelete: "cascade"}),
+    walletId: uuid("wallet_id") // Link directly to the specific billing
+        .notNull()
+        .references(() => wallets.id, {onDelete: "cascade"}),
+    transactionId: text("transaction_id").unique().notNull(),
     amount: decimal("amount", {precision: 12, scale: 2})
         .notNull(),
     status: text("status").$type<typeof TRANSACTION_STATUS[keyof typeof TRANSACTION_STATUS]>()
@@ -443,7 +446,7 @@ export const walletTransaction = pgTable("wallet_transaction", {
     receiptUrl: text("receipt_url"),
 
     type: text("type").notNull(), // 'credit' | 'debit'
-    module: text("module"),
+    campaign: text("campaign"),
 
     // Tracking metadata
     referenceId: text("reference_id"),                  // campaignId or other source

@@ -11,6 +11,7 @@ import {fetchR2Client} from "@/lib/actions/cloudflare-rs";
 import {PutObjectCommand} from "@aws-sdk/client-s3";
 import {format} from "date-fns";
 import {generateInvoicePDF} from "@/lib/utils/invoice";
+import {Routes} from "@/lib/constants/routes";
 
 
 export async function fetchAllTransactions() {
@@ -20,6 +21,7 @@ export async function fetchAllTransactions() {
     return db
         .select({
             id: walletTransaction.id,
+            transactionId: walletTransaction.transactionId,
             date: walletTransaction.createdAt,
             description: walletTransaction.note,
             amount: walletTransaction.amount,
@@ -73,10 +75,10 @@ export async function approveTopUp(transactionId: string) {
         }));
         const invoiceUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${uniqueName}`;
 
-        // 4. Update Transaction with COMPLETED status and INVOICE data
+        // 4. Update Transaction with APPROVED status and INVOICE data
         await tx.update(walletTransaction)
             .set({
-                status: TRANSACTION_STATUS.COMPLETED,
+                status: TRANSACTION_STATUS.APPROVED,
                 invoiceNumber: invoiceNum,
                 invoiceUrl: invoiceUrl
             })
@@ -94,12 +96,12 @@ export async function approveTopUp(transactionId: string) {
             "billing_success",
             "Top-Up Approved ✅",
             `Your top-up of MYR ${data.tx.amount} has been approved.`,
-            "/billing"
+            Routes.USER_BILLING
         );
     });
 
-    revalidatePath("/admin/billing");
-    revalidatePath("/billing");
+    revalidatePath(Routes.ADMIN_BILLING);
+    revalidatePath(Routes.USER_BILLING);
     return {
         success: true
     };
@@ -110,7 +112,7 @@ export async function rejectTopUp(transactionId: string) {
     await authenticateAdmin();
 
     const [transaction] = await db.update(walletTransaction)
-        .set({status: TRANSACTION_STATUS.FAILED})
+        .set({status: TRANSACTION_STATUS.REJECTED})
         .where(eq(walletTransaction.id, transactionId))
         .returning();
 
@@ -120,10 +122,10 @@ export async function rejectTopUp(transactionId: string) {
             "billing_failed",
             "Top-Up Rejected ❌",
             `Your top-up of MYR ${transaction.amount} was rejected. Please contact support if you believe this is an error.`,
-            "/billing"
+            Routes.USER_BILLING
         );
     }
 
-    revalidatePath("/admin/billing");
+    revalidatePath(Routes.ADMIN_BILLING);
     return {success: true};
 }

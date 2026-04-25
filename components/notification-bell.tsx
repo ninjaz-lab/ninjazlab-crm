@@ -22,7 +22,7 @@ export function NotificationBell({userId}: { userId: string }) {
 
     const playNotificationSound = useCallback(() => {
         if (typeof window !== "undefined") {
-            const audio = new Audio('/notification.wav');
+            const audio = new Audio('/notification.mp3');
             audio.play().catch((err) => {
                 console.log("Browser blocked auto-play sound. User must interact with the page first.", err);
             });

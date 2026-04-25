@@ -23,10 +23,17 @@ import {
 import {and, eq, inArray} from "drizzle-orm";
 import {randomUUID} from "crypto";
 import type {EmailBlastJobData} from "./index";
-import {CAMPAIGN_STATUS} from "@/lib/enums";
+import {CAMPAIGN_STATUS, CAMPAIGN_TYPE} from "@/lib/enums";
+
+const redisUrl = new URL(process.env.REDIS_URL || "redis://127.0.0.1:6379");
 
 const connection = {
-    url: process.env.REDIS_URL,
+    host: redisUrl.hostname,
+    port: Number(redisUrl.port),
+    username: redisUrl.username || undefined,
+    password: redisUrl.password || undefined,
+    // Automatically enable TLS if you are using an Upstash/AWS rediss:// URL
+    tls: redisUrl.protocol === "rediss:" ? {} : undefined,
 };
 
 type ProviderConfig = Record<string, string>;
@@ -234,7 +241,7 @@ async function processEmailBlast(job: Job<EmailBlastJobData>) {
             const {chargeForSend} = await import("@/lib/pricing");
             await chargeForSend({
                 userId: campaignRow.marketing_campaign.userId,
-                module: "email_marketing",
+                module: CAMPAIGN_TYPE.EMAIL,
                 units: sentCount,
                 referenceId: campaignId,
                 note: `Email campaign: ${campaignRow.marketing_campaign.name} (${sentCount} sent)`,
@@ -265,4 +272,4 @@ worker.on("failed", (job, err) => {
     console.error(`[email-worker] Job ${job?.id} failed:`, err.message);
 });
 
-console.log("[email-worker] Started — listening for jobs on 'email-blast' queue");
+console.log("[email-worker]  Worker initialized and waiting for jobs...");

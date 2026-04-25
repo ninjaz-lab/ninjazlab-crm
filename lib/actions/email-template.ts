@@ -85,7 +85,7 @@ export async function createEmailTemplate(data: {
         updatedAt: new Date(),
     });
 
-    revalidatePath("/marketing/email/templates");
+    revalidatePath("/campaigns/email/templates");
     return templateId;
 }
 
@@ -129,8 +129,8 @@ export async function updateEmailTemplate(
             .where(eq(emailTemplateDetail.templateId, id));
     }
 
-    revalidatePath("/marketing/email/templates");
-    revalidatePath(`/marketing/email/templates/${id}`);
+    revalidatePath("/campaigns/email/templates");
+    revalidatePath(`/campaigns/email/templates/${id}`);
 }
 
 export async function deleteEmailTemplate(id: string) {
@@ -143,7 +143,7 @@ export async function deleteEmailTemplate(id: string) {
                 eq(marketingTemplate.userId, session.user.id)
             )
         );
-    revalidatePath("/marketing/email/templates");
+    revalidatePath("/campaigns/email/templates");
 }
 
 export async function cloneEmailTemplate(templateId: string) {
@@ -179,7 +179,7 @@ export async function cloneEmailTemplate(templateId: string) {
         updatedAt: new Date(),
     });
 
-    revalidatePath("/marketing/email/templates");
+    revalidatePath("/campaigns/email/templates");
     return newTemplateId;
 }
 
@@ -217,7 +217,7 @@ export async function createEmailTemplateV2(data: {
         updatedAt: new Date(),
     });
 
-    revalidatePath("/marketing/email/templates");
+    revalidatePath("/campaigns/email/templates");
     return templateId;
 }
 
@@ -264,8 +264,8 @@ export async function updateEmailTemplateV2(
             .where(eq(emailTemplateDetail.templateId, id));
     }
 
-    revalidatePath("/marketing/email/templates");
-    revalidatePath(`/marketing/email/templates/${id}`);
+    revalidatePath("/campaigns/email/templates");
+    revalidatePath(`/campaigns/email/templates/${id}`);
 }
 
 export async function cloneEmailTemplateV2(templateId: string) {
@@ -302,6 +302,6 @@ export async function cloneEmailTemplateV2(templateId: string) {
         updatedAt: new Date(),
     });
 
-    revalidatePath("/marketing/email/templates");
+    revalidatePath("/campaigns/email/templates");
     return newTemplateId;
 }

@@ -53,10 +53,8 @@ export default async function AudiencePage({searchParams}: Props) {
 
             <ImportListener userId={session.user.id}/>
 
-            {/* Page Header */}
-            <PageHeader
-                title="Audience"
-                description="Manage audiences, segments, and data imports"
+            <PageHeader title="Audience"
+                        description="Manage audiences, segments, and data imports"
             >
                 <div
                     className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
@@ -67,10 +65,9 @@ export default async function AudiencePage({searchParams}: Props) {
             <div className="grid gap-4 md:grid-cols-4">
 
                 {/* Filtered Profiles Metric Card */}
-                <MetricCard
-                    title="Filtered / Total Audience"
-                    icon="UserMultipleIcon"
-                    variant="primary"
+                <MetricCard title="Filtered / Total Audience"
+                            icon="UserMultipleIcon"
+                            variant="primary"
                 >
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                         <span className="text-3xl font-black tracking-tighter">
@@ -83,18 +80,16 @@ export default async function AudiencePage({searchParams}: Props) {
                 </MetricCard>
 
                 {/* Total Segments Metric Card */}
-                <MetricCard
-                    title="Total Segments"
-                    value={segments.length}
-                    icon="Folder01Icon"
-                    variant="default"
+                <MetricCard title="Total Segments"
+                            value={segments.length}
+                            icon="Folder01Icon"
+                            variant="primary"
                 />
 
                 {/* Active Imports Metric Card */}
-                <MetricCard
-                    title="Imports (Active / Done)"
-                    icon="CloudUploadIcon"
-                    variant="warning"
+                <MetricCard title="Imports (Active / Done)"
+                            icon="CloudUploadIcon"
+                            variant="warning"
                 >
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                         <span className="text-3xl font-black tracking-tighter text-amber-600">
@@ -107,10 +102,9 @@ export default async function AudiencePage({searchParams}: Props) {
                 </MetricCard>
 
                 {/* Unsubscribed Contacts (List Health) */}
-                <MetricCard
-                    title="Unsubscribed (Email / SMS)"
-                    icon="MailBlock01Icon" // Or "UserRemoveIcon"
-                    variant="destructive"
+                <MetricCard title="Unsubscribed (Email / SMS)"
+                            icon="MailBlock01Icon"
+                            variant="destructive"
                 >
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                         {/* Email Unsubscribes */}
@@ -136,15 +130,14 @@ export default async function AudiencePage({searchParams}: Props) {
 
                 {/* Right: main content */}
                 <main className="flex-1 min-w-0">
-                    <AudienceTable
-                        audiences={audiences}
-                        total={total}
-                        segments={segments}
-                        page={page}
-                        pageSize={pageSize}
-                        search={search}
-                        segmentId={segmentId}
-                        importJobs={importJobs}
+                    <AudienceTable audiences={audiences}
+                                   total={total}
+                                   segments={segments}
+                                   page={page}
+                                   pageSize={pageSize}
+                                   search={search}
+                                   segmentId={segmentId}
+                                   importJobs={importJobs}
                     />
                 </main>
 

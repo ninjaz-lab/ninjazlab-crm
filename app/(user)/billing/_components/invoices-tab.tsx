@@ -1,24 +1,27 @@
 "use client";
 
 import React, {useMemo} from "react";
-import {DataTable} from "@/components/data-table";
+import {DataTable} from "@/components/data-table/data-table";
 import {getColumns} from "./columns";
 
-interface TabProps {
+interface Props {
     data: any[];
     actionSlot: React.ReactNode;
 }
 
-export function InvoicesTab({data, actionSlot}: TabProps) {
+export function InvoicesTab({data, actionSlot}: Props) {
     const invoiceColumns = useMemo(() => getColumns("invoices"), []);
 
-    const invoiceFilterFn = (row: any, columnId: string, filterValue: any) => {
+    const invoiceFilterFn = (
+        row: any,
+        columnId: string,
+        filterValue: any
+    ) => {
         if (!filterValue) return true;
         const searchValue = String(filterValue).toLowerCase();
         const invoiceMatch = (row.original.invoiceNumber?.toLowerCase() || "").includes(searchValue);
-        const txId = row.original.id as string;
-        const shortId = txId ? `trn-${txId.substring(0, 8).toLowerCase()}` : "";
-        const idMatch = shortId.includes(searchValue);
+        const txId = (row.original.transactionId || "").toLowerCase();
+        const idMatch = txId.includes(searchValue);
         return invoiceMatch || idMatch;
     };
 

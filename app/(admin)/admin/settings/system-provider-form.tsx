@@ -26,6 +26,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {CheckCircle, Info, Plus, Star, Trash2, Zap} from "lucide-react";
+import {SES_REGIONS} from "@/lib/config/aws";
 
 type Provider = {
     id: string;
@@ -35,22 +36,7 @@ type Provider = {
     isDefault: boolean;
     createdAt: Date;
 };
-type ProviderType = "ses" | "smtp" | "resend";
-
-const SES_REGIONS = [
-    {value: "us-east-1", label: "US East (N. Virginia)"},
-    {value: "us-east-2", label: "US East (Ohio)"},
-    {value: "us-west-1", label: "US West (N. California)"},
-    {value: "us-west-2", label: "US West (Oregon)"},
-    {value: "ap-southeast-1", label: "Asia Pacific (Singapore)"},
-    {value: "ap-southeast-2", label: "Asia Pacific (Sydney)"},
-    {value: "ap-northeast-1", label: "Asia Pacific (Tokyo)"},
-    {value: "eu-west-1", label: "Europe (Ireland)"},
-    {value: "eu-central-1", label: "Europe (Frankfurt)"},
-    {value: "eu-west-2", label: "Europe (London)"},
-    {value: "ca-central-1", label: "Canada (Central)"},
-    {value: "sa-east-1", label: "South America (São Paulo)"},
-];
+type ProviderType = "ses";
 
 export function SystemProviderForm({providers}: { providers: Provider[] }) {
     const [isPending, startTransition] = useTransition();
@@ -61,34 +47,22 @@ export function SystemProviderForm({providers}: { providers: Provider[] }) {
     const [name, setName] = useState("");
     const [isDefault, setIsDefault] = useState(providers.length === 0);
 
-    // SES
+    // SES Config
     const [sesRegion, setSesRegion] = useState("ap-southeast-1");
     const [sesAccessKeyId, setSesAccessKeyId] = useState("");
     const [sesSecretAccessKey, setSesSecretAccessKey] = useState("");
 
-    // SMTP
-    const [smtpHost, setSmtpHost] = useState("");
-    const [smtpPort, setSmtpPort] = useState("587");
-    const [smtpUser, setSmtpUser] = useState("");
-    const [smtpPass, setSmtpPass] = useState("");
-
-    // Resend
-    const [resendApiKey, setResendApiKey] = useState("");
-
     function isValid() {
-        if (!name) return false;
-        if (providerType === "ses") return !!(sesAccessKeyId && sesSecretAccessKey);
-        if (providerType === "smtp") return !!(smtpHost && smtpUser && smtpPass);
-        if (providerType === "resend") return !!resendApiKey;
-        return false;
+        return !!(name && sesAccessKeyId && sesSecretAccessKey);
     }
 
     function buildConfig(): Record<string, string> {
-        if (providerType === "ses")
-            return {type: "ses", region: sesRegion, accessKeyId: sesAccessKeyId, secretAccessKey: sesSecretAccessKey};
-        if (providerType === "smtp")
-            return {type: "smtp", host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass};
-        return {type: "resend", apiKey: resendApiKey};
+        return {
+            type: "ses",
+            region: sesRegion,
+            accessKeyId: sesAccessKeyId,
+            secretAccessKey: sesSecretAccessKey
+        };
     }
 
     function handleSave() {
@@ -103,14 +77,11 @@ export function SystemProviderForm({providers}: { providers: Provider[] }) {
             setAdding(false);
             setSuccess("Provider saved. All email campaigns will now use this provider.");
             setTimeout(() => setSuccess(""), 4000);
+
             // reset
             setName("");
             setSesAccessKeyId("");
             setSesSecretAccessKey("");
-            setSmtpHost("");
-            setSmtpUser("");
-            setSmtpPass("");
-            setResendApiKey("");
         });
     }
 
@@ -255,14 +226,13 @@ export function SystemProviderForm({providers}: { providers: Provider[] }) {
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <Label>Provider Type</Label>
-                                <Select value={providerType} onValueChange={(v) => setProviderType(v as ProviderType)}>
+                                <Select value={providerType} onValueChange={(v) => setProviderType(v as ProviderType)}
+                                        disabled>
                                     <SelectTrigger>
                                         <SelectValue/>
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="ses">Amazon SES</SelectItem>
-                                        <SelectItem value="smtp">SMTP</SelectItem>
-                                        <SelectItem value="resend">Resend</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -279,105 +249,56 @@ export function SystemProviderForm({providers}: { providers: Provider[] }) {
                         <Separator/>
 
                         {/* SES */}
-                        {providerType === "ses" && (
-                            <div className="space-y-4">
-                                <Alert>
-                                    <AlertDescription className="text-xs">
-                                        Create an IAM user with <strong>AmazonSESFullAccess</strong> and paste its
-                                        credentials.
-                                        Your sending domain must be verified in the SES console.
-                                    </AlertDescription>
-                                </Alert>
-                                <div className="space-y-2">
-                                    <Label>AWS Region</Label>
-                                    <Select value={sesRegion} onValueChange={setSesRegion}>
-                                        <SelectTrigger>
-                                            <SelectValue/>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {SES_REGIONS.map((r) => (
-                                                <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Access Key ID</Label>
-                                    <Input
-                                        placeholder="AKIAIOSFODNN7EXAMPLE"
-                                        value={sesAccessKeyId}
-                                        onChange={(e) => setSesAccessKeyId(e.target.value)}
-                                        autoComplete="off"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Secret Access Key</Label>
-                                    <Input
-                                        type="password"
-                                        placeholder="••••••••••••••••••••"
-                                        value={sesSecretAccessKey}
-                                        onChange={(e) => setSesSecretAccessKey(e.target.value)}
-                                        autoComplete="new-password"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* SMTP */}
-                        {providerType === "smtp" && (
-                            <div className="space-y-4">
-                                <div className="grid gap-4 sm:grid-cols-3">
-                                    <div className="space-y-2 sm:col-span-2">
-                                        <Label>SMTP Host</Label>
-                                        <Input placeholder="smtp.yourdomain.com" value={smtpHost}
-                                               onChange={(e) => setSmtpHost(e.target.value)}/>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Port</Label>
-                                        <Select value={smtpPort} onValueChange={setSmtpPort}>
-                                            <SelectTrigger><SelectValue/></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="25">25</SelectItem>
-                                                <SelectItem value="465">465 (SSL)</SelectItem>
-                                                <SelectItem value="587">587 (TLS)</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label>Username</Label>
-                                        <Input value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)}/>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Password</Label>
-                                        <Input type="password" value={smtpPass}
-                                               onChange={(e) => setSmtpPass(e.target.value)}/>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Resend */}
-                        {providerType === "resend" && (
+                        <div className="space-y-4">
+                            <Alert>
+                                <AlertDescription className="text-xs">
+                                    Create an IAM user with <strong>AmazonSESFullAccess</strong> and paste its
+                                    credentials.
+                                    Your sending domain must be verified in the SES console.
+                                </AlertDescription>
+                            </Alert>
                             <div className="space-y-2">
-                                <Label>API Key</Label>
-                                <Input
-                                    type="password"
-                                    placeholder="re_xxxxxxxxxxxx"
-                                    value={resendApiKey}
-                                    onChange={(e) => setResendApiKey(e.target.value)}
+                                <Label className="text-xs font-bold">AWS Region</Label>
+                                <Select value={sesRegion} onValueChange={setSesRegion}>
+                                    <SelectTrigger className="font-bold bg-muted/20 border-none h-11">
+                                        <SelectValue placeholder="Select AWS Region"/>
+                                    </SelectTrigger>
+                                    <SelectContent className="h-[300px]">
+                                        {SES_REGIONS.map((region) => (
+                                            <SelectItem key={region.value}
+                                                        value={region.value}
+                                                        className="font-medium">
+                                                {region.label} - {region.value}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Access Key ID</Label>
+                                <Input placeholder="AKIAIOSFODNN7EXAMPLE"
+                                       value={sesAccessKeyId}
+                                       onChange={(e) => setSesAccessKeyId(e.target.value)}
+                                       autoComplete="off"
                                 />
                             </div>
-                        )}
+                            <div className="space-y-2">
+                                <Label>Secret Access Key</Label>
+                                <Input type="password"
+                                       placeholder="••••••••••••••••••••"
+                                       value={sesSecretAccessKey}
+                                       onChange={(e) => setSesSecretAccessKey(e.target.value)}
+                                       autoComplete="new-password"
+                                />
+                            </div>
+                        </div>
 
                         <div className="flex items-center gap-2">
-                            <input
-                                id="isDefault"
-                                type="checkbox"
-                                checked={isDefault}
-                                onChange={(e) => setIsDefault(e.target.checked)}
-                                className="rounded"
+                            <input id="isDefault"
+                                   type="checkbox"
+                                   checked={isDefault}
+                                   onChange={(e) => setIsDefault(e.target.checked)}
+                                   className="rounded"
                             />
                             <Label htmlFor="isDefault" className="cursor-pointer font-normal">
                                 Set as default provider

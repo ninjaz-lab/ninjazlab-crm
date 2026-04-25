@@ -7,6 +7,7 @@ import {module, userPermission} from "@/lib/db/schema";
 import {and, eq} from "drizzle-orm";
 import {USER_ROLES} from "@/lib/enums";
 import {authenticateUser} from "@/lib/actions/session";
+import {Routes} from "@/lib/constants/routes";
 
 export async function fetchGrantedModules() {
     const session = await authenticateUser();
@@ -14,7 +15,7 @@ export async function fetchGrantedModules() {
     const defaultDashboard = {
         id: "default-user",
         title: "Dashboard",
-        href: "/",
+        href: Routes.HOME,
         iconName: "LayoutDashboard",
         exact: true
     };
@@ -63,7 +64,7 @@ export async function fetchAdminModules() {
     const defaultDashboard = {
         id: "default-user",
         title: "Dashboard",
-        href: "/admin",
+        href: Routes.HOME_ADMIN,
         iconName: "LayoutDashboard",
         exact: true
     };

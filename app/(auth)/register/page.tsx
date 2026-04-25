@@ -8,6 +8,7 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Database} from "lucide-react";
+import {Routes} from "@/lib/constants/routes";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -26,7 +27,7 @@ export default function RegisterPage() {
             setError(error.message ?? "Registration failed");
             setLoading(false);
         } else {
-            router.push("/");
+            router.push(Routes.HOME);
         }
     }
 
@@ -102,7 +103,7 @@ export default function RegisterPage() {
 
                     <p className="text-center text-sm text-muted-foreground">
                         Already have an account?{" "}
-                        <Link href="/login" className="underline underline-offset-4 hover:text-primary">
+                        <Link href={Routes.LOGIN} className="underline underline-offset-4 hover:text-primary">
                             Sign in
                         </Link>
                     </p>

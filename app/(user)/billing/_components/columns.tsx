@@ -1,28 +1,19 @@
 "use client";
 
 import {useState} from "react";
-import {ColumnDef} from "@tanstack/react-table";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
-import {cn} from "@/lib/utils/utils";
-import {fetchAmountColor, formatAmount} from "@/lib/utils/transactions";
-import {HugeIcon} from "@/components/huge-icon";
-import {Dialog, DialogContent, DialogTitle} from "@/components/ui/dialog";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import {TRANSACTION_STATUS, TRANSACTION_TYPES} from "@/lib/enums";
-import {formatDate, formatTime} from "@/lib/utils/date";
 import {toast} from "sonner";
+import {ColumnDef} from "@tanstack/react-table";
+import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
+import {DocumentPreviewDialog} from "@/components/document-preview-dialog";
+import {HugeIcon} from "@/components/huge-icon";
+import {Badge} from "@/components/ui/badge";
+import {createDateColumn} from "@/lib/utils/date";
+import {TRANSACTION_STATUS, TRANSACTION_TYPES} from "@/lib/enums";
+import {fetchAmountColor, formatAmount} from "@/lib/utils/transactions";
+import {cn} from "@/lib/utils/utils";
 
 const ActionsCell = ({row, viewType}: { row: any; viewType: string }) => {
-    const [isReceiptOpen, setIsReceiptOpen] = useState(false);
-    const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
+    const [previewDoc, setPreviewDoc] = useState<{ title: string, url: string } | null>(null);
 
     // Transactions tab shows receipt. Invoice tab completely hides it.
     const showReceiptAction = !!row.original.receiptUrl && viewType === "transactions";
@@ -30,87 +21,38 @@ const ActionsCell = ({row, viewType}: { row: any; viewType: string }) => {
 
     if (!showReceiptAction && !showInvoiceAction) return null;
 
-    const isImage = (url: string) => {
-        if (!url) return false;
-        return /\.(jpg|jpeg|png|webp|gif)$/i.test(url);
-    };
-
-    const receiptIsImage = isImage(row.original.receiptUrl);
+    const actions: TableRowAction[] = [
+        {
+            label: "View Receipt",
+            icon: "Attachment01Icon",
+            onClick: () => setPreviewDoc({title: "Receipt Document", url: row.original.receiptUrl}),
+            hidden: !showReceiptAction,
+            variant: "default",
+        },
+        {
+            label: "View Invoice",
+            icon: "Invoice01Icon",
+            onClick: () => setPreviewDoc({title: "Invoice Document", url: row.original.invoiceUrl}),
+            hidden: !showInvoiceAction,
+            variant: "success",
+        }
+    ];
 
     return (
         <>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted/50">
-                        <span className="sr-only">Open menu</span>
-                        <HugeIcon name="MoreHorizontalIcon" size={16}/>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel className="text-xs tracking-widest uppercase font-bold text-muted-foreground">
-                        Actions
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator/>
-
-                    {/* Only renders on Transactions Tab */}
-                    {showReceiptAction && (
-                        <DropdownMenuItem onClick={() => setIsReceiptOpen(true)}
-                                          className="cursor-pointer font-medium text-xs">
-                            <HugeIcon name="Attachment01Icon" size={14} className="mr-2 text-primary"/> View Receipt
-                        </DropdownMenuItem>
-                    )}
-
-                    {/* Renders on both tabs (if invoice exists) */}
-                    {showInvoiceAction && (
-                        <DropdownMenuItem onClick={() => setIsInvoiceOpen(true)}
-                                          className="cursor-pointer font-medium text-xs">
-                            <HugeIcon name="Invoice01Icon" size={14} className="mr-2 text-emerald-600"/> View Invoice
-                        </DropdownMenuItem>
-                    )}
-                </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Receipt Dialog */}
-            <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
-                <DialogContent className="sm:max-w-5xl w-[95vw] p-0 overflow-hidden bg-background">
-                    <DialogTitle className="sr-only">Receipt Document</DialogTitle>
-                    <div className="w-full h-[85vh] flex items-center justify-center p-4 bg-muted/20">
-                        {receiptIsImage ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
-                                src={row.original.receiptUrl}
-                                alt="Receipt"
-                                className="max-w-full max-h-full object-contain drop-shadow-xl rounded-md"
-                            />
-                        ) : (
-                            <iframe
-                                src={row.original.receiptUrl}
-                                className="w-full h-full border-0 rounded-xl bg-white shadow-inner"
-                                title="Receipt Document"
-                            />
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Invoice Dialog */}
-            <Dialog open={isInvoiceOpen} onOpenChange={setIsInvoiceOpen}>
-                <DialogContent className="sm:max-w-5xl w-[95vw] p-0 overflow-hidden bg-background">
-                    <DialogTitle className="sr-only">Invoice Document</DialogTitle>
-                    <div className="w-full h-[85vh] p-2 md:p-6 bg-muted/20">
-                        <iframe
-                            src={row.original.invoiceUrl}
-                            className="w-full h-full border-0 rounded-xl bg-white shadow-inner"
-                            title="Invoice Document"
-                        />
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <TableRowActions actions={actions}/>
+            <DocumentPreviewDialog open={!!previewDoc}
+                                   onOpenChange={(open) => !open && setPreviewDoc(null)}
+                                   title={previewDoc?.title || ""}
+                                   url={previewDoc?.url}
+            />
         </>
     );
 };
 
-export const getColumns = (viewType: "transactions" | "invoices" = "transactions"): ColumnDef<any>[] => [
+export const getColumns = (
+    viewType: "transactions" | "invoices" = "transactions"
+): ColumnDef<any>[] => [
     {
         id: "index",
         header: () => <div className="font-bold uppercase text-[10px] tracking-widest text-center w-8">#</div>,
@@ -118,38 +60,11 @@ export const getColumns = (viewType: "transactions" | "invoices" = "transactions
         size: 40,
     },
     {
-        accessorKey: "date",
-        header: ({column}) => {
-            const isSorted = column.getIsSorted();
-            return (
-                <Button variant="ghost" onClick={() => column.toggleSorting(isSorted === "asc")}
-                        className="-ml-4 h-8 text-[10px] font-bold uppercase tracking-widest hover:bg-muted/50 data-[active=true]:text-primary"
-                        data-active={!!isSorted}>
-                    Date
-                    <HugeIcon
-                        name={isSorted ? (isSorted === "asc" ? "ArrowUp01Icon" : "ArrowDown01Icon") : "Sorting05Icon"}
-                        size={14}
-                        className={cn("ml-2 transition-transform", isSorted ? "text-primary" : "opacity-50")}/>
-                </Button>
-            );
-        },
-        cell: ({row}) => {
-            const dateVal = row.getValue("date") as string;
-            return (
-                <div className="flex flex-col tracking-tighter">
-                    <span className="text-xs font-bold text-foreground">{formatDate(dateVal)}</span>
-                    <span className="text-[10px] font-medium text-muted-foreground">{formatTime(dateVal)}</span>
-                </div>
-            );
-        },
-    },
-    {
         accessorKey: "description",
         header: () => <div className="font-bold uppercase text-[10px] tracking-widest">Transaction Details</div>,
         cell: ({row}) => {
             const isInvoiceView = viewType === "invoices";
-            const txId = row.original.id as string;
-            const shortId = txId ? `TRN-${txId.substring(0, 8).toUpperCase()}` : "-";
+            const txId = row.original.transactionId;
             const invoiceNum = row.original.invoiceNumber;
 
             return (
@@ -171,10 +86,10 @@ export const getColumns = (viewType: "transactions" | "invoices" = "transactions
                             <span className="font-bold text-sm tracking-tight">{row.original.description}</span>
                             <div className="flex items-center gap-1.5 mt-0.5">
                                 <span className="text-[10px] font-mono font-bold text-muted-foreground">
-                                    {shortId}
+                                    {txId}
                                 </span>
                                 <button onClick={() => {
-                                    navigator.clipboard.writeText(shortId);
+                                    navigator.clipboard.writeText(txId);
                                     toast.success("Transaction ID copied!");
                                 }} className="text-muted-foreground hover:text-primary transition-colors outline-none"
                                         title="Copy TRN ID">
@@ -192,10 +107,10 @@ export const getColumns = (viewType: "transactions" | "invoices" = "transactions
                             {/* Small Text: TRN-ID + Copy Button */}
                             <div className="flex items-center gap-1.5 mt-0.5">
                                 <span className="text-[10px] font-mono font-bold text-muted-foreground">
-                                    {shortId}
+                                    {txId}
                                 </span>
                                 <button onClick={() => {
-                                    navigator.clipboard.writeText(shortId);
+                                    navigator.clipboard.writeText(txId);
                                     toast.success("Transaction ID copied!");
                                 }} className="text-muted-foreground hover:text-primary transition-colors outline-none"
                                         title="Copy TRN ID">
@@ -208,6 +123,7 @@ export const getColumns = (viewType: "transactions" | "invoices" = "transactions
             );
         },
     },
+    createDateColumn("date", "Transaction Date Time"),  
     {
         accessorKey: "status",
         size: 80,
@@ -218,8 +134,8 @@ export const getColumns = (viewType: "transactions" | "invoices" = "transactions
                 <div className="flex justify-center">
                     <Badge variant="secondary" className={cn(
                         "w-[75px] justify-center text-[9px] uppercase font-black tracking-widest px-0 py-0.5 border shadow-none",
-                        status === TRANSACTION_STATUS.COMPLETED ? "text-emerald-600 border-emerald-200 bg-emerald-50" : "text-amber-600 border-amber-200 bg-amber-50",
-                        status === TRANSACTION_STATUS.FAILED && "text-rose-600 border-rose-200 bg-rose-50"
+                        status === TRANSACTION_STATUS.APPROVED ? "text-emerald-600 border-emerald-200 bg-emerald-50" : "text-amber-600 border-amber-200 bg-amber-50",
+                        status === TRANSACTION_STATUS.REJECTED && "text-rose-600 border-rose-200 bg-rose-50"
                     )}>
                         {status}
                     </Badge>
@@ -262,6 +178,8 @@ export const getColumns = (viewType: "transactions" | "invoices" = "transactions
     {
         id: "actions",
         size: 40,
-        cell: ({row}) => <ActionsCell row={row} viewType={viewType}/>
+        cell: ({row}) =>
+            <ActionsCell row={row}
+                         viewType={viewType}/>
     }
 ];

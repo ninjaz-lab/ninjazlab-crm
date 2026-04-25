@@ -1,5 +1,5 @@
 import {unstable_noStore as noStore} from "next/cache";
-import {WalletManager} from "./_components/wallet-manager";
+import {BillingDashboard} from "./_components/billing-dashboard";
 import {fetchUserWalletData} from "@/lib/actions/billing";
 import {PageHeader} from "@/components/page-header";
 import {HugeIcon} from "@/components/huge-icon";
@@ -41,7 +41,7 @@ export default async function BillingPage() {
             </div>
 
             {/* Transaction & Invoice Tables */}
-            <WalletManager transactions={walletData.transactions}/>
+            <BillingDashboard transactions={walletData.transactions}/>
         </div>
     );
 }

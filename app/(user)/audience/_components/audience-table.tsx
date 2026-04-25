@@ -25,7 +25,7 @@ import {
 import {fetchImportJobs} from "@/lib/actions/job_import_audience";
 import {AudienceForm} from "./audience-form";
 import {ImportWizard} from "./import-wizard";
-import {DataTable} from "@/components/data-table";
+import {DataTable} from "@/components/data-table/data-table";
 import {getColumns} from "./columns";
 import {HugeIcon} from "@/components/huge-icon";
 

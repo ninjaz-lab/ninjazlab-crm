@@ -66,7 +66,11 @@
       "Bash(/Users/yswei93/.nvm/versions/node/v22.21.1/bin/node /Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/node_modules/next/dist/bin/next build)",
       "Bash(/Users/yswei93/.nvm/versions/node/v22.21.1/bin/node node_modules/next/dist/bin/next build --no-turbopack)",
       "Bash(/Users/yswei93/.nvm/versions/node/v22.21.1/bin/node node_modules/typescript/bin/tsc --noEmit)",
-      "Bash(ls /Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/app/\\\\\\(dashboard\\\\\\)/)"
+      "Bash(ls /Users/yswei93/Desktop/workspace/ninjazlab/ninjazlab-crm/app/\\\\\\(dashboard\\\\\\)/)",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const x = require\\('@hugeicons/core-free-icons'\\); console.log\\(Object.keys\\(x\\).filter\\(n=>n.startsWith\\('Shield'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node -e \"const x = require\\('./node_modules/@hugeicons/core-free-icons'\\); console.log\\(Object.keys\\(x\\).filter\\(n=>n.startsWith\\('Shield'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node -e \"const x = require\\('./node_modules/@hugeicons/core-free-icons/dist/cjs/index.js'\\); const keys = Object.keys\\(x\\); console.log\\(keys.filter\\(n=>n.startsWith\\('Shield'\\)\\).join\\('\\\\n'\\)\\)\")"
     ]
   }
 }

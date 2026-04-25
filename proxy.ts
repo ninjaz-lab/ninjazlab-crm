@@ -2,9 +2,10 @@ import type {NextRequest} from "next/server";
 import {NextResponse} from "next/server";
 import {getSessionCookie} from "better-auth/cookies";
 import {USER_ROLES} from "@/lib/enums";
+import {Routes} from "@/lib/constants/routes";
 
-const publicRoutes = ["/login", "/register", "/api/auth", "/api/auth-redirect"];
-const adminRoutes = ["/admin"];
+const publicRoutes = [Routes.LOGIN, Routes.REGISTER, "/api/auth", "/api/auth-redirect"];
+const adminRoutes = [Routes.HOME_ADMIN];
 
 export async function proxy(request: NextRequest) {
     const {pathname} = request.nextUrl;
@@ -17,10 +18,10 @@ export async function proxy(request: NextRequest) {
 
     // Not authenticated — redirect to login unless on a public route
     if (!sessionCookie && !isPublicRoute)
-        return NextResponse.redirect(new URL("/login", request.url));
+        return NextResponse.redirect(new URL(Routes.LOGIN, request.url));
 
     // Already authenticated — skip auth pages, redirect admins to /admin
-    if (sessionCookie && (pathname === "/login" || pathname === "/register")) {
+    if (sessionCookie && (pathname === Routes.LOGIN || pathname === Routes.REGISTER)) {
         try {
             const sessionRes = await fetch(
                 new URL("/api/auth/get-session", request.url),
@@ -32,8 +33,8 @@ export async function proxy(request: NextRequest) {
                 return NextResponse.next();
 
             const dest = session?.user?.role === USER_ROLES.ADMIN
-                ? "/admin/accounts"
-                : "/";
+                ? Routes.HOME_ADMIN
+                : Routes.HOME;
             return NextResponse.redirect(new URL(dest, request.url));
         } catch {
             return NextResponse.next();
@@ -52,9 +53,9 @@ export async function proxy(request: NextRequest) {
             );
             const session = await sessionRes.json();
             if (session?.user?.role !== USER_ROLES.ADMIN)
-                return NextResponse.redirect(new URL("/", request.url));
+                return NextResponse.redirect(new URL(Routes.HOME_ADMIN, request.url));
         } catch {
-            return NextResponse.redirect(new URL("/login", request.url));
+            return NextResponse.redirect(new URL(Routes.LOGIN, request.url));
         }
     }
 

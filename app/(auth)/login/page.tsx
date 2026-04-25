@@ -8,6 +8,7 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Database} from "lucide-react";
+import {Routes} from "@/lib/constants/routes";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -139,7 +140,7 @@ export default function LoginPage() {
 
                     <p className="text-center text-sm text-muted-foreground">
                         Don&apos;t have an account?{" "}
-                        <Link href="/register" className="underline underline-offset-4 hover:text-primary">
+                        <Link href={Routes.REGISTER} className="underline underline-offset-4 hover:text-primary">
                             Sign up
                         </Link>
                     </p>

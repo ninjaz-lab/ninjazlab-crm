@@ -1,14 +1,16 @@
 import {unstable_noStore as noStore} from "next/cache";
 import {db} from "@/lib/db";
 import {user, userPermission, wallets, walletTransaction} from "@/lib/db/schema";
-import {and, count, eq, gte, lt, sql} from "drizzle-orm";
-import {Card, CardContent} from "@/components/ui/card";
+import {and, count, eq, gte, lt, sum} from "drizzle-orm";
 import {HugeIcon} from "@/components/huge-icon";
 import {USER_ROLES, WALLET_TYPES} from "@/lib/enums";
 import {cn} from "@/lib/utils/utils";
 import {formatAmount} from "@/lib/utils/transactions";
 import {Progress} from "@/components/ui/progress";
 import {PageHeader} from "@/components/page-header";
+import {MetricCard} from "@/components/metric-card";
+import {DashboardPanel, EmptyState} from "@/components/dashboard-panel";
+import {Routes} from "@/lib/constants/routes";
 
 // Helper for percentage calculations
 function calculateTrend(current: number, previous: number) {
@@ -38,25 +40,19 @@ async function getStats() {
 
     // 3. System Liquidity
     const [totalBalanceRes] = await db.select({
-        sum: sql<string>`coalesce
-        (sum(
-            ${wallets.balance}
-            ),
-            '0')`
-    }).from(wallets).where(eq(wallets.walletType, WALLET_TYPES.MAIN));
+        total: sum(wallets.balance)
+    })
+        .from(wallets)
+        .where(eq(wallets.walletType, WALLET_TYPES.MAIN));
 
     const [netChangeRes] = await db.select({
-        sum: sql<string>`coalesce
-        (sum(
-            ${walletTransaction.amount}
-            ),
-            '0')`
+        net: sum(walletTransaction.amount)
     })
         .from(walletTransaction)
         .where(gte(walletTransaction.createdAt, thirtyDaysAgo));
 
-    const currentBalance = parseFloat(totalBalanceRes.sum ?? "0");
-    const netChange = parseFloat(netChangeRes.sum ?? "0");
+    const currentBalance = parseFloat(totalBalanceRes?.total ?? "0");
+    const netChange = parseFloat(netChangeRes?.net ?? "0");
     const previousBalance = currentBalance - netChange;
 
     // 4. Permissions Stats
@@ -98,53 +94,13 @@ async function getStats() {
 export default async function AdminDashboardPage() {
     const stats = await getStats();
 
-    const statsConfig = [
-        {
-            title: "Platform Users",
-            value: stats.users.total,
-            changeAmount: stats.users.newCount,
-            isAmountTrend: true,
-            icon: "UserGroupIcon",
-            color: "text-blue-600",
-            bg: "bg-blue-600/5",
-        },
-        {
-            title: "System Admins",
-            value: stats.admins.total,
-            description: "Active administrators",
-            icon: "Shield02Icon",
-            color: "text-rose-600",
-            bg: "bg-rose-600/5",
-        },
-        {
-            title: "System Liquidity",
-            value: formatAmount(stats.liquidity.totalBalance),
-            prefix: "MYR",
-            trend: stats.liquidity.trend,
-            isTrendPercentage: true,
-            icon: "Coins01Icon",
-            color: "text-emerald-600",
-            bg: "bg-emerald-600/5",
-        },
-        {
-            title: "Active Permissions",
-            value: stats.permissions.total,
-            trend: stats.permissions.trend,
-            isTrendPercentage: true,
-            icon: "Key01Icon",
-            color: "text-amber-600",
-            bg: "bg-amber-600/5",
-        }
-    ];
-
     return (
         <div className="max-w-7xl mx-auto space-y-6 p-2">
 
-            <PageHeader
-                title="Admin Dashboard"
-                description="System-wide monitoring"
-                tag="Admin Only"
-                tagClassName="text-rose-600"
+            <PageHeader title="Admin Dashboard"
+                        description="System-wide monitoring"
+                        tag="Admin Only"
+                        tagClassName="text-rose-600"
             >
                 <div
                     className="h-8 w-8 rounded-md border flex items-center justify-center bg-card shadow-sm text-muted-foreground">
@@ -153,98 +109,110 @@ export default async function AdminDashboardPage() {
             </PageHeader>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {statsConfig.map((item) => (
-                    <Card key={item.title} className="border shadow-sm overflow-hidden group bg-card">
-                        <CardContent className="p-4 relative">
-                            <div className="flex items-center gap-3">
-                                <div
-                                    className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg border shadow-sm transition-transform group-hover:scale-110", item.bg, item.color)}>
-                                    <HugeIcon name={item.icon} size={20}/>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate mb-0.5">
-                                        {item.title}
-                                    </p>
-                                    <div className="flex items-baseline justify-between gap-1.5">
-                                        <h2 className="text-xl font-black tracking-tight tabular-nums">
-                                            {item.prefix && <span
-                                                className="text-sm font-bold text-muted-foreground mr-0.5">{item.prefix}</span>}
-                                            {item.value}
-                                        </h2>
+                <MetricCard title="Platform Users"
+                            icon="UserGroupIcon"
+                            variant="primary"
+                            href={Routes.ADMIN_USER}>
+                    <div className="flex flex-col gap-1">
+                            <span className="text-3xl font-black tracking-tighter text-primary">
+                                {stats.users.total.toLocaleString()}
+                            </span>
+                        <div className="flex items-center text-[11px] font-bold text-primary/70">
+                            <HugeIcon name="PlusSignIcon" size={12} className="mr-1"/>
+                            {stats.users.newCount} New this month
+                        </div>
+                    </div>
+                </MetricCard>
 
-                                        {item.isTrendPercentage ? (
-                                            <div className={cn(
-                                                "flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-md",
-                                                item.trend >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                                            )}>
-                                                <HugeIcon name={item.trend >= 0 ? "ArrowUp01Icon" : "ArrowDown01Icon"}
-                                                          size={10} className="mr-1"/>
-                                                {Math.abs(item.trend)}%
-                                            </div>
-                                        ) : item.isAmountTrend ? (
-                                            <div
-                                                className="flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700">
-                                                <HugeIcon name="PlusSignIcon" size={10} className="mr-1"/>
-                                                {item.changeAmount}
-                                            </div>
-                                        ) : (
-                                            <span className="text-[9px] font-bold text-muted-foreground italic">
-                                                {item.description}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                <MetricCard title="System Admins"
+                            icon="Shield02Icon"
+                            variant="default"
+                            href={Routes.ADMIN_USER}>
+                    <div className="flex flex-col gap-1">
+                            <span className="text-3xl font-black tracking-tighter text-foreground">
+                                {stats.admins.total.toLocaleString()}
+                            </span>
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                                Active administrators
+                            </span>
+                    </div>
+                </MetricCard>
+
+                <MetricCard title="System Liquidity"
+                            icon="Coins01Icon"
+                            variant="success"
+                            href={Routes.ADMIN_BILLING}>
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-end gap-1.5 mt-0.5">
+                                <span
+                                    className="text-xs font-bold text-emerald-600/70 mb-1.5 uppercase tracking-widest">MYR</span>
+                            <span
+                                className="text-3xl font-black tracking-tighter text-emerald-600 group-hover:text-emerald-500 transition-colors">
+                                    {formatAmount(stats.liquidity.totalBalance)}
+                                </span>
+                        </div>
+                        <div className={cn(
+                            "flex items-center text-[11px] font-bold w-fit",
+                            stats.liquidity.trend >= 0 ? "text-emerald-600" : "text-rose-600"
+                        )}>
+                            <HugeIcon name={stats.liquidity.trend >= 0 ? "ArrowUp01Icon" : "ArrowDown01Icon"}
+                                      size={12} className="mr-1"/>
+                            {Math.abs(stats.liquidity.trend)}% vs last month
+                        </div>
+                    </div>
+                </MetricCard>
+
+                <MetricCard title="Active Permissions"
+                            icon="Key01Icon"
+                            variant="warning"
+                            href={Routes.ADMIN_MODULES}>
+                    <div className="flex flex-col gap-1">
+                            <span
+                                className="text-3xl font-black tracking-tighter text-amber-600 group-hover:text-amber-500 transition-colors">
+                                {stats.permissions.total.toLocaleString()}
+                            </span>
+                        <div className={cn(
+                            "flex items-center text-[11px] font-bold w-fit",
+                            stats.permissions.trend >= 0 ? "text-amber-600" : "text-rose-600"
+                        )}>
+                            <HugeIcon name={stats.permissions.trend >= 0 ? "ArrowUp01Icon" : "ArrowDown01Icon"}
+                                      size={12}
+                                      className="mr-1"/>
+                            {Math.abs(stats.permissions.trend)}% trend
+                        </div>
+                    </div>
+                </MetricCard>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-7">
-                <div className="md:col-span-4 h-[350px] rounded-xl border bg-card shadow-sm flex flex-col">
-                    <div className="p-4 border-b flex items-center justify-between">
-                        <span className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                            <HugeIcon name="ChartPie01Icon" size={14} className="text-primary"/>
-                            Revenue Analytics
-                        </span>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center justify-center bg-muted/5 relative">
-                        <HugeIcon name="AiCloud01Icon" size={40} className="opacity-10 mb-2"/>
-                        <span className="text-[9px] font-black uppercase tracking-widest opacity-20">Real-time Charting Offline</span>
-                    </div>
-                </div>
+            <div className="grid gap-6 md:grid-cols-7">
 
-                <div className="md:col-span-3 h-[350px] rounded-xl border bg-card shadow-sm flex flex-col">
-                    <div className="p-4 border-b">
-                        <span className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                            <HugeIcon name="ActivityIcon" size={14} className="text-primary"/>
-                            System Health
-                        </span>
+                {/* Revenue Analytics */}
+                <DashboardPanel title="Revenue Analytics"
+                                description="Real-time platform charting is currently offline."
+                                icon="ChartPie01Icon"
+                                className="md:col-span-4"
+                                contentClassName="bg-muted/5 items-center justify-center p-8">
+                    <EmptyState icon="AiCloud01Icon"
+                                title="Analytics Unavailable"
+                                description="Please check back later once data aggregation completes."/>
+                </DashboardPanel>
+
+                {/* System Health */}
+                <DashboardPanel title="System Health"
+                                description="Live telemetry from production servers."
+                                icon="ActivityIcon"
+                                className="md:col-span-3"
+                                contentClassName="justify-center gap-8">
+                    <div className="space-y-2.5">
+                        <div className="flex justify-between text-sm font-semibold">
+                            <span>API Response Time</span>
+                            <span className="text-emerald-600">24ms</span>
+                        </div>
+                        <Progress value={15} className="h-2 bg-emerald-600/10 [&>div]:bg-emerald-600"/>
                     </div>
-                    <div className="flex-1 p-4 flex flex-col justify-center gap-6">
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
-                                <span>API Response Time</span>
-                                <span className="text-emerald-600">24ms</span>
-                            </div>
-                            <Progress value={15} className="h-1"/>
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
-                                <span>Database Load</span>
-                                <span className="text-amber-600">42%</span>
-                            </div>
-                            <Progress value={42} className="h-1"/>
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
-                                <span>Worker Threads</span>
-                                <span className="text-blue-600">Active</span>
-                            </div>
-                            <Progress value={88} className="h-1"/>
-                        </div>
-                    </div>
-                </div>
+
+                </DashboardPanel>
+
             </div>
         </div>
     );

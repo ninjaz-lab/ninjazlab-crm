@@ -6,6 +6,7 @@ import {asc, desc, eq} from "drizzle-orm";
 import {db} from "@/lib/db";
 import {pricingRule, user} from "@/lib/db/schema";
 import {authenticateAdmin} from "@/lib/actions/session";
+import {Routes} from "@/lib/constants/routes";
 
 export async function fetchAllPricingRules() {
     // Validate is Admin
@@ -18,7 +19,7 @@ export async function fetchAllPricingRules() {
             userName: user.name,
             userEmail: user.email,
             userImage: user.image,
-            module: pricingRule.module,
+            campaign: pricingRule.campaign,
             action: pricingRule.action,
             unitPrice: pricingRule.unitPrice,
             currency: pricingRule.currency,
@@ -28,13 +29,13 @@ export async function fetchAllPricingRules() {
         })
         .from(pricingRule)
         .leftJoin(user, eq(user.id, pricingRule.userId))
-        .orderBy(asc(pricingRule.module), asc(pricingRule.action), desc(pricingRule.effectiveFrom));
+        .orderBy(asc(pricingRule.campaign), asc(pricingRule.action), desc(pricingRule.effectiveFrom));
 }
 
 export async function createPricingRule(
     data: {
         userId?: string | null;
-        module: string;
+        campaign: string;
         action?: string;
         unitPrice: string;
         currency?: string;
@@ -49,16 +50,16 @@ export async function createPricingRule(
     await db.insert(pricingRule).values({
         id,
         userId: data.userId ?? null,
-        module: data.module,
+        campaign: data.campaign,
         action: data.action ?? "send",
         unitPrice: data.unitPrice,
-        currency: data.currency ?? "USD",
+        currency: data.currency ?? "MYR",
         effectiveFrom: data.effectiveFrom,
         note: data.note ?? null,
         createdBy: session.user.id,
         createdAt: new Date(),
     });
-    revalidatePath("/admin/pricing");
+    revalidatePath(Routes.ADMIN_PRICING);
     return id;
 }
 
@@ -79,7 +80,7 @@ export async function updatePricingRule(
         note: data.note ?? null,
     }).where(eq(pricingRule.id, id));
 
-    revalidatePath("/admin/pricing");
+    revalidatePath(Routes.ADMIN_PRICING);
 }
 
 export async function deletePricingRule(id: string) {
@@ -87,5 +88,5 @@ export async function deletePricingRule(id: string) {
     await authenticateAdmin();
 
     await db.delete(pricingRule).where(eq(pricingRule.id, id));
-    revalidatePath("/admin/pricing");
+    revalidatePath(Routes.ADMIN_PRICING);
 }

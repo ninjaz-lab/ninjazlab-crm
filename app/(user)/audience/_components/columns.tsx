@@ -2,18 +2,10 @@
 
 import React from "react";
 import {ColumnDef} from "@tanstack/react-table";
-import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {Checkbox} from "@/components/ui/checkbox";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {type AudienceRow} from "@/lib/actions/audience";
-import {HugeIcon} from "@/components/huge-icon";
+import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
 
 export const getColumns = (
     audiencesLength: number,
@@ -76,30 +68,27 @@ export const getColumns = (
     },
     {
         id: "actions",
-        header: () => <div className="w-10"/>,
+        header: () => <div className="w-10 pr-4"/>,
         cell: ({row}) => {
             const c = row.original;
+
+            const actions: TableRowAction[] = [
+                {
+                    label: "Edit",
+                    icon: "PencilEdit01Icon",
+                    onClick: () => setEditAudience(c),
+                },
+                {
+                    label: "Delete",
+                    icon: "Delete02Icon",
+                    variant: "destructive",
+                    onClick: () => setDeleteId(c.id),
+                }
+            ];
+
             return (
                 <div className="flex justify-end pr-4">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="size-8">
-                                <HugeIcon name="MoreHorizontalIcon" size={16} className="opacity-50"/>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-xl">
-                            <DropdownMenuItem onClick={() => setEditAudience(c)} className="font-bold cursor-pointer">
-                                <HugeIcon name="PencilEdit01Icon" size={16} className="mr-2"/> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator/>
-                            <DropdownMenuItem
-                                className="text-destructive focus:bg-destructive/10 font-bold cursor-pointer"
-                                onClick={() => setDeleteId(c.id)}
-                            >
-                                <HugeIcon name="Delete02Icon" size={16} className="mr-2"/> Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <TableRowActions actions={actions}/>
                 </div>
             );
         }

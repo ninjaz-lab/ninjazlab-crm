@@ -15,6 +15,7 @@ import {
 import {useAppStore} from "@/lib/store/app-store";
 import {NotificationBell} from "@/components/notification-bell";
 import {useSession} from "@/lib/auth-client";
+import {Routes} from "@/lib/constants/routes";
 
 const routeLabels: Record<string, string> = {
     "/audience": "Audience",
@@ -41,8 +42,8 @@ export function UserHeader() {
             const segment = segments[i];
 
             // 1. Group "Marketing" and "Email" into one smart crumb
-            if (segment === "marketing" && segments[i + 1] === "email") {
-                let href = "/marketing/email";
+            if (segment === "campaigns" && segments[i + 1] === "email") {
+                let href = "/campaigns/email";
 
                 // Look ahead in the URL to see if we are in templates or campaigns!
                 if (segments.includes("templates"))
@@ -50,7 +51,7 @@ export function UserHeader() {
                 else if (segments.includes("campaigns"))
                     href += "?tab=campaigns";
 
-                crumbs.push({label: "Email Marketing", href});
+                crumbs.push({label: "Email Campaigns", href});
 
                 // Skip the 'email' segment since we combined them into one crumb
                 i++;
@@ -115,7 +116,7 @@ export function UserHeader() {
 
                         {/* Always show root */}
                         <BreadcrumbItem className="hidden md:block">
-                            <BreadcrumbLink href="/">NinjazCRM</BreadcrumbLink>
+                            <BreadcrumbLink href={Routes.HOME}>NinjazCRM</BreadcrumbLink>
                         </BreadcrumbItem>
 
                         {/* Map over dynamically generated crumbs */}
@@ -139,7 +140,7 @@ export function UserHeader() {
             </div>
 
             <div className="flex items-center gap-2 pr-2">
-                {session?.user?.id && <NotificationBell userId={session.user.id} />}
+                {session?.user?.id && <NotificationBell userId={session.user.id}/>}
             </div>
         </header>
     );

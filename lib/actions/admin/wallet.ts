@@ -3,10 +3,11 @@
 import {db} from "@/lib/db";
 import {wallets, walletTransaction} from "@/lib/db/schema";
 import {and, desc, eq, sql} from "drizzle-orm";
-import {TRANSACTION_MODULES, TRANSACTION_TYPES, WALLET_TYPES} from "@/lib/enums";
+import {TRANSACTION_CAMPAIGN, TRANSACTION_TYPES, WALLET_TYPES} from "@/lib/enums";
 import {randomUUID} from "crypto";
 import {revalidatePath} from "next/cache";
 import {authenticateAdmin} from "@/lib/actions/session";
+import {generateTransactionId} from "@/lib/pricing";
 
 async function ensureMainWallet(userId: string) {
     const [existing] = await db
@@ -58,17 +59,18 @@ export async function adjustWalletBalance(
         // 3. Record the transaction tied to that specific billing
         await tx.insert(walletTransaction).values({
             id: randomUUID(),
-            walletId: wallet.id,
             userId,
+            walletId: wallet.id,
+            transactionId: generateTransactionId(),
             amount: Math.abs(amount).toFixed(2),
             type: TRANSACTION_TYPES[type],
-            module: TRANSACTION_MODULES.SYSTEM,
+            module: TRANSACTION_CAMPAIGN.SYSTEM,
             note: note || `Admin adjustment`,
             createdAt: new Date(),
         });
     });
 
-    revalidatePath("/admin/accounts");
+    revalidatePath("/admin");
 }
 
 export async function fetchWalletTransactions(

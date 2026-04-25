@@ -1,6 +1,6 @@
 import {db} from "@/lib/db"; // Adjust this import based on your actual db file path
 import {pricingRule} from "@/lib/db/schema";
-import {TRANSACTION_MODULES} from "@/lib/enums";
+import {TRANSACTION_CAMPAIGN} from "@/lib/enums";
 import {randomUUID} from "crypto";
 import {isNull} from "drizzle-orm";
 
@@ -11,7 +11,7 @@ export async function seedPricingRules() {
         {
             id: randomUUID(),
             userId: null,
-            module: TRANSACTION_MODULES.EMAIL,
+            module: TRANSACTION_CAMPAIGN.EMAIL,
             action: "send",
             unitPrice: "0.100000",
             currency: "MYR",
@@ -22,7 +22,7 @@ export async function seedPricingRules() {
         {
             id: randomUUID(),
             userId: null,
-            module: TRANSACTION_MODULES.SMS,
+            module: TRANSACTION_CAMPAIGN.SMS,
             action: "send",
             unitPrice: "0.100000",
             currency: "MYR",

@@ -3,15 +3,18 @@
 import {ColumnDef} from "@tanstack/react-table";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {cn} from "@/lib/utils/utils";
 import {formatAmount} from "@/lib/utils/transactions";
 import {HugeIcon} from "@/components/huge-icon";
-import {TableRowAction} from "@/components/table-row-action";
+import {TableRowDetailsAction} from "@/components/data-table/table-row-details-action";
+import {RoleAvatar} from "@/components/role-avatar";
+import {Progress} from "@/components/ui/progress";
 import {USER_ROLES} from "@/lib/enums";
+import {UserStatusBadge} from "@/components/user-status-badge";
 
 export const getColumns = (
     currentUserId: string,
+    totalModules: number = 0,
     pageIndex: number,
     pageSize: number
 ): ColumnDef<any>[] => [
@@ -48,35 +51,11 @@ export const getColumns = (
 
             return (
                 <div className="flex items-center gap-3">
-                    <div className="relative h-10 w-10 shrink-0">
-                        <Avatar
-                            className="h-full w-full border-2 border-background shadow-sm group-hover:border-primary/20 transition-all">
-                            <AvatarImage src={u.image || undefined} alt={u.name}/>
-                            <AvatarFallback className="bg-primary/5 text-primary font-bold">
-                                {u.name.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                        {/* Role-based Avatar Badges */}
-                        {u.role === USER_ROLES.SUPERADMIN ? (
-                            <div
-                                className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center bg-amber-500 rounded-full border-2 border-background shadow-sm"
-                                title="Superadmin">
-                                <HugeIcon name="CrownIcon" size={10} className="text-white "/>
-                            </div>
-                        ) : u.role === USER_ROLES.ADMIN ? (
-                            <div
-                                className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center bg-rose-600 rounded-full border-2 border-background shadow-sm"
-                                title="Admin">
-                                <HugeIcon name="Shield02Icon" size={10} className="text-white"/>
-                            </div>
-                        ) : (
-                            <div
-                                className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center bg-slate-700 rounded-full border-2 border-background shadow-sm"
-                                title="User">
-                                <HugeIcon name="UserIcon" size={10} className="text-white "/>
-                            </div>
-                        )}
-                    </div>
+                    <RoleAvatar src={u.image}
+                                name={u.name}
+                                role={u.role}
+                    />
+
                     <div className="flex flex-col">
                         <p className="font-bold text-sm tracking-tight leading-none mb-1">
                             {u.name}
@@ -87,6 +66,65 @@ export const getColumns = (
                         </p>
                         <p className="text-[11px] text-muted-foreground font-medium">{u.email}</p>
                     </div>
+                </div>
+            );
+        },
+    },
+    {
+        id: "coverage",
+        accessorFn: (row) => {
+            if (row.role === USER_ROLES.ADMIN || row.role === USER_ROLES.SUPERADMIN)
+                return totalModules;
+
+            return Object.values(row.permissions || {}).filter(Boolean).length;
+        },
+        header: ({column}) => {
+            const isSorted = column.getIsSorted();
+            return (
+                <div className="flex justify-center">
+                    <Button variant="ghost" onClick={() => column.toggleSorting(isSorted === "asc")}
+                            className="h-8 text-[10px] font-bold uppercase tracking-widest hover:bg-muted/50 data-[active=true]:text-primary"
+                            data-active={!!isSorted}>
+                        Module Coverage
+                        <HugeIcon
+                            name={isSorted ? (isSorted === "asc" ? "ArrowUp01Icon" : "ArrowDown01Icon") : "Sorting05Icon"}
+                            size={14}
+                            className={cn("ml-2 transition-transform", isSorted ? "text-primary" : "opacity-50")}/>
+                    </Button>
+                </div>
+            );
+        },
+        cell: ({row}) => {
+            const u = row.original;
+            const fullAccess = u.role === USER_ROLES.ADMIN || u.role === USER_ROLES.SUPERADMIN;
+
+            if (fullAccess)
+                return (
+                    <div className="flex flex-col gap-1.5 w-[140px] mx-auto">
+                        <div
+                            className="flex items-center justify-between text-[10px] font-black uppercase text-primary">
+                            <span className="flex items-center gap-1">
+                                <HugeIcon name="CrownIcon" size={12} className="text-primary"/>
+                                Full Access
+                            </span>
+                        </div>
+                        <Progress value={100} className="h-1.5 bg-muted"/>
+                    </div>
+                );
+
+            // Standard User UI
+            const activeCount = Object.values(row.original.permissions || {}).filter(Boolean).length;
+            const progress = totalModules > 0 ? (activeCount / totalModules) * 100 : 0;
+
+            return (
+                <div className="flex flex-col gap-1.5 w-[140px] mx-auto">
+                    <div
+                        className="flex items-center justify-between text-[10px] font-black uppercase text-muted-foreground">
+                        <span>{activeCount} / {totalModules} Active</span>
+                        <span>{Math.round(progress)}%</span>
+                    </div>
+                    <Progress value={progress}
+                              className="h-1.5 bg-muted"/>
                 </div>
             );
         },
@@ -145,31 +183,18 @@ export const getColumns = (
                 </div>
             );
         },
-        cell: ({row}) => {
-            const banned = row.original.banned;
-            return (
-                <div className="flex justify-center">
-                    {banned ? (
-                        <Badge variant="destructive"
-                               className="rounded-full font-black text-[9px] uppercase tracking-wider py-0.5 pr-2 pl-1 gap-1">
-                            <HugeIcon name="UserBlock01Icon" size={12}/> Banned
-                        </Badge>
-                    ) : (
-                        <Badge variant="outline"
-                               className="text-emerald-600 border-emerald-200 bg-emerald-50 rounded-full font-black text-[9px] uppercase tracking-wider py-0.5 pr-2 pl-1 gap-1">
-                            <HugeIcon name="UserCheck02Icon" size={12}/> Active
-                        </Badge>
-                    )}
-                </div>
-            );
-        },
+        cell: ({row}) => (
+            <div className="flex justify-center">
+                <UserStatusBadge banned={row.original.banned}/>
+            </div>
+        ),
     },
     {
         id: "actions",
         header: () => <div className="w-10"/>,
         cell: () => (
             <div className="flex justify-end">
-                <TableRowAction/>
+                <TableRowDetailsAction/>
             </div>
         )
     },

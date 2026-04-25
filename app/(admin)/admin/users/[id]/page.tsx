@@ -6,6 +6,7 @@ import {notFound} from "next/navigation";
 import {ProfileTab} from "./_components/profile-tab";
 import {BillingTab} from "./_components/billing-tab";
 import {MarketingTab} from "./_components/marketing-tab";
+import React from "react";
 
 export default async function UserDetailsPage({params}: {
     params: Promise<{ id: string }>
@@ -39,17 +40,22 @@ export default async function UserDetailsPage({params}: {
             </header>
 
             <Tabs defaultValue="profile" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 max-w-md">
-                    <TabsTrigger value="profile">
-                        <HugeIcon name="UserCircleIcon" size={16} className="mr-2"/> Profile
-                    </TabsTrigger>
-                    <TabsTrigger value="billing">
-                        <HugeIcon name="HistoryIcon" size={16} className="mr-2"/> Billing
-                    </TabsTrigger>
-                    <TabsTrigger value="marketing">
-                        <HugeIcon name="Calendar02Icon" size={16} className="mr-2"/> Schedule
-                    </TabsTrigger>
-                </TabsList>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <TabsList className="max-w-[400px]">
+                        <TabsTrigger value="profile">
+                            <HugeIcon name="UserCircleIcon" size={14} className="mr-2"/> Profile
+                        </TabsTrigger>
+
+                        <TabsTrigger value="billing">
+                            <HugeIcon name="GlobalIcon" size={14} className="mr-2"/> Billing
+                        </TabsTrigger>
+
+                        <TabsTrigger value="marketing">
+                            <HugeIcon name="GlobalIcon" size={14} className="mr-2"/> Schedule
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
                 <TabsContent value="profile" className="mt-6">
                     <ProfileTab user={u} audience={a}/>

@@ -1,17 +1,29 @@
 "use server";
 
 import {db} from "@/lib/db";
-import {audience, marketingCampaign, pricingRule, session, user, wallets, walletTransaction} from "@/lib/db/schema";
+import {
+    audience,
+    marketingCampaign,
+    pricingRule,
+    session,
+    user,
+    userPermission,
+    wallets,
+    walletTransaction
+} from "@/lib/db/schema";
 import {and, asc, desc, eq, ilike, inArray, isNull, or, sql} from "drizzle-orm";
 import {CAMPAIGN_STATUS, type UserRole, WALLET_TYPES} from "@/lib/enums";
 import {revalidatePath} from "next/cache";
 import {authenticateAdmin} from "@/lib/actions/session";
+import {Routes} from "@/lib/constants/routes";
 
 export async function fetchAllUsers() {
     // Validate is Admin
     await authenticateAdmin();
 
-    return db.select().from(user).orderBy(user.createdAt);
+    return db.select()
+        .from(user)
+        .orderBy(user.createdAt);
 }
 
 export async function fetchAllUsersWithWallets(
@@ -53,14 +65,32 @@ export async function fetchAllUsersWithWallets(
         .offset(offset)
         .orderBy(asc(user.name));
 
+    const userIds = data.map(u => u.id);
+    let allPerms: any[] = [];
+    if (userIds.length > 0)
+        allPerms = await db.select()
+            .from(userPermission)
+            .where(inArray(userPermission.userId, userIds));
+
+    const usersWithPerms = data.map(u => {
+        const perms: Record<string, boolean> = {};
+        allPerms.filter(p => p.userId === u.id).forEach(p => {
+            perms[p.moduleId] = p.enabled;
+        });
+        return {...u, permissions: perms};
+    });
+
     const [countResult] = await db
-        .select({count: sql<number>`count(*)`})
+        .select({
+            count: sql<number>`count
+                (*)`
+        })
         .from(user)
         .where(whereClause);
 
     return {
-        users: data,
-        total: Number(countResult.count),
+        users: usersWithPerms,
+        totalUsers: Number(countResult.count),
     };
 
 }
@@ -76,7 +106,7 @@ export async function setUserRole(
         .update(user)
         .set({role, updatedAt: new Date()})
         .where(eq(user.id, userId));
-    revalidatePath("/admin/users");
+    revalidatePath(Routes.ADMIN_USER);
 }
 
 export async function banUser(
@@ -90,7 +120,7 @@ export async function banUser(
         .update(user)
         .set({banned: true, banReason: reason, updatedAt: new Date()})
         .where(eq(user.id, userId));
-    revalidatePath("/admin/users");
+    revalidatePath(Routes.ADMIN_USER);
 }
 
 export async function unbanUser(userId: string) {
@@ -101,7 +131,7 @@ export async function unbanUser(userId: string) {
         .update(user)
         .set({banned: false, banReason: null, updatedAt: new Date()})
         .where(eq(user.id, userId));
-    revalidatePath("/admin/users");
+    revalidatePath(Routes.ADMIN_USER);
 }
 
 export async function fetchUserFullDetails(userId: string) {
@@ -116,6 +146,15 @@ export async function fetchUserFullDetails(userId: string) {
         .leftJoin(wallets, and(eq(user.id, wallets.userId), eq(wallets.walletType, WALLET_TYPES.MAIN)))
         .where(eq(user.id, userId))
         .limit(1);
+
+    const userPerms = await db.select().from(userPermission).where(eq(userPermission.userId, userId));
+    const permMap: Record<string, boolean> = {};
+    userPerms.forEach(p => {
+        permMap[p.moduleId] = p.enabled;
+    });
+
+    if (userDetails && userDetails.user)
+        (userDetails.user as any).permissions = permMap;
 
     // 2. Fetch Recent Transactions
     const transactions = await db
@@ -151,7 +190,10 @@ export async function fetchUserFullDetails(userId: string) {
         .where(isNull(pricingRule.userId));
 
     const [audienceCount] = await db
-        .select({count: sql<number>`count(*)`})
+        .select({
+            count: sql<number>`count
+                (*)`
+        })
         .from(audience)
         .where(eq(audience.userId, userId));
 

@@ -2,11 +2,12 @@
 
 import {db} from "@/lib/db";
 import {module, user, userPermission} from "@/lib/db/schema";
-import {and, eq} from "drizzle-orm";
+import {eq} from "drizzle-orm";
 import {USER_ROLES} from "@/lib/enums";
 import {randomUUID} from "crypto";
 import {revalidatePath} from "next/cache";
 import {authenticateAdmin} from "@/lib/actions/session";
+import {Routes} from "@/lib/constants/routes";
 
 export async function fetchAllModules() {
     // Validate is Admin
@@ -42,44 +43,33 @@ export async function fetchAllUsersWithPermissions() {
     });
 }
 
-export async function setModulePermission(
+export async function setBulkModulePermissions(
     userId: string,
-    moduleId: string,
+    moduleIds: string[],
     enabled: boolean
 ) {
     // Validate is Admin
     await authenticateAdmin();
 
-    const existing = await db
-        .select()
-        .from(userPermission)
-        .where(
-            and(
-                eq(userPermission.userId, userId),
-                eq(userPermission.moduleId, moduleId)
-            )
+    if (moduleIds.length === 0) return;
+
+    await db.insert(userPermission)
+        .values(
+            moduleIds.map((mId) => ({
+                id: randomUUID(),
+                userId,
+                moduleId: mId,
+                enabled,
+                updatedAt: new Date(),
+            }))
         )
-        .limit(1);
-
-    if (existing.length === 0)
-        await db.insert(userPermission).values({
-            id: randomUUID(),
-            userId,
-            moduleId,
-            enabled,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+        .onConflictDoUpdate({
+            target: [userPermission.userId, userPermission.moduleId],
+            set: {
+                enabled,
+                updatedAt: new Date()
+            },
         });
-    else // Update existing permission record
-        await db
-            .update(userPermission)
-            .set({enabled, updatedAt: new Date()})
-            .where(
-                and(
-                    eq(userPermission.userId, userId),
-                    eq(userPermission.moduleId, moduleId)
-                )
-            );
 
-    revalidatePath("/admin/modules");
+    revalidatePath(Routes.ADMIN_MODULES);
 }

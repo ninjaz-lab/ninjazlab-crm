@@ -3,13 +3,15 @@
 import {db} from "@/lib/db";
 import {wallets, walletTransaction} from "@/lib/db/schema";
 import {and, desc, eq, gte, sum} from "drizzle-orm";
-import {TRANSACTION_MODULES, TRANSACTION_STATUS, TRANSACTION_TYPES, WALLET_TYPES} from "@/lib/enums";
+import {TRANSACTION_CAMPAIGN, TRANSACTION_STATUS, TRANSACTION_TYPES, WALLET_TYPES} from "@/lib/enums";
 import {authenticateUser} from "@/lib/actions/session";
 import {revalidatePath} from "next/cache";
 import {randomUUID} from "crypto";
 import {PutObjectCommand} from "@aws-sdk/client-s3";
 import {notifyAdmins} from "@/lib/actions/notification";
 import {fetchR2Client} from "@/lib/actions/cloudflare-rs";
+import {generateTransactionId} from "@/lib/pricing";
+import {Routes} from "@/lib/constants/routes";
 
 export async function fetchUserWalletData() {
     // 1. Authenticate the user
@@ -58,13 +60,13 @@ export async function fetchUserWalletData() {
     const mappedTransactions = transactions.map((t) => {
         const amount = parseFloat(t.amount.toString());
         const isCredit = t.type.toLowerCase() === TRANSACTION_TYPES.CREDIT.toLowerCase();
-        const isCompleted = t.status === TRANSACTION_STATUS.COMPLETED;
+        const isApproved = t.status === TRANSACTION_STATUS.APPROVED;
 
         // Snapshot the balance for THIS row
         const currentRunningBalance = runningBalance;
 
         // If the transaction is completed, we reverse-engineer the math to find out what the balance was BEFORE this transaction happened
-        if (isCompleted) {
+        if (isApproved) {
             if (isCredit)
                 runningBalance -= amount; // Revert a top-up
             else
@@ -73,6 +75,7 @@ export async function fetchUserWalletData() {
 
         return {
             id: t.id,
+            transactionId: t.transactionId,
             date: new Date(t.createdAt).toISOString(),
             description: t.note || "Wallet Transaction",
             amount: amount,
@@ -146,11 +149,12 @@ export async function requestTopUp(formData: FormData) {
     // 3. Create a PENDING Transaction Record
     await db.insert(walletTransaction).values({
         id: randomUUID(),
-        walletId: wallet.id,
         userId,
+        walletId: wallet.id,
+        transactionId: generateTransactionId(),
         amount: amount.toFixed(2),
         type: TRANSACTION_TYPES.CREDIT,
-        module: TRANSACTION_MODULES.SYSTEM,
+        module: TRANSACTION_CAMPAIGN.SYSTEM,
         status: TRANSACTION_STATUS.PENDING,
         receiptUrl: receiptUrl,
         note: `Top-up Request`,
@@ -161,7 +165,7 @@ export async function requestTopUp(formData: FormData) {
         "billing_alert",
         "New Top-Up Request",
         `A user has requested a top-up of MYR ${amount.toFixed(2)}.`,
-        "/admin/billing"
+        Routes.ADMIN_BILLING
     );
 
     revalidatePath("/billing");
