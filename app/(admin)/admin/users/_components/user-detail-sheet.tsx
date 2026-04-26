@@ -3,11 +3,12 @@
 import {HugeIcon} from "@/components/huge-icon";
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@/components/ui/sheet";
 import {cn} from "@/lib/utils/utils";
-import {formatAmount} from "@/lib/utils/transactions";
+import {fetchAmountColor, formatAmount} from "@/lib/utils/amount";
 import {UserTab} from "@/app/(admin)/admin/users/_components/user-tab";
 import {useUserDetail} from "@/hooks/use-user-details";
 import {RoleAvatar} from "@/components/role-avatar";
-import {UserStatusBadge} from "@/components/user-status-badge";
+import {UserStatusBadge} from "@/components/badge/user-status-badge";
+import {TRANSACTION_TYPES} from "@/lib/enums";
 
 export function UserDetailSheet({userId, open, onOpenChangeAction}: {
     userId: string | null; open: boolean; onOpenChangeAction: (open: boolean) => void;
@@ -38,7 +39,7 @@ export function UserDetailSheet({userId, open, onOpenChangeAction}: {
             <SheetContent
                 className="w-full sm:max-w-3xl p-0 flex flex-col gap-0 border-l shadow-2xl h-full overflow-hidden">
 
-                {loading || !data ? (
+                {!data ? (
                     <>
                         <SheetHeader className="sr-only">
                             <SheetTitle>Loading User</SheetTitle>
@@ -54,6 +55,12 @@ export function UserDetailSheet({userId, open, onOpenChangeAction}: {
                     </>
                 ) : (
                     <>
+                        {loading && (
+                            <div className="absolute top-0 left-0 w-full h-1 bg-primary/20 z-50 overflow-hidden">
+                                <div
+                                    className="h-full bg-primary w-1/3 animate-[pulse_1s_ease-in-out_infinite] shadow-[0_0_8px_rgba(0,0,0,0.5)]"/>
+                            </div>
+                        )}
                         <SheetHeader className="px-6 pt-5 pb-4 border-b bg-muted/5 relative overflow-hidden shrink-0">
                             <div
                                 className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-transparent pointer-events-none"/>
@@ -72,8 +79,8 @@ export function UserDetailSheet({userId, open, onOpenChangeAction}: {
                                         <SheetDescription className="text-xs font-medium truncate">
                                             {data.profile.user.email}
                                         </SheetDescription>
+                                        <UserStatusBadge banned={!!isBanned}/>
                                     </div>
-                                    <UserStatusBadge banned={!!isBanned}/>
                                 </div>
 
                                 {/* Row 2: Wallet balance */}
@@ -82,9 +89,11 @@ export function UserDetailSheet({userId, open, onOpenChangeAction}: {
                                         <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-0.5">
                                             Wallet Balance
                                         </p>
-                                        <p className={cn("text-lg font-mono font-black leading-none", balance < 0 ? "text-rose-600" : "text-emerald-600")}>
-                                            {formatAmount(balance)} <span
-                                            className="text-[9px] text-muted-foreground font-bold">MYR</span>
+                                        <p className={cn("flex items-baseline justify-end gap-1 text-lg font-mono font-black leading-none whitespace-nowrap",
+                                            fetchAmountColor(balance < 0 ? TRANSACTION_TYPES.DEBIT : TRANSACTION_TYPES.CREDIT)
+                                        )}>
+                                            <span className="text-[9px] text-muted-foreground font-bold">MYR</span>
+                                            {formatAmount(balance)}
                                         </p>
                                     </div>
                                 </div>

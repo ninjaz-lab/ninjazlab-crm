@@ -2,10 +2,17 @@
 
 import React from "react";
 import {format} from "date-fns";
-import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,} from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/dialog";
 import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
-import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,} from "@/components/ui/command";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList} from "@/components/ui/command";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
@@ -102,11 +109,11 @@ export function PricingRuleDialog({
                             <DialogTitle className="text-base font-semibold">
                                 {isEditing ? "Edit Pricing Rule" : "New Pricing Rule"}
                             </DialogTitle>
-                            <p className="text-sm text-muted-foreground mt-0.5">
+                            <DialogDescription className="text-sm text-muted-foreground mt-0.5">
                                 {isEditing
                                     ? "Update the rate, date, or notes for this rule."
                                     : "Set a billing rate for a campaign and scope."}
-                            </p>
+                            </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
@@ -338,18 +345,17 @@ export function PricingRuleDialog({
 
                 {/* Footer */}
                 <DialogFooter className="px-6 py-4 border-t bg-muted/10 flex-row justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={onCancel} className="font-medium">
+                    <Button variant="ghost" size="lg" onClick={onCancel} className="font-medium">
                         Cancel
                     </Button>
-                    <Button
-                        size="sm"
-                        onClick={onSave}
-                        disabled={isPending}
-                        className="font-semibold min-w-[110px]"
+                    <Button size="lg"
+                            onClick={onSave}
+                            disabled={isPending}
+                            className="font-semibold min-w-[110px]"
                     >
                         {isPending
                             ? <><HugeIcon name="Loading03Icon" size={14} className="mr-1.5 animate-spin"/> Saving…</>
-                            : isEditing ? "Save Changes" : "Create Rule"
+                            : isEditing ? "Save Changes" : "Create"
                         }
                     </Button>
                 </DialogFooter>

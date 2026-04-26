@@ -71,25 +71,30 @@ export function useUserDetail(userId: string | null, open: boolean) {
 
     // Derived State: Effective Pricing
     const effectivePricing = useMemo(() => {
-        const pricing: any[] = [];
-        if (data?.defaultPricing) {
-            const defaults = data.defaultPricing;
-            const overrides = data.pricingRules || [];
+        const now = new Date();
 
-            defaults.forEach((def: any) => {
-                const override = overrides.find((o: any) => o.module === def.module && o.action === def.action);
-                if (override) {
-                    pricing.push({...override, isOverride: true, originalPrice: def.unitPrice});
-                } else {
-                    pricing.push({...def, isOverride: false});
-                }
-            });
-            overrides.forEach((over: any) => {
-                if (!pricing.find((e) => e.module === over.module && e.action === over.action)) {
-                    pricing.push({...over, isOverride: true});
-                }
-            });
-        }
+        const getActiveRule = (rulesList: any[], campaign: string) => {
+            return rulesList
+                .filter(r => r.campaign === campaign && new Date(r.effectiveFrom) <= now)
+                .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0];
+        };
+
+        const defaultRules = data?.defaultPricing || [];
+        const overrideRules = data?.pricingRules || [];
+        const allCampaigns = Array.from(new Set([...defaultRules, ...overrideRules].map(r => r.campaign)));
+
+        const pricing: any[] = [];
+
+        allCampaigns.forEach(campaign => {
+            const activeOverride = getActiveRule(overrideRules, campaign);
+            const activeDefault = getActiveRule(defaultRules, campaign);
+
+            if (activeOverride)
+                pricing.push({...activeOverride, isOverride: true, originalPrice: activeDefault?.unitPrice});
+            else if (activeDefault)
+                pricing.push({...activeDefault, isOverride: false});
+        });
+
         return pricing;
     }, [data]);
 
@@ -160,9 +165,18 @@ export function useUserDetail(userId: string | null, open: boolean) {
     return {
         data, loading,
         allModules,
-        balance, effectivePricing,
-        transactions, totalTx, txPage, setTxPage, pageSize, setPageSize, txLoading, totalPages,
-        adjustAmt, setAdjustAmt, adjustNote, setAdjustNote, isAdjusting,
-        handleAdjust, handleRoleToggle, handleBanToggle, handleUpdateUser
+        balance,
+        effectivePricing,
+        transactions, totalTx,
+        txPage, setTxPage,
+        pageSize, setPageSize,
+        txLoading,
+        totalPages,
+        adjustAmt, setAdjustAmt,
+        adjustNote, setAdjustNote,
+        isAdjusting, handleAdjust,
+        handleRoleToggle,
+        handleBanToggle,
+        handleUpdateUser
     };
 }

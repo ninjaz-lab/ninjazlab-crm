@@ -1,16 +1,16 @@
 "use client";
 
 import {ColumnDef} from "@tanstack/react-table";
-import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
-import {cn} from "@/lib/utils/utils";
-import {formatAmount} from "@/lib/utils/transactions";
+import {Button} from "@/components/ui/button";
 import {HugeIcon} from "@/components/huge-icon";
-import {TableRowDetailsAction} from "@/components/data-table/table-row-details-action";
-import {RoleAvatar} from "@/components/role-avatar";
 import {Progress} from "@/components/ui/progress";
+import {RoleAvatar} from "@/components/role-avatar";
+import {UserStatusBadge} from "@/components/badge/user-status-badge";
+import {TableRowDetailsAction} from "@/components/data-table/table-row-details-action";
 import {USER_ROLES} from "@/lib/enums";
-import {UserStatusBadge} from "@/components/user-status-badge";
+import {cn} from "@/lib/utils/utils";
+import {formatAmount} from "@/lib/utils/amount";
 
 export const getColumns = (
     currentUserId: string,
@@ -36,7 +36,7 @@ export const getColumns = (
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                         className="-ml-4 h-8 text-[10px] font-bold uppercase tracking-widest hover:bg-muted/50 data-[active=true]:text-primary"
                         data-active={!!isSorted}>
-                    User Information
+                    User Account
                     <HugeIcon
                         name={isSorted ? (isSorted === "asc" ? "ArrowUp01Icon" : "ArrowDown01Icon") : "Sorting05Icon"}
                         size={14}
@@ -150,14 +150,21 @@ export const getColumns = (
         },
         cell: ({row}) => {
             const balance = parseFloat(row.original.balance ?? "0");
+            const isDebit = balance < 0;
+
             return (
                 <div className="flex flex-col items-end text-right pr-4">
-                    <div className="flex items-center gap-1.5">
-                        <span
-                            className={cn("font-mono text-sm font-black", balance < 0 ? "text-rose-600" : "text-emerald-600")}>
+                    <div className="flex items-center gap-1">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                            MYR
+                        </span>
+
+                        <span className={cn(
+                            "font-mono text-sm font-black",
+                            isDebit ? "text-rose-600" : "text-emerald-600"
+                        )}>
                             {formatAmount(balance)}
                         </span>
-                        <span className="text-[10px] font-bold text-muted-foreground">MYR</span>
                     </div>
                     <span
                         className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Total Credits</span>

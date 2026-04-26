@@ -3,14 +3,15 @@
 import {useState, useTransition} from "react";
 import {toast} from "sonner";
 import {ColumnDef} from "@tanstack/react-table";
-import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
 import {DocumentPreviewDialog} from "@/components/document-preview-dialog";
 import {HugeIcon} from "@/components/huge-icon";
-import {Badge} from "@/components/ui/badge";
+import {RoleAvatar} from "@/components/role-avatar";
+import {TransactionStatusBadge} from "@/components/badge/transaction-status-badge";
+import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
 import {approveTopUp, rejectTopUp} from "@/lib/actions/admin/billing";
 import {TRANSACTION_STATUS, TRANSACTION_TYPES} from "@/lib/enums";
-import {createDateColumn} from "@/lib/utils/date";
-import {fetchAmountColor, formatAmount} from "@/lib/utils/transactions";
+import {fetchAmountColor, formatAmount} from "@/lib/utils/amount";
+import {generateDateColumn} from "@/lib/utils/date";
 import {cn} from "@/lib/utils/utils";
 
 export const getColumns = (): ColumnDef<any>[] => [
@@ -27,11 +28,16 @@ export const getColumns = (): ColumnDef<any>[] => [
     },
     {
         id: "user",
-        header: () => <div className="font-bold uppercase text-[10px] tracking-widest">User</div>,
+        header: () => <div className="font-bold uppercase text-[10px] tracking-widest">User Account</div>,
         cell: ({row}) => (
-            <div className="flex flex-col">
-                <span className="text-xs font-bold">{row.original.userName || "Unknown User"}</span>
-                <span className="text-[10px] text-muted-foreground">{row.original.userEmail}</span>
+            <div className="flex items-center gap-3">
+                <RoleAvatar src={row.original.userImage}
+                            name={row.original.userName}
+                            role={row.original.userRole}/>
+                <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold truncate">{row.original.userName || "Unknown User"}</span>
+                    <span className="text-[10px] text-muted-foreground truncate">{row.original.userEmail}</span>
+                </div>
             </div>
         ),
     },
@@ -58,7 +64,7 @@ export const getColumns = (): ColumnDef<any>[] => [
             </div>
         ),
     },
-    createDateColumn("date", "Processed Date"),
+    generateDateColumn("date", "Processed Date"),
     {
         accessorKey: "amount",
         header: () => <div className="text-right font-bold uppercase text-[10px] tracking-widest">Amount</div>,
@@ -68,10 +74,10 @@ export const getColumns = (): ColumnDef<any>[] => [
             const colorClass = fetchAmountColor(row.original.type);
             return (
                 <div className="flex items-center justify-end gap-1.5">
-            <span className={cn("font-mono text-sm font-black", colorClass)}>
-        {isCredit ? "+" : "-"}{formatAmount(amount)}
-        </span>
                     <span className="text-[10px] font-bold text-muted-foreground">MYR</span>
+                    <span className={cn("font-mono text-sm font-black", colorClass)}>
+                        {formatAmount(amount)}
+                    </span>
                 </div>
             );
         },
@@ -80,23 +86,7 @@ export const getColumns = (): ColumnDef<any>[] => [
         accessorKey: "status",
         size: 80,
         header: () => <div className="font-bold uppercase text-[10px] tracking-widest text-center">Status</div>,
-        cell: ({row}) => {
-            const status = row.original.status || TRANSACTION_STATUS.PENDING;
-            return (
-                <div className="flex justify-center">
-                    <Badge variant="secondary"
-                           className={cn(
-                               "w-[75px] justify-center text-[9px] uppercase font-black tracking-widest px-0 py-0.5 border shadow-none",
-                               status === TRANSACTION_STATUS.APPROVED
-                                   ? "text-emerald-600 border-emerald-200 bg-emerald-50"
-                                   : "text-amber-600 border-amber-200 bg-amber-50",
-                               status === TRANSACTION_STATUS.REJECTED && "text-rose-600 border-rose-200 bg-rose-50"
-                           )}>
-                        {status}
-                    </Badge>
-                </div>
-            );
-        },
+        cell: ({row}) => <TransactionStatusBadge status={row.original.status}/>,
     },
     {
         id: "receipt",

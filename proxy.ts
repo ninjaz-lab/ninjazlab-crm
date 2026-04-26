@@ -32,7 +32,7 @@ export async function proxy(request: NextRequest) {
             if (!session || !session.user)
                 return NextResponse.next();
 
-            const dest = session?.user?.role === USER_ROLES.ADMIN
+            const dest = (session?.user?.role === USER_ROLES.ADMIN || session?.user?.role === USER_ROLES.SUPERADMIN)
                 ? Routes.HOME_ADMIN
                 : Routes.HOME;
             return NextResponse.redirect(new URL(dest, request.url));
@@ -52,7 +52,7 @@ export async function proxy(request: NextRequest) {
                 }
             );
             const session = await sessionRes.json();
-            if (session?.user?.role !== USER_ROLES.ADMIN)
+            if (session?.user?.role !== USER_ROLES.ADMIN && session?.user?.role !== USER_ROLES.SUPERADMIN)
                 return NextResponse.redirect(new URL(Routes.HOME_ADMIN, request.url));
         } catch {
             return NextResponse.redirect(new URL(Routes.LOGIN, request.url));

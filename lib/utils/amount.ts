@@ -1,6 +1,8 @@
 import {TRANSACTION_TYPES} from "@/lib/enums";
 
-export function formatAmount(amount: number | string): string {
+export function formatAmount(
+    amount: number | string
+): string {
     const num = typeof amount === "string" ? parseFloat(amount) : amount;
 
     // Fallback in case of invalid input
@@ -17,4 +19,16 @@ export function fetchAmountColor(type: string): string {
     return type === TRANSACTION_TYPES.CREDIT
         ? "text-emerald-600"
         : "text-rose-600";
+}
+
+export function fetchAmountSign(type: string): string {
+    return type === TRANSACTION_TYPES.CREDIT
+        ? "+"
+        : "-";
+}
+
+export function fetchAmountArrow(type: string): string {
+    return type === TRANSACTION_TYPES.CREDIT
+        ? "ArrowDownLeft01Icon"
+        : "ArrowUpRight01Icon";
 }

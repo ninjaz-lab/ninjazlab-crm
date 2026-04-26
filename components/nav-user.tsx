@@ -95,8 +95,8 @@ export function NavUser({variant}: Props) {
                                 Account settings
                             </DropdownMenuItem>
 
-                            {/* Switch to Admin Dashboard (Shown only on User side if Admin) */}
-                            {isUser && role === USER_ROLES.ADMIN && (
+                            {/* Switch to Admin Dashboard (Shown only on User side if Admin or Superadmin) */}
+                            {isUser && (role === USER_ROLES.ADMIN || role === USER_ROLES.SUPERADMIN) && (
                                 <DropdownMenuItem onClick={() => router.push("/admin")}
                                                   className="text-rose-600 font-bold cursor-pointer group focus:bg-rose-50 focus:text-rose-600">
                                     <HugeIcon name="Shield02Icon" size={16} className="mr-2 group-focus:text-rose-600"/>

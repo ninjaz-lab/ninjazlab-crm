@@ -6,7 +6,7 @@ import {Routes} from "@/lib/constants/routes";
 export async function GET() {
     const session = await authenticateUser();
     const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    if (session?.user?.role === USER_ROLES.ADMIN)
+    if (session?.user?.role === USER_ROLES.ADMIN || session?.user?.role === USER_ROLES.SUPERADMIN)
         return NextResponse.redirect(new URL(Routes.HOME_ADMIN, base));
 
     return NextResponse.redirect(new URL(Routes.HOME, base));

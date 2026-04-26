@@ -19,7 +19,7 @@ export function UserTabMarketing({campaigns}: { campaigns: any[] }) {
                     <HugeIcon name="Calendar01Icon" size={22} className="text-muted-foreground/40"/>
                 </div>
                 <p className="text-sm font-bold text-muted-foreground">No active events</p>
-                <p className="text-[11px] text-muted-foreground/60 mt-1">This user has no ongoing marketing campaigns</p>
+                <p className="text-[11px] text-muted-foreground/60 mt-1">This user has no ongoing campaigns</p>
             </div>
         );
     }
@@ -37,11 +37,10 @@ export function UserTabMarketing({campaigns}: { campaigns: any[] }) {
                             <p className="text-sm font-bold leading-none truncate">{cp.name}</p>
                             <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mt-0.5">{cp.channel}</p>
                         </div>
-                        <Badge
-                            variant="outline"
-                            className={cn("uppercase font-black text-[9px] h-5 px-2 shrink-0",
-                                STATUS_STYLES[cp.status?.toLowerCase()] || ""
-                            )}
+                        <Badge variant="outline"
+                               className={cn("uppercase font-black text-[9px] h-5 px-2 shrink-0",
+                                   STATUS_STYLES[cp.status?.toLowerCase()] || ""
+                               )}
                         >
                             {cp.status}
                         </Badge>

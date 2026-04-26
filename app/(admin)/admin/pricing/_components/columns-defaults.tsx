@@ -2,15 +2,16 @@
 
 import {ColumnDef} from "@tanstack/react-table";
 import {formatPricingAmount, SortHeader} from "./columns-helpers";
-import {PricingStatusBadge} from "@/components/pricing-status-badge";
-import {CampaignTypeBadge} from "@/components/campaign-type-badge";
+import {PricingStatusBadge} from "@/components/badge/pricing-status-badge";
+import {CampaignTypeBadge} from "@/components/badge/campaign-type-badge";
 import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
-import {createDateColumn} from "@/lib/utils/date";
+import {generateDateColumn} from "@/lib/utils/date";
 
 export const getColumns = (
     onEdit: (rule: any) => void,
     setRuleToDelete: (rule: any) => void,
     isPending: boolean,
+    allRules?: any[],
 ): ColumnDef<any>[] => [
     {
         id: "index",
@@ -39,10 +40,10 @@ export const getColumns = (
             return (
                 <div className="flex flex-col">
                     <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-bold text-muted-foreground">MYR</span>
                         <span className="font-mono text-sm font-black text-foreground">
                             {formatPricingAmount(r.unitPrice)}
                         </span>
-                        <span className="text-[10px] font-bold text-muted-foreground">MYR</span>
                     </div>
                     <span
                         className="text-[10px] text-muted-foreground font-medium lowercase italic">per {r.action}</span>
@@ -54,9 +55,17 @@ export const getColumns = (
         id: "status",
         accessorFn: (row) => row.effectiveFrom,
         header: ({column}) => <SortHeader column={column} label="Status"/>,
-        cell: ({row}) => <PricingStatusBadge effectiveFrom={new Date(row.original.effectiveFrom)}/>,
+        cell: ({row}) => {
+            const rule = row.original;
+            const isLatest = !allRules || allRules.every(r =>
+                r.campaign !== rule.campaign ||
+                r.userId !== null ||
+                new Date(r.effectiveFrom) <= new Date(rule.effectiveFrom)
+            );
+            return <PricingStatusBadge effectiveFrom={new Date(rule.effectiveFrom)} isLatest={isLatest}/>;
+        },
     },
-    createDateColumn("effectiveFrom", "Effective From"),
+    generateDateColumn("effectiveFrom", "Effective From"),
     {
         id: "actions",
         header: () => <div className="w-12"/>,

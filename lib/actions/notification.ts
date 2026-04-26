@@ -1,6 +1,6 @@
 "use server";
 
-import {and, count, desc, eq} from "drizzle-orm";
+import {and, count, desc, eq, or} from "drizzle-orm";
 import {db} from "@/lib/db";
 import {notification, user} from "@/lib/db/schema";
 import {getSession} from "@/lib/session";
@@ -126,7 +126,7 @@ export async function notifyAdmins(
 ) {
     const adminUsers = await db.select({id: user.id})
         .from(user)
-        .where(eq(user.role, USER_ROLES.ADMIN));
+        .where(or(eq(user.role, USER_ROLES.ADMIN), eq(user.role, USER_ROLES.SUPERADMIN)));
 
     if (adminUsers.length === 0) return;
 

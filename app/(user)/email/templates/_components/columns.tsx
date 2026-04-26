@@ -7,7 +7,7 @@ import {HugeIcon} from "@/components/huge-icon";
 import {cn} from "@/lib/utils/utils";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
 import {TemplateRowActions} from "./template-row-actions";
-import {createDateColumn} from "@/lib/utils/date";
+import {generateDateColumn} from "@/lib/utils/date";
 
 export const getColumns = (): ColumnDef<any>[] => [
     {
@@ -75,7 +75,7 @@ export const getColumns = (): ColumnDef<any>[] => [
             );
         },
     },
-    createDateColumn("updatedAt", "Last Updated"),
+    generateDateColumn("updatedAt", "Last Updated"),
     {
         id: "actions",
         header: () => <div className="w-[100px]"/>,

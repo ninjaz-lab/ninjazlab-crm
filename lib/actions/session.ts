@@ -7,7 +7,7 @@ export async function authenticateAdmin() {
         headers: await headers()
     });
 
-    if (!session || session.user.role !== USER_ROLES.ADMIN) throw new Error("Unauthorized");
+    if (!session || (session.user.role !== USER_ROLES.ADMIN && session.user.role !== USER_ROLES.SUPERADMIN)) throw new Error("Unauthorized");
 
     return session;
 }

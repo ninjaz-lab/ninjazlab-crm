@@ -45,13 +45,12 @@ export default async function DashboardPage() {
                 </div>
             </PageHeader>
 
-            {/* Top Metrics Row - Now Clickable & Interactive */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <MetricCard title="Total Audiences"
                             value={totalAudiences.toLocaleString()}
                             icon="UserGroupIcon"
                             variant="primary"
-                            href="/audience"
+                            href={Routes.USER_AUDIENCE}
                 />
 
                 <MetricCard title="Total Campaigns"
@@ -65,7 +64,7 @@ export default async function DashboardPage() {
                             value={totalSegments.toLocaleString()}
                             icon="Folder01Icon"
                             variant="default"
-                            href="/audience"
+                            href={Routes.USER_AUDIENCE}
                 />
 
                 <MetricCard title="Available Balance"

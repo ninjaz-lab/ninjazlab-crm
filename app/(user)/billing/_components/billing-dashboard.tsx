@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useMemo, useState, useTransition} from "react";
+import React, {useMemo} from "react";
 import {HugeIcon} from "@/components/huge-icon";
 import {Button} from "@/components/ui/button";
 import {
@@ -15,72 +15,31 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {cn} from "@/lib/utils/utils";
-import {requestTopUp} from "@/lib/actions/billing";
-import {toast} from "sonner";
-import {formatAmount} from "@/lib/utils/transactions";
+import {formatAmount} from "@/lib/utils/amount";
 import {TransactionsTab} from "./transactions-tab";
 import {InvoicesTab} from "./invoices-tab";
+import {useUserBillingDashboard} from "@/hooks/use-user-billing-dashboard";
 
 interface Props {
     transactions: any[];
 }
 
 export function BillingDashboard({transactions}: Props) {
-    const [activeTab, setActiveTab] = useState("transactions");
-    const [isTopUpOpen, setIsTopUpOpen] = useState(false);
-
-    const [topUpAmount, setTopUpAmount] = useState<string>("50");
-    const [receipt, setReceipt] = useState<File | null>(null);
-
-    const [isPending, startTransition] = useTransition();
-
-    const invoicesOnly = useMemo(() => {
-        return transactions.filter(t => Boolean(t.invoiceUrl));
-    }, [transactions]);
-
-    const handleCopy = (
-        text: string | undefined
-    ) => {
-        if (!text)
-            return;
-        navigator.clipboard.writeText(text);
-        toast.success("Account number copied to clipboard!");
-    };
-
-    const handleSubmit = () => {
-        const amount = parseFloat(topUpAmount);
-        if (isNaN(amount) || amount < 10) {
-            toast.error("Minimum top-up amount is MYR 10.00");
-            return;
-        }
-
-        if (!receipt) {
-            toast.error("Please upload your bank transfer receipt.");
-            return;
-        }
-
-        const maxMb = parseInt(process.env.NEXT_PUBLIC_MAX_UPLOAD_MB || "5", 10);
-        const MAX_FILE_SIZE = maxMb * 1024 * 1024;
-        if (receipt.size > MAX_FILE_SIZE) {
-            toast.error("File is too large. Please upload a receipt under 5MB.");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("amount", topUpAmount);
-        formData.append("receipt", receipt);
-
-        startTransition(async () => {
-            try {
-                await requestTopUp(formData);
-                setIsTopUpOpen(false);
-                setReceipt(null); // Reset on close
-                toast.success("Receipt submitted! Your balance will be updated once an admin approves it.");
-            } catch (error: any) {
-                toast.error(error.message || "Failed to submit top-up request.");
-            }
-        });
-    };
+    const {
+        activeTab,
+        setActiveTab,
+        isTopUpOpen,
+        setIsTopUpOpen,
+        topUpAmount,
+        setTopUpAmount,
+        receipt,
+        setReceipt,
+        isPending,
+        invoicesOnly,
+        handleCopy,
+        handleSubmit,
+        handleCloseDialog,
+    } = useUserBillingDashboard({transactions});
 
     const TopUpAction = (
         <Button onClick={() => setIsTopUpOpen(true)}
@@ -120,9 +79,11 @@ export function BillingDashboard({transactions}: Props) {
             </Tabs>
 
             <Dialog open={isTopUpOpen} onOpenChange={(open) => {
-                setIsTopUpOpen(open);
-                if (!open)
-                    setReceipt(null); // Reset on close
+                if (!open) {
+                    handleCloseDialog();
+                } else {
+                    setIsTopUpOpen(true);
+                }
             }}>
                 <DialogContent className="sm:max-w-md p-0 overflow-hidden gap-0">
                     <DialogHeader className="p-6 bg-muted/20 border-b">
@@ -221,7 +182,7 @@ export function BillingDashboard({transactions}: Props) {
 
                     <DialogFooter className="p-6 bg-muted/20 border-t gap-3">
                         <Button variant="ghost"
-                                onClick={() => setIsTopUpOpen(false)}
+                                onClick={handleCloseDialog}
                                 className="font-bold"
                                 disabled={isPending}>
                             Cancel

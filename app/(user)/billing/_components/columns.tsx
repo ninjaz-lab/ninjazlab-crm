@@ -7,9 +7,9 @@ import {TableRowAction, TableRowActions} from "@/components/data-table/table-row
 import {DocumentPreviewDialog} from "@/components/document-preview-dialog";
 import {HugeIcon} from "@/components/huge-icon";
 import {Badge} from "@/components/ui/badge";
-import {createDateColumn} from "@/lib/utils/date";
+import {generateDateColumn} from "@/lib/utils/date";
 import {TRANSACTION_STATUS, TRANSACTION_TYPES} from "@/lib/enums";
-import {fetchAmountColor, formatAmount} from "@/lib/utils/transactions";
+import {fetchAmountColor, formatAmount} from "@/lib/utils/amount";
 import {cn} from "@/lib/utils/utils";
 
 const ActionsCell = ({row, viewType}: { row: any; viewType: string }) => {
@@ -123,7 +123,7 @@ export const getColumns = (
             );
         },
     },
-    createDateColumn("date", "Transaction Date Time"),  
+    generateDateColumn("date", "Transaction Date Time"),
     {
         accessorKey: "status",
         size: 80,
@@ -161,7 +161,7 @@ export const getColumns = (
         },
     },
     {
-        accessorKey: "balanceAfter",
+        accessorKey: "runningBalance",
         header: () => <div className="text-right font-bold uppercase text-[10px] tracking-widest">Balance</div>,
         cell: ({row}) => {
             const balance = parseFloat(row.original.balanceAfter || "0");

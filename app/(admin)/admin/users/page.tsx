@@ -6,24 +6,36 @@ import {PageHeader} from "@/components/page-header";
 import {fetchAllUsersWithWallets} from "@/lib/actions/admin/users";
 import {auth} from "@/lib/auth";
 import {fetchAllModules} from "@/lib/actions/admin/module";
+import {db} from "@/lib/db";
+import {user} from "@/lib/db/schema";
+import {count, eq} from "drizzle-orm";
+import {USER_ROLES} from "@/lib/enums";
 
 interface Props {
-    searchParams: Promise<{ page?: string; q?: string }>;
+    searchParams: Promise<{ page?: string; q?: string; role?: string }>;
 }
 
 export default async function AdminUsersPage({searchParams,}: Props) {
     noStore();
-    const {page, q} = await searchParams;
+    const {page, q, role} = await searchParams;
 
     const currentPage = Number(page) || 1;
     const pageSize = 10;
+    const currentRole = role || null;
 
     // Fetching data based on current page and search query
-    const [{users, totalUsers}, session, allModules] = await Promise.all([
+    const [{users, totalUsers}, session, allModules, superadminCount, adminCount, userCount] = await Promise.all([
         fetchAllUsersWithWallets(currentPage, pageSize, q),
         auth.api.getSession({headers: await headers()}),
-        fetchAllModules()
+        fetchAllModules(),
+        db.select({count: count()}).from(user).where(eq(user.role, USER_ROLES.SUPERADMIN)),
+        db.select({count: count()}).from(user).where(eq(user.role, USER_ROLES.ADMIN)),
+        db.select({count: count()}).from(user).where(eq(user.role, USER_ROLES.USER)),
     ]);
+
+    const totalSuperadmins = superadminCount[0].count;
+    const totalAdmins = adminCount[0].count;
+    const totalRegularUsers = userCount[0].count;
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 p-2">
@@ -44,6 +56,10 @@ export default async function AdminUsersPage({searchParams,}: Props) {
                             totalModules={allModules.length}
                             page={currentPage}
                             pageSize={pageSize}
+                            totalSuperadmins={totalSuperadmins}
+                            totalAdmins={totalAdmins}
+                            totalRegularUsers={totalRegularUsers}
+                            currentRole={currentRole}
             />
         </div>
     );

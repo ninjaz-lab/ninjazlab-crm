@@ -1,39 +1,22 @@
 "use client";
 
-import {useMemo, useTransition} from "react";
-import {useRouter} from "next/navigation";
+import {useMemo} from "react";
 import {getColumns} from "./columns";
 import {QueueMetrics} from "@/app/(admin)/admin/queue/_components/queue-metrics";
 import {DataTable} from "@/components/data-table/data-table";
 import {HugeIcon} from "@/components/huge-icon";
 import {Button} from "@/components/ui/button";
+import {useQueueDashboard} from "@/hooks/use-queue-dashboard";
 
 interface Props {
     data: any[];
     metrics: Record<string, number>;
 }
 
-export function QueueDashboard({data, metrics}: Props
-) {
-    const router = useRouter();
-    const [isPending, startTransition] = useTransition();
+export function QueueDashboard({data, metrics}: Props) {
+    const {isPending, queueFilterFn, handleRefresh} = useQueueDashboard();
 
     const columns = useMemo(() => getColumns(), []);
-
-    const queueFilterFn = (row: any, columnId: string, filterValue: string) => {
-        const q = filterValue.toLowerCase();
-        return (
-            (row.original.id?.toLowerCase() || "").includes(q) ||
-            (row.original.status?.toLowerCase() || "").includes(q) ||
-            (row.original.campaignId?.toLowerCase() || "").includes(q)
-        );
-    };
-
-    function handleRefresh() {
-        startTransition(() => {
-            router.refresh();
-        });
-    }
 
     const actionSlot = (
         <Button variant="outline"

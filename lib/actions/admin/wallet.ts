@@ -3,7 +3,7 @@
 import {db} from "@/lib/db";
 import {wallets, walletTransaction} from "@/lib/db/schema";
 import {and, desc, eq, sql} from "drizzle-orm";
-import {TRANSACTION_CAMPAIGN, TRANSACTION_TYPES, WALLET_TYPES} from "@/lib/enums";
+import {TRANSACTION_CAMPAIGN, TRANSACTION_STATUS, TRANSACTION_TYPES, WALLET_TYPES} from "@/lib/enums";
 import {randomUUID} from "crypto";
 import {revalidatePath} from "next/cache";
 import {authenticateAdmin} from "@/lib/actions/session";
@@ -56,7 +56,7 @@ export async function adjustWalletBalance(
             })
             .where(eq(wallets.id, wallet.id));
 
-        // 3. Record the transaction tied to that specific billing
+        // 3. Record the transaction tied to that specific billing (auto-approved)
         await tx.insert(walletTransaction).values({
             id: randomUUID(),
             userId,
@@ -64,7 +64,8 @@ export async function adjustWalletBalance(
             transactionId: generateTransactionId(),
             amount: Math.abs(amount).toFixed(2),
             type: TRANSACTION_TYPES[type],
-            module: TRANSACTION_CAMPAIGN.SYSTEM,
+            status: TRANSACTION_STATUS.APPROVED,
+            campaign: TRANSACTION_CAMPAIGN.SYSTEM,
             note: note || `Admin adjustment`,
             createdAt: new Date(),
         });
@@ -84,11 +85,40 @@ export async function fetchWalletTransactions(
     const offset = (page - 1) * pageSize;
 
     const [transactions, countResult] = await Promise.all([
-        db.select().from(walletTransaction)
-            .where(eq(walletTransaction.userId, userId))
-            .limit(pageSize).offset(offset).orderBy(desc(walletTransaction.createdAt)),
+        db.select({
+            id: walletTransaction.id,
+            userId: walletTransaction.userId,
+            walletId: walletTransaction.walletId,
+            transactionId: walletTransaction.transactionId,
+            amount: walletTransaction.amount,
+            type: walletTransaction.type,
+            module: walletTransaction.campaign,
+            note: walletTransaction.note,
+            createdAt: walletTransaction.createdAt,
+            balanceAfter: sql<string>`
+                CAST(SUM(CASE
+                    WHEN ${walletTransaction.type} = 'credit' THEN ${walletTransaction.amount}
+                    ELSE -${walletTransaction.amount}
+                END) OVER (
+                    PARTITION BY ${walletTransaction.userId}
+                    ORDER BY ${walletTransaction.createdAt} ASC
+                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                ) AS TEXT)
+            `
+        }).from(walletTransaction)
+            .where(and(
+                eq(walletTransaction.userId, userId),
+                eq(walletTransaction.type, TRANSACTION_TYPES.CREDIT),
+                eq(walletTransaction.status, TRANSACTION_STATUS.APPROVED)
+            ))
+            .orderBy(desc(walletTransaction.createdAt))
+            .limit(pageSize).offset(offset),
         db.select({count: sql<number>`count(*)`}).from(walletTransaction)
-            .where(eq(walletTransaction.userId, userId))
+            .where(and(
+                eq(walletTransaction.userId, userId),
+                eq(walletTransaction.type, TRANSACTION_TYPES.CREDIT),
+                eq(walletTransaction.status, TRANSACTION_STATUS.APPROVED)
+            ))
     ]);
 
     return {

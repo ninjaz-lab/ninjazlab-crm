@@ -6,7 +6,7 @@ import Link from "next/link";
 import {Badge} from "@/components/ui/badge";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
 import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
-import {createDateColumn} from "@/lib/utils/date";
+import {generateDateColumn} from "@/lib/utils/date";
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     draft: "secondary",
@@ -145,7 +145,7 @@ export const getColumns = (): ColumnDef<any>[] => [
             );
         },
     },
-    createDateColumn("scheduledAt", "Scheduled At"),
+    generateDateColumn("scheduledAt", "Scheduled At"),
     {
         id: "actions",
         header: () => <div className="w-[40px]"/>,

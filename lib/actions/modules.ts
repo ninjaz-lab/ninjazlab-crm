@@ -22,8 +22,8 @@ export async function fetchGrantedModules() {
 
     let grantedModules;
 
-    if (session.user.role === USER_ROLES.ADMIN) {
-        // Admins see all modules that have the "user" scope
+    if (session.user.role === USER_ROLES.ADMIN || session.user.role === USER_ROLES.SUPERADMIN) {
+        // Admins and superadmins see all modules that have the "user" scope
         grantedModules = await db.select({
             id: module.id,
             title: module.title,
@@ -58,7 +58,7 @@ export async function fetchGrantedModules() {
 
 export async function fetchAdminModules() {
     const session = await auth.api.getSession({headers: await headers()});
-    if (!session || session.user.role !== USER_ROLES.ADMIN)
+    if (!session || (session.user.role !== USER_ROLES.ADMIN && session.user.role !== USER_ROLES.SUPERADMIN))
         throw new Error("Unauthorized");
 
     const defaultDashboard = {

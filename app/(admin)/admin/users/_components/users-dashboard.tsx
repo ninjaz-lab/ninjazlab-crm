@@ -3,8 +3,11 @@
 import {useMemo, useState} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
 import {UserDetailSheet} from "./user-detail-sheet";
-import {DataTable} from "@/components/data-table/data-table";
 import {getColumns} from "@/app/(admin)/admin/users/_components/columns";
+import {DataTable} from "@/components/data-table/data-table";
+import {DataTableFilter} from "@/components/data-table/data-table-filter";
+import {UserMetrics} from "@/app/(admin)/admin/users/_components/user-metrics";
+import {useUserMetrics} from "@/hooks/use-user-metrics";
 
 interface Props {
     currentUserId: string;
@@ -13,14 +16,44 @@ interface Props {
     totalModules: number;
     page: number;
     pageSize: number;
+    totalSuperadmins: number;
+    totalAdmins: number;
+    totalRegularUsers: number;
+    currentRole: string | null;
 }
 
-export function UsersDashboard({currentUserId, users, totalUsers, totalModules, page, pageSize}: Props) {
+export function UsersDashboard({
+                                   currentUserId,
+                                   users,
+                                   totalUsers,
+                                   totalModules,
+                                   page,
+                                   pageSize,
+                                   totalSuperadmins,
+                                   totalAdmins,
+                                   totalRegularUsers,
+                                   currentRole
+                               }: Props) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
-    // Pass required state into our Column Factory
+    const {
+        roleFilter,
+        handleRoleFilter,
+        metrics,
+        filteredUsers,
+        filterOptions,
+        totalRowsCount
+    } = useUserMetrics({
+        users,
+        totalUsers,
+        totalSuperadmins,
+        totalAdmins,
+        totalRegularUsers,
+        currentRole
+    });
+
     const columns = useMemo(
         () => getColumns(currentUserId, totalModules, page - 1, pageSize),
         [currentUserId, page, pageSize, totalModules]
@@ -50,14 +83,24 @@ export function UsersDashboard({currentUserId, users, totalUsers, totalModules, 
     return (
         <div className="space-y-6">
 
+            {/* User Statistics & Filter */}
+            <UserMetrics metrics={metrics}
+                         setRoleFilter={handleRoleFilter}/>
+
             <DataTable columns={columns}
-                       data={users}
+                       data={filteredUsers}
                        searchPlaceholder="Filter users by name or email..."
                        onRowClick={(row) => setDetailUserId(row.id)}
+                       actionSlot={
+                           <DataTableFilter icon="FilterIcon"
+                                            value={roleFilter}
+                                            onChange={(role) => handleRoleFilter(role === "ALL" ? null : role)}
+                                            options={filterOptions}
+                           />
+                       }
 
-                // Server-Side Config
                        isServerSide={true}
-                       totalRows={totalUsers}
+                       totalRows={totalRowsCount}
                        currentPage={page}
                        pageSize={pageSize}
                        searchValue={searchParams.get("q") ?? ""}

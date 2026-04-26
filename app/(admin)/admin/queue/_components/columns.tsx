@@ -4,7 +4,7 @@ import {useState} from "react";
 import {ColumnDef} from "@tanstack/react-table";
 import {Badge} from "@/components/ui/badge";
 import {HugeIcon} from "@/components/huge-icon";
-import {createDateColumn} from "@/lib/utils/date";
+import {generateDateColumn} from "@/lib/utils/date";
 import {TableRowActions} from "@/components/data-table/table-row-actions";
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@/components/ui/sheet";
 
@@ -114,7 +114,7 @@ export const getColumns = (): ColumnDef<any>[] => [
             );
         },
     },
-    createDateColumn("timestamp", "Added To Queue"),
+    generateDateColumn("timestamp", "Added To Queue"),
     {
         id: "actions",
         header: () => <div className="w-[100px]"/>,

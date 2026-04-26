@@ -1,12 +1,12 @@
 "use client";
 
 import {format} from "date-fns";
-import {cn} from "@/lib/utils/utils";
-import {formatAmount} from "@/lib/utils/transactions";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {HugeIcon} from "@/components/huge-icon";
 import {USER_ROLES} from "@/lib/enums";
+import {formatAmount} from "@/lib/utils/amount";
+import {cn} from "@/lib/utils/utils";
 
 interface Props {
     data: any;
@@ -61,26 +61,22 @@ export function UserTabProfile({data, effectivePricing, onRoleToggle, onBanToggl
                     </h4>
                 </div>
                 <div className="p-4 grid grid-cols-2 gap-2">
-                    <Button
-                        variant="outline"
-                        className={cn("h-9 font-bold text-xs gap-2 transition-all",
-                            isAdmin
-                                ? "text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300"
-                                : "text-primary border-primary/20 hover:bg-primary/5 hover:border-primary/40"
-                        )}
-                        onClick={onRoleToggle}
+                    <Button className={cn("h-9 font-bold text-xs gap-2 transition-all",
+                        isAdmin
+                            ? "bg-rose-600 hover:bg-rose-700"
+                            : "bg-primary hover:bg-primary/90"
+                    )}
+                            onClick={onRoleToggle}
                     >
                         <HugeIcon name="Shield01Icon" size={14}/>
                         {isAdmin ? "Revoke Admin" : "Make Admin"}
                     </Button>
-                    <Button
-                        variant="outline"
-                        className={cn("h-9 font-bold text-xs gap-2 transition-all",
-                            isBanned
-                                ? "text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300"
-                                : "text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300"
-                        )}
-                        onClick={onBanToggle}
+                    <Button className={cn("h-9 font-bold text-xs gap-2 transition-all",
+                        isBanned
+                            ? "bg-emerald-600 hover:bg-emerald-700"
+                            : "bg-rose-600 hover:bg-rose-700"
+                    )}
+                            onClick={onBanToggle}
                     >
                         <HugeIcon name={isBanned ? "UserCheck01Icon" : "UserBlock01Icon"} size={14}/>
                         {isBanned ? "Unban User" : "Ban User"}
@@ -126,7 +122,6 @@ export function UserTabProfile({data, effectivePricing, onRoleToggle, onBanToggl
                                     <span
                                         className={cn("text-xs font-mono font-black", rule.isOverride ? "text-emerald-600" : "text-foreground")}>
                                         {formatAmount(rule.unitPrice)}
-                                        <span className="text-[9px] font-bold text-muted-foreground ml-0.5">MYR</span>
                                     </span>
                                 </div>
                             </div>

@@ -40,7 +40,7 @@ export function UserTab({data, allModules, effectivePricing, onRoleToggle, onBan
             </TabsContent>
 
             <TabsContent value="wallet" className="flex-1 flex flex-col gap-4 min-h-0 overflow-hidden px-6 data-[state=active]:flex mt-0 pt-4">
-                <UserTabWallet {...walletProps}/>
+                <UserTabWallet {...walletProps} userRole={data.profile.user.role}/>
             </TabsContent>
 
             <TabsContent value="modules" className="flex-1 flex flex-col min-h-0 data-[state=active]:flex mt-0">

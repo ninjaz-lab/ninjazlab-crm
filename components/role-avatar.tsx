@@ -29,7 +29,7 @@ export function RoleAvatar({src, name, role, className}: Props) {
         if (role === USER_ROLES.ADMIN) {
             return (
                 <div
-                    className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center bg-rose-600 rounded-full border-2 border-background shadow-sm"
+                    className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center bg-blue-600 rounded-full border-2 border-background shadow-sm"
                     title="Admin">
                     <HugeIcon name="Shield02Icon" size={10} className="text-white"/>
                 </div>

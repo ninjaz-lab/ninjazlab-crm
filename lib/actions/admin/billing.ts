@@ -30,6 +30,8 @@ export async function fetchAllTransactions() {
             receiptUrl: walletTransaction.receiptUrl,
             userName: user.name,
             userEmail: user.email,
+            userImage: user.image,
+            userRole: user.role,
         })
         .from(walletTransaction)
         .leftJoin(user, eq(walletTransaction.userId, user.id))

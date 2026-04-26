@@ -8,10 +8,16 @@ export interface PricingRule {
     id: string;
     userId: string | null;
     userName: string | null;
+    userEmail: string | null;
+    userImage: string | null;
+    role?: string | null;
     campaign: string;
+    action: string;
     unitPrice: string;
+    currency: string;
     effectiveFrom: Date;
-    note?: string | null;
+    note: string | null;
+    createdAt: Date;
 }
 
 export function usePricingRuleForm(rules: PricingRule[]) {
@@ -50,13 +56,8 @@ export function usePricingRuleForm(rules: PricingRule[]) {
         setScope(rule.userId ? USER_ROLES.USER : "default");
         setSelectedUserId(rule.userId || "");
         setCampaign(rule.campaign);
-
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        setEffectiveFrom(now.toISOString().slice(0, 16));
-
-        setEffectiveFrom(new Date(rule.effectiveFrom).toISOString());
-
+        setUnitPrice(rule.unitPrice);
+        setEffectiveFrom(new Date(rule.effectiveFrom).toISOString().slice(0, 16));
         setNote(rule.note || "");
         setDialogOpen(true);
     }

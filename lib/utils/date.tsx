@@ -4,7 +4,7 @@ import {Button} from "@/components/ui/button";
 import {HugeIcon} from "@/components/huge-icon";
 import {cn} from "@/lib/utils/utils";
 
-export function createDateColumn<TData>(
+export function generateDateColumn<TData>(
     accessorKey: Extract<keyof TData, string>,
     label: string
 ): ColumnDef<TData, any> {

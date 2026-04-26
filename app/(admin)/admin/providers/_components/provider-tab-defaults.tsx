@@ -24,14 +24,13 @@ export function ProviderTabDefaults({data, isPending, onEdit, onDelete, actionSl
                 className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 px-4 rounded-lg border bg-muted/30 shadow-sm text-sm">
                 <div className="flex items-center gap-2 text-primary shrink-0">
                     <HugeIcon name="GlobalIcon" size={16}/>
-                    <span className="font-semibold">System Defaults</span>
+                    <span className="font-semibold">Default Providers</span>
                 </div>
                 <p className="text-muted-foreground sm:border-l sm:pl-3 sm:border-border/50">
                     Fallback credentials used automatically when tenants lack specific overrides.
                 </p>
             </div>
-
-            {/* Table Container */}
+            
             <DataTable columns={columns}
                        data={data}
                        hideSearch={true}

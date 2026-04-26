@@ -1,11 +1,11 @@
 import {unstable_noStore as noStore} from "next/cache";
 import {db} from "@/lib/db";
 import {user, userPermission, wallets, walletTransaction} from "@/lib/db/schema";
-import {and, count, eq, gte, lt, sum} from "drizzle-orm";
+import {and, count, eq, gte, lt, or, sum} from "drizzle-orm";
 import {HugeIcon} from "@/components/huge-icon";
 import {USER_ROLES, WALLET_TYPES} from "@/lib/enums";
 import {cn} from "@/lib/utils/utils";
-import {formatAmount} from "@/lib/utils/transactions";
+import {formatAmount} from "@/lib/utils/amount";
 import {Progress} from "@/components/ui/progress";
 import {PageHeader} from "@/components/page-header";
 import {MetricCard} from "@/components/metric-card";
@@ -36,7 +36,7 @@ async function getStats() {
     // 2. Admin Stats
     const [adminCount] = await db.select({count: count()})
         .from(user)
-        .where(eq(user.role, USER_ROLES.ADMIN));
+        .where(or(eq(user.role, USER_ROLES.ADMIN), eq(user.role, USER_ROLES.SUPERADMIN)));
 
     // 3. System Liquidity
     const [totalBalanceRes] = await db.select({

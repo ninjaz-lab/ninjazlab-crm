@@ -7,7 +7,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {cn} from "@/lib/utils/utils";
 import {HugeIcon} from "@/components/huge-icon";
 import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
-import {createDateColumn} from "@/lib/utils/date";
+import {generateDateColumn} from "@/lib/utils/date";
 
 export const getColumns = (
     onEdit: (rule: any) => void,
@@ -25,7 +25,7 @@ export const getColumns = (
     },
     {
         id: "scope",
-        accessorFn: (row) => row.userName || "System Global",
+        accessorFn: (row) => row.userName || "Default Provide",
         header: ({column}) => {
             const isSorted = column.getIsSorted();
             return (
@@ -100,7 +100,7 @@ export const getColumns = (
             Service</div>,
         cell: ({row}) => <span className="font-bold text-sm">{row.original.name}</span>,
     },
-    createDateColumn("updatedAt", "Last Updated"),
+    generateDateColumn("updatedAt", "Last Updated"),
     {
         id: "actions",
         header: () => <div className="w-12"/>,
