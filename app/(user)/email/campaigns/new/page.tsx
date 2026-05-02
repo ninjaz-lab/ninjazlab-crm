@@ -1,14 +1,10 @@
 import {unstable_noStore as noStore} from "next/cache";
 import {fetchEmailTemplates} from "@/lib/actions/email-template";
-import {fetchAudienceLists} from "@/lib/actions/audience";
 import {NewCampaignForm} from "../_components/new-campaign-form";
 
 export default async function NewCampaignPage() {
     noStore();
-    const [templates, segments] = await Promise.all([
-        fetchEmailTemplates(),
-        fetchAudienceLists(),
-    ]);
+    const templates = await fetchEmailTemplates();
 
     return (
         <div className="space-y-6">
@@ -16,8 +12,7 @@ export default async function NewCampaignPage() {
                 <h1 className="text-3xl font-bold tracking-tight">New Campaign</h1>
                 <p className="text-muted-foreground">Configure and schedule your email blast.</p>
             </div>
-            <NewCampaignForm templates={templates}
-                             segments={segments}/>
+            <NewCampaignForm templates={templates}/>
         </div>
     );
 }

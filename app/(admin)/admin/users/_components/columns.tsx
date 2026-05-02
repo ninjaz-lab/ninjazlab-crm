@@ -12,12 +12,35 @@ import {USER_ROLES} from "@/lib/enums";
 import {cn} from "@/lib/utils/utils";
 import {formatAmount} from "@/lib/utils/amount";
 
+/**
+ * User data for admin table display
+ */
+interface UserTableRow {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  role: string;
+  balance?: string;
+  banned: boolean;
+  permissions?: Record<string, boolean>;
+  createdAt?: Date;
+}
+
+/**
+ * Get column definitions for users admin table
+ * @param currentUserId - ID of the current logged-in user
+ * @param totalModules - Total number of modules in the system
+ * @param pageIndex - Current page index (0-based)
+ * @param pageSize - Number of rows per page
+ * @returns Column definitions for TanStack React Table
+ */
 export const getColumns = (
     currentUserId: string,
     totalModules: number = 0,
     pageIndex: number,
     pageSize: number
-): ColumnDef<any>[] => [
+): ColumnDef<UserTableRow>[] => [
     {
         id: "index",
         header: () => <div className="text-center font-bold uppercase text-[10px] tracking-widest w-[60px]">#</div>,

@@ -4,6 +4,7 @@ import {HugeIcon} from "@/components/huge-icon";
 import {fetchAllUsers} from "@/lib/actions/admin/users";
 import {fetchAllPricingRules} from "@/lib/actions/admin/pricing";
 import {PageHeader} from "@/components/page-header";
+import {ADMIN_CONTAINER_CLASS} from "@/lib/constants/admin";
 
 export default async function AdminPricingPage() {
     noStore();
@@ -14,7 +15,7 @@ export default async function AdminPricingPage() {
     ]);
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 p-2">
+        <div className={ADMIN_CONTAINER_CLASS}>
 
             <PageHeader title="Pricing"
                         description="Set unit prices for campaigns modules"

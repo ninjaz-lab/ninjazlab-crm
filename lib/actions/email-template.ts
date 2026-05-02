@@ -1,15 +1,15 @@
 "use server"
 
-import {getSession} from "@/lib/session";
+import {fetchSession} from "@/lib/session";
 import {db} from "@/lib/db";
 import {and, desc, eq} from "drizzle-orm";
 import {randomUUID} from "crypto";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
 import {revalidatePath} from "next/cache";
-import {emailTemplateDetail, marketingTemplate} from "@/lib/db/schema";
+import {emailTemplate, marketingTemplate} from "@/lib/db/schema";
 
 export async function fetchEmailTemplates() {
-    const session = await getSession();
+    const session = await fetchSession();
     return db
         .select({
             id: marketingTemplate.id,
@@ -18,14 +18,14 @@ export async function fetchEmailTemplates() {
             editorType: marketingTemplate.editorType,
             createdAt: marketingTemplate.createdAt,
             updatedAt: marketingTemplate.updatedAt,
-            subject: emailTemplateDetail.subject,
-            previewText: emailTemplateDetail.previewText,
-            htmlBody: emailTemplateDetail.htmlBody,
+            subject: emailTemplate.subject,
+            previewText: emailTemplate.previewText,
+            htmlBody: emailTemplate.htmlBody,
         })
         .from(marketingTemplate)
         .leftJoin(
-            emailTemplateDetail,
-            eq(emailTemplateDetail.templateId, marketingTemplate.id)
+            emailTemplate,
+            eq(emailTemplate.templateId, marketingTemplate.id)
         )
         .where(
             and(
@@ -37,13 +37,13 @@ export async function fetchEmailTemplates() {
 }
 
 export async function fetchEmailTemplateById(id: string) {
-    const session = await getSession();
+    const session = await fetchSession();
     const [row] = await db
         .select()
         .from(marketingTemplate)
         .innerJoin(
-            emailTemplateDetail,
-            eq(emailTemplateDetail.templateId, marketingTemplate.id)
+            emailTemplate,
+            eq(emailTemplate.templateId, marketingTemplate.id)
         )
         .where(
             and(
@@ -61,7 +61,7 @@ export async function createEmailTemplate(data: {
     previewText?: string;
     htmlBody: string;
 }) {
-    const session = await getSession();
+    const session = await fetchSession();
     const templateId = randomUUID();
 
     await db.insert(marketingTemplate).values({
@@ -75,7 +75,7 @@ export async function createEmailTemplate(data: {
         updatedAt: new Date(),
     });
 
-    await db.insert(emailTemplateDetail).values({
+    await db.insert(emailTemplate).values({
         id: randomUUID(),
         templateId,
         subject: data.subject,
@@ -99,7 +99,7 @@ export async function updateEmailTemplate(
         status?: typeof CAMPAIGN_STATUS.DRAFT | typeof CAMPAIGN_STATUS.PUBLISHED;
     }
 ) {
-    const session = await getSession();
+    const session = await fetchSession();
 
     if (data.name || data.status) {
         await db
@@ -119,14 +119,14 @@ export async function updateEmailTemplate(
 
     if (data.subject || data.previewText !== undefined || data.htmlBody) {
         await db
-            .update(emailTemplateDetail)
+            .update(emailTemplate)
             .set({
                 ...(data.subject && {subject: data.subject}),
                 ...(data.previewText !== undefined && {previewText: data.previewText}),
                 ...(data.htmlBody && {htmlBody: data.htmlBody}),
                 updatedAt: new Date(),
             })
-            .where(eq(emailTemplateDetail.templateId, id));
+            .where(eq(emailTemplate.templateId, id));
     }
 
     revalidatePath("/campaigns/email/templates");
@@ -134,7 +134,7 @@ export async function updateEmailTemplate(
 }
 
 export async function deleteEmailTemplate(id: string) {
-    const session = await getSession();
+    const session = await fetchSession();
     await db
         .delete(marketingTemplate)
         .where(
@@ -147,7 +147,7 @@ export async function deleteEmailTemplate(id: string) {
 }
 
 export async function cloneEmailTemplate(templateId: string) {
-    const session = await getSession();
+    const session = await fetchSession();
 
     // 1. Fetch the existing template
     const existing = await fetchEmailTemplateById(templateId);
@@ -169,7 +169,7 @@ export async function cloneEmailTemplate(templateId: string) {
     });
 
     // 3. Insert duplicate into emailTemplateDetail
-    await db.insert(emailTemplateDetail).values({
+    await db.insert(emailTemplate).values({
         id: randomUUID(),
         templateId: newTemplateId,
         subject: existing.email_template_detail.subject,
@@ -192,7 +192,7 @@ export async function createEmailTemplateV2(data: {
     htmlBody: string;
     jsonBody?: any;
 }) {
-    const session = await getSession();
+    const session = await fetchSession();
     const templateId = randomUUID();
 
     await db.insert(marketingTemplate).values({
@@ -206,7 +206,7 @@ export async function createEmailTemplateV2(data: {
         updatedAt: new Date(),
     });
 
-    await db.insert(emailTemplateDetail).values({
+    await db.insert(emailTemplate).values({
         id: randomUUID(),
         templateId,
         subject: data.subject,
@@ -232,7 +232,7 @@ export async function updateEmailTemplateV2(
         status?: typeof CAMPAIGN_STATUS.DRAFT | typeof CAMPAIGN_STATUS.PUBLISHED;
     }
 ) {
-    const session = await getSession();
+    const session = await fetchSession();
 
     if (data.name || data.status) {
         await db
@@ -253,7 +253,7 @@ export async function updateEmailTemplateV2(
 
     if (data.subject || data.previewText !== undefined || data.htmlBody || data.jsonBody) {
         await db
-            .update(emailTemplateDetail)
+            .update(emailTemplate)
             .set({
                 ...(data.subject && {subject: data.subject}),
                 ...(data.previewText !== undefined && {previewText: data.previewText}),
@@ -261,7 +261,7 @@ export async function updateEmailTemplateV2(
                 ...(data.jsonBody && {jsonBody: data.jsonBody}),
                 updatedAt: new Date(),
             })
-            .where(eq(emailTemplateDetail.templateId, id));
+            .where(eq(emailTemplate.templateId, id));
     }
 
     revalidatePath("/campaigns/email/templates");
@@ -269,7 +269,7 @@ export async function updateEmailTemplateV2(
 }
 
 export async function cloneEmailTemplateV2(templateId: string) {
-    const session = await getSession();
+    const session = await fetchSession();
 
     // 1. Fetch the existing template
     const existing = await fetchEmailTemplateById(templateId);
@@ -291,7 +291,7 @@ export async function cloneEmailTemplateV2(templateId: string) {
     });
 
     // 3. Insert duplicate into emailTemplateDetail
-    await db.insert(emailTemplateDetail).values({
+    await db.insert(emailTemplate).values({
         id: randomUUID(),
         templateId: newTemplateId,
         subject: existing.email_template_detail.subject,

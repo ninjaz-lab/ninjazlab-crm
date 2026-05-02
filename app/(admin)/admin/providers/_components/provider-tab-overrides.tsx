@@ -2,7 +2,7 @@
 
 import React, {useMemo} from "react";
 import {DataTable} from "@/components/data-table/data-table";
-import {getColumns} from "./columns";
+import {getColumns} from "./columns-overrides";
 import {ProviderConfig} from "./provider-dashboard";
 import {HugeIcon} from "@/components/huge-icon";
 
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function ProviderTabOverrides({data, isPending, onEdit, onDelete, actionSlot}: Props) {
-    const columns = useMemo(() => getColumns(onEdit, onDelete, isPending, false), [onEdit, onDelete, isPending]);
+    const columns = useMemo(() => getColumns(onEdit, onDelete, isPending), [onEdit, onDelete, isPending]);
 
     return (
         <div className="space-y-4 animate-in fade-in duration-300">

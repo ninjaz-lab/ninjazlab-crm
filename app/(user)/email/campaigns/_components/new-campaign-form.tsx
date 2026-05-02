@@ -1,7 +1,8 @@
 "use client";
 
-import {useState, useTransition} from "react";
+import {useRef, useState, useTransition} from "react";
 import {useRouter} from "next/navigation";
+import * as XLSX from "xlsx";
 import {createEmailCampaign} from "@/lib/actions/email-marketing";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
@@ -9,36 +10,80 @@ import {Label} from "@/components/ui/label";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Alert, AlertDescription} from "@/components/ui/alert";
 import {HugeIcon} from "@/components/huge-icon";
-import {SendMode, useEmailCampaignStore} from "@/lib/store/email-campaign-store";
+import {type RecipientRow, SendMode, useEmailCampaignStore} from "@/lib/store/email-campaign-store";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
 import {cn} from "@/lib/utils/utils";
 
 type Template = { id: string; name: string; subject: string | null; status: string };
-type Segment = { id: string; name: string; count: number };
 
-export function NewCampaignForm(
-    {
-        templates,
-        segments,
-    }: {
-        templates: Template[];
-        segments: Segment[];
-    }) {
+function parseRecipientFile(file: File): Promise<RecipientRow[]> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const wb = XLSX.read(e.target?.result, {type: "array"});
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const raw = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {defval: ""});
+                const rows = raw
+                    .map((r) => ({
+                        email: (r.email ?? r.Email ?? r.EMAIL ?? "").toString().trim(),
+                        firstName: (r.firstName ?? r.first_name ?? r["First Name"] ?? r.FirstName ?? "").toString().trim() || undefined,
+                        lastName: (r.lastName ?? r.last_name ?? r["Last Name"] ?? r.LastName ?? "").toString().trim() || undefined,
+                    }))
+                    .filter((r) => r.email.includes("@"));
+                resolve(rows);
+            } catch (err) {
+                reject(err);
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+export function NewCampaignForm({templates}: { templates: Template[] }) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState("");
+    const [isParsing, setIsParsing] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const {
         name, setName, fromName, setFromName, fromEmail, setFromEmail,
-        replyTo, setReplyTo, templateId, setTemplateId, listId, setListId,
+        replyTo, setReplyTo, templateId, setTemplateId,
+        recipientRows, setRecipientRows,
         sendMode, setSendMode, scheduledAt, setScheduledAt,
         utmSource, setUtmSource, utmMedium, setUtmMedium, utmCampaign, setUtmCampaign,
         reset
     } = useEmailCampaignStore();
 
+    async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsParsing(true);
+        setError("");
+        try {
+            const rows = await parseRecipientFile(file);
+            if (rows.length === 0) {
+                setError("No valid email addresses found in the file. Ensure the file has an 'email' column.");
+            } else {
+                setRecipientRows(rows);
+            }
+        } catch {
+            setError("Failed to parse file. Please upload a valid CSV or Excel file.");
+        } finally {
+            setIsParsing(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    }
+
     function handleSubmit() {
-        if (!name || !fromName || !fromEmail || !templateId || !listId) {
-            setError("Name, from details, template and segment are required.");
+        if (!name || !fromName || !fromEmail || !templateId) {
+            setError("Name, from details, and template are required.");
+            return;
+        }
+        if (recipientRows.length === 0) {
+            setError("Please upload a recipient list (CSV or Excel).");
             return;
         }
         if (sendMode === "schedule" && !scheduledAt) {
@@ -54,7 +99,7 @@ export function NewCampaignForm(
                 fromEmail,
                 replyTo: replyTo || undefined,
                 templateId,
-                listId,
+                recipientRows,
                 scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
                 utmSource: utmSource || undefined,
                 utmMedium: utmMedium || undefined,
@@ -129,7 +174,7 @@ export function NewCampaignForm(
                     </div>
                 </div>
 
-                {/* 3. UTM Tracking (Moved to left column to balance height) */}
+                {/* 3. UTM Tracking */}
                 <div className="bg-background border border-muted-foreground/20 shadow-sm rounded-xl overflow-hidden">
                     <div className="bg-muted/30 border-b border-muted-foreground/10 px-6 py-4 flex items-center gap-3">
                         <div className="p-2 bg-background rounded-lg shadow-sm border border-muted-foreground/10">
@@ -178,9 +223,9 @@ export function NewCampaignForm(
                             <HugeIcon name="UserMultiple01Icon" size={16} className="text-primary"/>
                         </div>
                         <div>
-                            <h3 className="font-bold text-foreground leading-tight">Content & Audience</h3>
-                            <p className="text-xs text-muted-foreground font-medium">Select your target segment and
-                                design</p>
+                            <h3 className="font-bold text-foreground leading-tight">Content & Recipients</h3>
+                            <p className="text-xs text-muted-foreground font-medium">Select your template and upload
+                                recipients</p>
                         </div>
                     </div>
                     <div className="p-6 space-y-6">
@@ -210,30 +255,43 @@ export function NewCampaignForm(
                                 </Select>
                             )}
                         </div>
+
+                        {/* Recipients Upload */}
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Target
-                                Audience</Label>
-                            {segments.length === 0 ? (
-                                <Alert className="bg-muted/20 border-primary/20 text-primary">
-                                    <HugeIcon name="Alert01Icon" size={16}/>
-                                    <AlertDescription className="ml-2 font-medium">No segments yet. Go to Audience to
-                                        create one.</AlertDescription>
-                                </Alert>
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                Recipients
+                            </Label>
+                            {recipientRows.length > 0 ? (
+                                <div
+                                    className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <HugeIcon name="CheckmarkCircle01Icon" size={18}
+                                                  className="text-emerald-600"/>
+                                        <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                                            {recipientRows.length} recipients loaded
+                                        </span>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={() => setRecipientRows([])}
+                                            className="text-muted-foreground hover:text-destructive text-xs h-7">
+                                        Clear
+                                    </Button>
+                                </div>
                             ) : (
-                                <Select value={listId} onValueChange={setListId}>
-                                    <SelectTrigger
-                                        className="h-10 bg-muted/10 hover:bg-muted/30 transition-all rounded-lg font-medium">
-                                        <SelectValue placeholder="Select a segment..."/>
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl shadow-xl">
-                                        {segments.map((s) => (
-                                            <SelectItem key={s.id} value={s.id} className="font-medium cursor-pointer">
-                                                {s.name} <span
-                                                className="text-muted-foreground ml-2">({s.count} contacts)</span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <label
+                                    className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/20 transition-all">
+                                    <HugeIcon name={isParsing ? "Loading03Icon" : "Upload04Icon"} size={22}
+                                              className={cn("text-muted-foreground mb-1.5", isParsing && "animate-spin")}/>
+                                    <span className="text-sm font-semibold text-muted-foreground">
+                                        {isParsing ? "Parsing file..." : "Click to upload CSV or Excel"}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground/70 mt-0.5">
+                                        Needs an <code className="font-mono">email</code> column. Optional: <code
+                                        className="font-mono">firstName</code>, <code
+                                        className="font-mono">lastName</code>
+                                    </span>
+                                    <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden"
+                                           onChange={handleFileChange} disabled={isParsing}/>
+                                </label>
                             )}
                         </div>
                     </div>
@@ -281,7 +339,7 @@ export function NewCampaignForm(
                             "w-full h-12 rounded-xl font-black tracking-wide shadow-md transition-all active:scale-[0.98]",
                             sendMode === "draft" ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : "bg-primary text-primary-foreground hover:bg-primary/90"
                         )}
-                                onClick={handleSubmit} disabled={isPending}>
+                                onClick={handleSubmit} disabled={isPending || isParsing}>
                             <HugeIcon name={buttonConfig[sendMode].icon as any} size={18} className="mr-2"/>
                             {isPending ? "Processing..." : buttonConfig[sendMode].text}
                         </Button>

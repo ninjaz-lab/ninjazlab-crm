@@ -18,11 +18,13 @@ export type UIRule = {
 interface SegmentState {
     name: string;
     colorPicker: string;
+    matchType: "AND" | "OR";
     fields: FieldDef[];
     rules: UIRule[];
     fieldValuesCache: Record<string, string[]>;
     setName: (name: string) => void;
     setColorPicker: (color: string) => void;
+    setMatchType: (type: "AND" | "OR") => void;
     fetchFields: () => Promise<void>;
     addRule: () => void;
     setRules: (rules: any[]) => void;
@@ -35,6 +37,7 @@ interface SegmentState {
 export const useSegmentStore = create<SegmentState>((set, get) => ({
     name: "",
     colorPicker: "#3b82f6",
+    matchType: "AND",
     fields: [],
     // Start with one empty rule by default
     rules: [{
@@ -47,6 +50,7 @@ export const useSegmentStore = create<SegmentState>((set, get) => ({
 
     setName: (name) => set({name}),
     setColorPicker: (color) => set({colorPicker: color}),
+    setMatchType: (type) => set({matchType: type}),
 
     fetchFields: async () => {
         const fields = await getAvailableFields() as FieldDef[];

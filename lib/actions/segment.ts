@@ -2,15 +2,15 @@
 
 import {and, count, eq, isNotNull, sql} from "drizzle-orm";
 import {db} from "@/lib/db";
-import {audience, audienceList} from "@/lib/db/schema";
+import {audience, audience_segment} from "@/lib/db/schema";
 import {type SegmentRule} from "@/lib/audience-utils";
 import {buildDynamicSegmentQuery} from "@/lib/segments";
 import {randomUUID} from "crypto";
 import {revalidatePath} from "next/cache";
-import {getSession} from "@/lib/session";
+import {fetchSession} from "@/lib/session";
 
 export async function getAvailableFields() {
-    const session = await getSession();
+    const session = await fetchSession();
 
     const standardFields = [
         {id: "firstName", label: "First Name", type: "standard" as const, inputType: "text" as const},
@@ -42,7 +42,7 @@ export async function getDistinctFieldValues(
     fieldId: string,
     type: "standard" | "custom"
 ) {
-    const session = await getSession();
+    const session = await fetchSession();
 
     if (type === "standard") {
         let col;
@@ -93,10 +93,20 @@ export async function getDistinctFieldValues(
     }
 }
 
-export async function previewSegmentCount(rules: SegmentRule[]) {
-    const session = await getSession();
+export async function previewSegmentCount(input: any, matchType: "AND" | "OR" = "AND") {
+    const session = await fetchSession();
 
-    const validRules = rules.filter(r => r.field && r.operator && r.value);
+    let rulesArray: SegmentRule[] = [];
+    let resolvedMatchType = matchType;
+
+    if (Array.isArray(input)) {
+        rulesArray = input;
+    } else if (input && typeof input === 'object' && Array.isArray(input.rules)) {
+        rulesArray = input.rules;
+        resolvedMatchType = input.matchType || matchType;
+    }
+
+    const validRules = rulesArray.filter(r => r.field && r.operator && r.value);
 
     if (validRules.length === 0) {
         const [{total}] = await db
@@ -106,7 +116,7 @@ export async function previewSegmentCount(rules: SegmentRule[]) {
         return total;
     }
 
-    const dynamicConditions = buildDynamicSegmentQuery(validRules);
+    const dynamicConditions = buildDynamicSegmentQuery(validRules, resolvedMatchType);
 
     const [{total}] = await db
         .select({total: count()})
@@ -121,8 +131,13 @@ export async function previewSegmentCount(rules: SegmentRule[]) {
     return total;
 }
 
-export async function createDynamicSegment(name: string, color: string, rules: SegmentRule[]) {
-    const session = await getSession();
+export async function createDynamicSegment(
+    name: string,
+    color: string,
+    rules: SegmentRule[],
+    matchType: "AND" | "OR" = "AND"
+) {
+    const session = await fetchSession();
     const id = randomUUID();
 
     // Ensure we don't save incomplete rules
@@ -130,14 +145,16 @@ export async function createDynamicSegment(name: string, color: string, rules: S
     if (validRules.length === 0)
         throw new Error("Cannot save a segment without valid rules");
 
-    await db.insert(audienceList).values({
+    const totalCount = await previewSegmentCount(validRules, matchType);
+
+    await db.insert(audience_segment).values({
         id,
         userId: session.user.id,
         name,
         color,
         type: "dynamic",
-        rules: validRules, // Store the JSON array directly in the DB
-        count: 0, // Dynamic segments don't rely on a static count column
+        rules: {matchType, rules: validRules},
+        count: totalCount,
         updatedAt: new Date(),
     });
 
@@ -145,16 +162,30 @@ export async function createDynamicSegment(name: string, color: string, rules: S
     return id;
 }
 
-export async function previewSegmentContacts(rules: SegmentRule[], limit = 50) {
-    const session = await getSession();
+export async function previewSegmentContacts(
+    input: any,
+    matchType: "AND" | "OR" = "AND",
+    limit = 50
+) {
+    const session = await fetchSession();
 
-    const validRules = rules.filter(r => r.field && r.operator && r.value);
+    let rulesArray: SegmentRule[] = [];
+    let resolvedMatchType = matchType;
+
+    if (Array.isArray(input)) {
+        rulesArray = input;
+    } else if (input && typeof input === 'object' && Array.isArray(input.rules)) {
+        rulesArray = input.rules;
+        resolvedMatchType = input.matchType || matchType;
+    }
+
+    const validRules = rulesArray.filter(r => r.field && r.operator && r.value);
 
     let conditions = eq(audience.userId, session.user.id);
 
     // If we have valid rules, apply them. Otherwise, just return a generic sample.
     if (validRules.length > 0) {
-        const dynamicConditions = buildDynamicSegmentQuery(validRules);
+        const dynamicConditions = buildDynamicSegmentQuery(validRules, resolvedMatchType);
         if (dynamicConditions)
             conditions = and(conditions, dynamicConditions) as any;
     }
@@ -177,24 +208,28 @@ export async function updateDynamicSegment(
     id: string,
     name: string,
     color: string,
-    rules: SegmentRule[]
+    rules: SegmentRule[],
+    matchType: "AND" | "OR" = "AND"
 ) {
-    const session = await getSession();
+    const session = await fetchSession();
 
     // Ensure we don't save incomplete rules
     const validRules = rules.filter(r => r.field && r.operator && r.value);
     if (validRules.length === 0)
         throw new Error("Cannot save a segment without valid rules");
 
-    await db.update(audienceList).set({
+    const totalCount = await previewSegmentCount(validRules, matchType);
+
+    await db.update(audience_segment).set({
         name,
         color,
-        rules: validRules,
+        rules: {matchType, rules: validRules},
+        count: totalCount,
         updatedAt: new Date(),
     }).where(
         and(
-            eq(audienceList.id, id),
-            eq(audienceList.userId, session.user.id) // Security: Only owner can edit
+            eq(audience_segment.id, id),
+            eq(audience_segment.userId, session.user.id) // Security: Only owner can edit
         )
     );
 

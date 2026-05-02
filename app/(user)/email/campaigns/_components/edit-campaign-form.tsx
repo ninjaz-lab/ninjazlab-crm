@@ -1,8 +1,9 @@
 "use client";
 
-import {useState, useTransition} from "react";
+import {useRef, useState, useTransition} from "react";
 import {useRouter} from "next/navigation";
 import {toast} from "sonner";
+import * as XLSX from "xlsx";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
@@ -12,24 +13,50 @@ import {updateEmailCampaign} from "@/lib/actions/email-marketing";
 import {Alert, AlertDescription} from "@/components/ui/alert";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
 import {cn} from "@/lib/utils/utils";
+import type {RecipientRow} from "@/lib/store/email-campaign-store";
 
 type Template = { id: string; name: string; subject: string | null; status: string };
-type Segment = { id: string; name: string; count: number };
 type SendMode = "draft" | "now" | "schedule";
+
+function parseRecipientFile(file: File): Promise<RecipientRow[]> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const wb = XLSX.read(e.target?.result, {type: "array"});
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const raw = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {defval: ""});
+                const rows = raw
+                    .map((r) => ({
+                        email: (r.email ?? r.Email ?? r.EMAIL ?? "").toString().trim(),
+                        firstName: (r.firstName ?? r.first_name ?? r["First Name"] ?? r.FirstName ?? "").toString().trim() || undefined,
+                        lastName: (r.lastName ?? r.last_name ?? r["Last Name"] ?? r.LastName ?? "").toString().trim() || undefined,
+                    }))
+                    .filter((r) => r.email.includes("@"));
+                resolve(rows);
+            } catch (err) {
+                reject(err);
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
 
 export function EditCampaignForm({
                                      campaign,
                                      detail,
                                      templates = [],
-                                     segments = []
                                  }: {
     campaign: any;
     detail: any;
     templates?: Template[];
-    segments?: Segment[];
 }) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
+    const [isParsing, setIsParsing] = useState(false);
+    const [recipientRows, setRecipientRows] = useState<RecipientRow[] | null>(null); // null = keep existing
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [sendMode, setSendMode] = useState<SendMode>(
         campaign.status === CAMPAIGN_STATUS.SCHEDULED ? "schedule" : "draft"
@@ -40,16 +67,37 @@ export function EditCampaignForm({
 
     const publishedTemplates = templates.filter((t) => t.status === CAMPAIGN_STATUS.PUBLISHED);
 
+    async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsParsing(true);
+        try {
+            const rows = await parseRecipientFile(file);
+            if (rows.length === 0) {
+                toast.error("No valid email addresses found. Ensure the file has an 'email' column.");
+            } else {
+                setRecipientRows(rows);
+            }
+        } catch {
+            toast.error("Failed to parse file. Please upload a valid CSV or Excel file.");
+        } finally {
+            setIsParsing(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    }
+
     async function onSubmit(formData: FormData) {
-        // Validate Schedule
         if (sendMode === "schedule" && !scheduledAt) {
             toast.error("Please select a date and time to schedule the campaign.");
             return;
         }
 
-        // Inject Delivery states into standard form data
         formData.append("sendMode", sendMode);
         if (scheduledAt) formData.append("scheduledAt", scheduledAt);
+        // null = keep existing list; only send rows when a new file was uploaded
+        if (recipientRows !== null) {
+            formData.append("recipientRowsJson", JSON.stringify(recipientRows));
+        }
 
         startTransition(async () => {
             try {
@@ -158,18 +206,18 @@ export function EditCampaignForm({
                 </div>
             </div>
 
-            {/* RIGHT COLUMN: Audience & Actions */}
+            {/* RIGHT COLUMN: Content & Actions */}
             <div className="space-y-8">
-                {/* 2. Content & Audience */}
+                {/* 2. Content & Recipients */}
                 <div className="bg-background border border-muted-foreground/20 shadow-sm rounded-xl overflow-hidden">
                     <div className="bg-muted/30 border-b border-muted-foreground/10 px-6 py-4 flex items-center gap-3">
                         <div className="p-2 bg-background rounded-lg shadow-sm border border-muted-foreground/10">
                             <HugeIcon name="UserMultiple01Icon" size={16} className="text-primary"/>
                         </div>
                         <div>
-                            <h3 className="font-bold text-foreground leading-tight">Content & Audience</h3>
-                            <p className="text-xs text-muted-foreground font-medium">Update the template or target
-                                segment</p>
+                            <h3 className="font-bold text-foreground leading-tight">Content & Recipients</h3>
+                            <p className="text-xs text-muted-foreground font-medium">Update the template and upload a
+                                new recipient list</p>
                         </div>
                     </div>
                     <div className="p-6 space-y-6">
@@ -199,29 +247,56 @@ export function EditCampaignForm({
                                 </Select>
                             )}
                         </div>
+
+                        {/* Recipients Upload */}
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Target
-                                Audience</Label>
-                            {segments.length === 0 ? (
-                                <Alert className="bg-muted/20 border-primary/20 text-primary">
-                                    <HugeIcon name="Alert01Icon" size={16}/>
-                                    <AlertDescription className="ml-2 font-medium">No segments yet.</AlertDescription>
-                                </Alert>
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                Recipients
+                            </Label>
+                            {recipientRows !== null ? (
+                                // New file uploaded
+                                <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <HugeIcon name="CheckmarkCircle01Icon" size={18} className="text-emerald-600"/>
+                                        <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                                            {recipientRows.length} new recipients loaded
+                                        </span>
+                                    </div>
+                                    <Button variant="ghost" size="sm" type="button"
+                                            onClick={() => setRecipientRows(null)}
+                                            className="text-muted-foreground hover:text-destructive text-xs h-7">
+                                        Cancel
+                                    </Button>
+                                </div>
+                            ) : campaign.totalRecipients > 0 ? (
+                                // Keeping existing list
+                                <div className="flex items-center justify-between p-4 bg-muted/20 border border-muted-foreground/20 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <HugeIcon name="UserMultiple02Icon" size={18} className="text-muted-foreground"/>
+                                        <span className="text-sm font-medium text-muted-foreground">
+                                            Keeping existing list ({campaign.totalRecipients} recipients)
+                                        </span>
+                                    </div>
+                                    <label className="cursor-pointer text-xs font-bold text-primary hover:underline">
+                                        Replace
+                                        <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls"
+                                               className="hidden" onChange={handleFileChange} disabled={isParsing}/>
+                                    </label>
+                                </div>
                             ) : (
-                                <Select name="listId" defaultValue={campaign.listId}>
-                                    <SelectTrigger
-                                        className="h-10 bg-muted/10 hover:bg-muted/30 transition-all rounded-lg font-medium">
-                                        <SelectValue placeholder="Select a segment..."/>
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl shadow-xl">
-                                        {segments.map((s) => (
-                                            <SelectItem key={s.id} value={s.id} className="font-medium cursor-pointer">
-                                                {s.name} <span
-                                                className="text-muted-foreground ml-2">({s.count} contacts)</span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                // No existing list — must upload
+                                <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/20 transition-all">
+                                    <HugeIcon name={isParsing ? "Loading03Icon" : "Upload04Icon"} size={22}
+                                              className={cn("text-muted-foreground mb-1.5", isParsing && "animate-spin")}/>
+                                    <span className="text-sm font-semibold text-muted-foreground">
+                                        {isParsing ? "Parsing file..." : "Click to upload CSV or Excel"}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground/70 mt-0.5">
+                                        Needs an <code className="font-mono">email</code> column. Optional: <code className="font-mono">firstName</code>, <code className="font-mono">lastName</code>
+                                    </span>
+                                    <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden"
+                                           onChange={handleFileChange} disabled={isParsing}/>
+                                </label>
                             )}
                         </div>
                     </div>
@@ -268,7 +343,7 @@ export function EditCampaignForm({
                                 "w-full md:w-2/3 h-12 rounded-xl font-black tracking-wide shadow-md transition-all active:scale-[0.98]",
                                 sendMode === "draft" ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : "bg-primary text-primary-foreground hover:bg-primary/90"
                             )}
-                                    type="submit" disabled={isPending}>
+                                    type="submit" disabled={isPending || isParsing}>
                                 <HugeIcon name={buttonConfig[sendMode].icon as any} size={18} className="mr-2"/>
                                 {isPending ? "Processing..." : buttonConfig[sendMode].text}
                             </Button>

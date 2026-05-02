@@ -6,12 +6,18 @@ const connection = {
 
 export type ContactImportJobData = { importJobId: string };
 
+export type RecipientRow = { email: string; firstName?: string; lastName?: string };
+export type SmsRecipientRow = { phone: string; name?: string };
+
 export type EmailBlastJobData = {
     campaignId: string;
     blastJobId: string;
     batchIndex: number;
     batchSize: number;
-    subscriberIds: string[];
+    // CSV-upload path — no audience table involved
+    recipientRows?: RecipientRow[];
+    // Segment/list path (future) — audience UUIDs
+    subscriberIds?: string[];
 };
 
 const defaultOptions: DefaultJobOptions = {
@@ -39,7 +45,7 @@ export function getAudienceImportQueue(): Queue {
     return _contactImportQueue;
 }
 
-export function getEmailBlastQueue(): Queue {
+export function fetchEmailBlastQueue(): Queue {
     if (!_emailBlastQueue)
         _emailBlastQueue = new Queue("email-blast", {
             connection,

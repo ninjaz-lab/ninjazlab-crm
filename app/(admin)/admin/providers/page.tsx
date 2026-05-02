@@ -4,6 +4,7 @@ import {PageHeader} from "@/components/page-header";
 import {ProviderDashboard} from "@/app/(admin)/admin/providers/_components/provider-dashboard";
 import {fetchTenants} from "@/lib/actions/admin/providers";
 import {fetchAllUsers} from "@/lib/actions/admin/users";
+import {ADMIN_CONTAINER_CLASS} from "@/lib/constants/admin";
 
 export default async function ProvidersSettingsPage() {
     noStore();
@@ -14,7 +15,7 @@ export default async function ProvidersSettingsPage() {
     ]);
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 p-2">
+        <div className={ADMIN_CONTAINER_CLASS}>
 
             <PageHeader title="Service Providers"
                         description="Manage system-wide API configurations and tenant overrides"

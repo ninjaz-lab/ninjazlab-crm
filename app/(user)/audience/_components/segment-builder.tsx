@@ -35,6 +35,7 @@ export function SegmentBuilder({initialSegment, onDone}: Props) {
     const {
         name, setName,
         colorPicker, setColorPicker,
+        matchType, setMatchType,
         fields, fetchFields,
         rules, addRule, setRules,
         updateRuleField, updateRuleOperator, updateRuleValue, removeRule,
@@ -53,16 +54,20 @@ export function SegmentBuilder({initialSegment, onDone}: Props) {
         if (initialSegment) {
             setName(initialSegment.name);
             setColorPicker(initialSegment.color || "#3b82f6");
+            setMatchType(initialSegment.rules?.matchType || "AND");
+
             if (setRules) {
-                setRules(initialSegment.rules || []);
+                const initialRules = initialSegment.rules?.rules || [];
+                setRules(initialRules);
             }
         } else {
             // Reset for "Create New" mode
             setName("");
             setColorPicker("#3b82f6");
-            if (setRules) {
+            setMatchType("AND");
+
+            if (setRules)
                 setRules([]);
-            }
         }
     }, [initialSegment, fetchFields, setName, setColorPicker, setRules]);
 
@@ -86,8 +91,8 @@ export function SegmentBuilder({initialSegment, onDone}: Props) {
         if (validRules.length > 0) {
             startPreviewTransition(async () => {
                 const [count, contacts] = await Promise.all([
-                    previewSegmentCount(validRules),
-                    previewSegmentContacts(validRules)
+                    previewSegmentCount(validRules, matchType),
+                    previewSegmentContacts(validRules, matchType)
                 ]);
                 setPreviewCount(count);
                 setPreviewContacts(contacts);
@@ -96,7 +101,7 @@ export function SegmentBuilder({initialSegment, onDone}: Props) {
             setPreviewCount(null);
             setPreviewContacts([]);
         }
-    }, [rules, fields]);
+    }, [rules, fields, matchType]);
 
     const handleSave = () => {
         const validRules = getValidBackendRules();
@@ -162,6 +167,22 @@ export function SegmentBuilder({initialSegment, onDone}: Props) {
                 {/* Rules Section */}
                 <div className="space-y-4">
                     <h3 className="font-semibold text-sm text-muted-foreground">Match audiences where:</h3>
+
+                    {rules.length > 1 && (
+                        <div className="flex items-center gap-2 mb-2 p-3 border rounded-lg bg-muted/30">
+                            <span className="text-sm font-medium text-muted-foreground">Contacts must match</span>
+                            <Select value={matchType} onValueChange={(val: "AND" | "OR") => setMatchType(val)}>
+                                <SelectTrigger className="w-[85px] h-8 bg-background">
+                                    <SelectValue/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="AND">ALL</SelectItem>
+                                    <SelectItem value="OR">ANY</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <span className="text-sm font-medium text-muted-foreground">of the following rules:</span>
+                        </div>
+                    )}
 
                     {rules.map((rule) => {
                         const ruleValues = fieldValuesCache[rule.field] || [];

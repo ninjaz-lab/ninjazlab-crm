@@ -1,3 +1,5 @@
+"use client";
+
 import {ColumnDef} from "@tanstack/react-table";
 import {Button} from "@/components/ui/button";
 import {HugeIcon} from "@/components/huge-icon";
@@ -7,6 +9,10 @@ import {Badge} from "@/components/ui/badge";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
 import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
 import {generateDateColumn} from "@/lib/utils/date";
+import {useRouter} from "next/navigation";
+import {useTransition} from "react";
+import {toast} from "sonner";
+import {cloneEmailCampaign} from "@/lib/actions/email-marketing";
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     draft: "secondary",
@@ -21,6 +27,20 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 const ActionCell = ({row}: { row: any }) => {
     const campaign = row.original;
     const isEditable = campaign.status === CAMPAIGN_STATUS.DRAFT || campaign.status === CAMPAIGN_STATUS.SCHEDULED;
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+
+    function handleClone() {
+        startTransition(async () => {
+            try {
+                const newId = await cloneEmailCampaign(campaign.id);
+                toast.success("Campaign cloned successfully!");
+                router.push(`/email/campaigns/${newId}/edit`);
+            } catch {
+                toast.error("Failed to clone campaign.");
+            }
+        });
+    }
 
     const actions: TableRowAction[] = [
         {
@@ -33,7 +53,13 @@ const ActionCell = ({row}: { row: any }) => {
             icon: "Edit02Icon",
             href: `/email/campaigns/${campaign.id}/edit`,
             hidden: !isEditable,
-        }
+        },
+        {
+            label: isPending ? "Cloning..." : "Clone",
+            icon: "Copy01Icon",
+            onClick: handleClone,
+            disabled: isPending,
+        },
     ];
 
     return <TableRowActions actions={actions}/>;

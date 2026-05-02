@@ -5,10 +5,10 @@ import {Button} from "@/components/ui/button";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar";
 import {HugeIcon} from "@/components/huge-icon";
 import {PageHeader} from "@/components/page-header";
-import {getSession} from "@/lib/session";
+import {fetchSession} from "@/lib/session";
 import {db} from "@/lib/db";
 import {and, count, desc, eq} from "drizzle-orm";
-import {audience, audienceList, marketingCampaign, wallets} from "@/lib/db/schema";
+import {audience, audience_segment, marketingCampaign, wallets} from "@/lib/db/schema";
 import {WALLET_TYPES} from "@/lib/enums";
 import {MetricCard} from "@/components/metric-card";
 import {Routes} from "@/lib/constants/routes";
@@ -16,7 +16,7 @@ import {Routes} from "@/lib/constants/routes";
 export default async function DashboardPage() {
     noStore();
 
-    const session = await getSession();
+    const session = await fetchSession();
     const userId = session.user.id;
 
     const [
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
     ] = await Promise.all([
         db.select({totalAudiences: count()}).from(audience).where(eq(audience.userId, userId)),
         db.select({totalCampaigns: count()}).from(marketingCampaign).where(eq(marketingCampaign.userId, userId)),
-        db.select({totalSegments: count()}).from(audienceList).where(eq(audienceList.userId, userId)),
+        db.select({totalSegments: count()}).from(audience_segment).where(eq(audience_segment.userId, userId)),
         db.select().from(wallets).where(and(eq(wallets.userId, userId), eq(wallets.walletType, WALLET_TYPES.MAIN))),
         db.select().from(audience).where(eq(audience.userId, userId)).orderBy(desc(audience.createdAt)).limit(4)
     ]);

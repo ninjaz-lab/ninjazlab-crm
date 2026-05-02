@@ -3,6 +3,7 @@ import {PageHeader} from "@/components/page-header";
 import {HugeIcon} from "@/components/huge-icon";
 import {QueueDashboard} from "./_components/queue-dashboard";
 import {fetchQueueJobs, getQueueMetrics} from "@/lib/actions/admin/queue";
+import {ADMIN_CONTAINER_CLASS} from "@/lib/constants/admin";
 
 export default async function QueuePage() {
     noStore();
@@ -13,7 +14,7 @@ export default async function QueuePage() {
     ]);
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 p-2">
+        <div className={ADMIN_CONTAINER_CLASS}>
 
             <PageHeader title="Job Queue Mission Control"
                         description="Monitor active campaigns blasts, background tasks, and failures"

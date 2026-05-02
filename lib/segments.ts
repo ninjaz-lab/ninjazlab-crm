@@ -1,9 +1,27 @@
-import {and, eq, ilike, ne, SQL, sql} from "drizzle-orm";
+import {and, eq, ilike, ne, or, SQL, sql} from "drizzle-orm";
 import {audience} from "@/lib/db/schema";
-import {type SegmentRule} from "@/lib/audience-utils";
+import {SegmentRule} from "@/lib/audience-utils";
 
-export function buildDynamicSegmentQuery(rules: SegmentRule[]): SQL | undefined {
-    if (!rules || rules.length === 0) return undefined;
+export function buildDynamicSegmentQuery(
+    input: any,
+    providedMatchType?: "AND" | "OR"
+): SQL | undefined {
+    if (!input)
+        return undefined;
+
+    let rules: SegmentRule[] = [];
+    let matchType: "AND" | "OR" = providedMatchType || "AND";
+
+    if (Array.isArray(input)) {
+        rules = input;
+    } else if (input && typeof input === 'object' && Array.isArray(input.rules)) {
+        // New format: input is { matchType, rules: [...] }
+        rules = input.rules;
+        matchType = input.matchType || matchType;
+    }
+
+    if (rules.length === 0)
+        return undefined;
 
     const conditions = rules.map((rule) => {
         let dbField: any;
@@ -27,5 +45,5 @@ export function buildDynamicSegmentQuery(rules: SegmentRule[]): SQL | undefined 
         }
     });
 
-    return and(...conditions);
+    return matchType === "OR" ? or(...conditions) : and(...conditions);
 }

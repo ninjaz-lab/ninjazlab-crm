@@ -1,9 +1,9 @@
 import {authenticateAdmin} from "@/lib/actions/session";
-import {getEmailBlastQueue} from "@/lib/queue";
+import {fetchEmailBlastQueue} from "@/lib/queue";
 
 export async function getQueueMetrics() {
     await authenticateAdmin();
-    const queue = getEmailBlastQueue();
+    const queue = fetchEmailBlastQueue();
 
     // Get counts for the metrics cards
     return await queue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed');
@@ -11,7 +11,7 @@ export async function getQueueMetrics() {
 
 export async function fetchQueueJobs(start = 0, end = 100) {
     await authenticateAdmin();
-    const queue = getEmailBlastQueue();
+    const queue = fetchEmailBlastQueue();
 
     // Fetch jobs across relevant statuses (limit to 100 to prevent crashing the UI if there are millions)
     const jobs = await queue.getJobs(['waiting', 'active', 'delayed', 'failed'], start, end);
@@ -34,6 +34,6 @@ export async function fetchQueueJobs(start = 0, end = 100) {
 // Optional: Add a function to clear failed jobs or retry them later!
 export async function cleanFailedJobs() {
     await authenticateAdmin();
-    const queue = getEmailBlastQueue();
+    const queue = fetchEmailBlastQueue();
     await queue.clean(0, 1000, 'failed');
 }

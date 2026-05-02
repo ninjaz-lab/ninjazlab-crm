@@ -1,5 +1,6 @@
 "use client";
 
+import {useMemo, useCallback} from "react";
 import {useModulePermissions} from "@/hooks/use-module-permissions";
 import {HugeIcon} from "@/components/huge-icon";
 import {Input} from "@/components/ui/input";
@@ -25,24 +26,27 @@ export function UserTabModules({user, allModules, onUpdateUser}: Props) {
         filteredModules
     } = useModulePermissions(user, allModules, onUpdateUser);
 
-    const renderModuleList = (list: any[], scope: USER_ROLES.USER | USER_ROLES.ADMIN) => {
+    const adminTheme = useMemo(() => ({
+        activeBg: "bg-admin",
+        activeText: "text-admin-foreground",
+        borderActive: "border-admin/20",
+        lightBg: "bg-admin/[0.03]",
+        switchColor: "data-[state=checked]:bg-admin"
+    }), []);
+
+    const userTheme = useMemo(() => ({
+        activeBg: "bg-primary",
+        activeText: "text-primary-foreground",
+        borderActive: "border-primary/20",
+        lightBg: "bg-primary/[0.03]",
+        switchColor: "data-[state=checked]:bg-primary"
+    }), []);
+
+    const renderModuleList = useCallback((list: any[], scope: USER_ROLES.USER | USER_ROLES.ADMIN) => {
+        const theme = scope === USER_ROLES.ADMIN ? adminTheme : userTheme;
+
         return list.map((module) => {
             const isEnabled = user?.permissions?.[module.id] ?? false;
-            const isAdmin = scope === USER_ROLES.ADMIN;
-
-            const theme = isAdmin ? {
-                activeBg: "bg-admin",
-                activeText: "text-admin-foreground",
-                borderActive: "border-admin/20",
-                lightBg: "bg-admin/[0.03]",
-                switchColor: "data-[state=checked]:bg-admin"
-            } : {
-                activeBg: "bg-primary",
-                activeText: "text-primary-foreground",
-                borderActive: "border-primary/20",
-                lightBg: "bg-primary/[0.03]",
-                switchColor: "data-[state=checked]:bg-primary"
-            };
 
             return (
                 <div key={module.id}
@@ -75,9 +79,12 @@ export function UserTabModules({user, allModules, onUpdateUser}: Props) {
                 </div>
             );
         });
-    };
+    }, [adminTheme, userTheme, user, isPending, handleToggle]);
 
-    const isAdminUser = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPERADMIN;
+    const isAdminUser = useMemo(() => user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPERADMIN, [user?.role]);
+
+    const handleBulkGrantAll = useCallback(() => bulkUpdate(true), [bulkUpdate]);
+    const handleBulkRevokeAll = useCallback(() => bulkUpdate(false), [bulkUpdate]);
 
     if (isAdminUser) {
         return (
@@ -143,12 +150,12 @@ export function UserTabModules({user, allModules, onUpdateUser}: Props) {
             <div className="px-6 py-3 border-t bg-muted/5 flex items-center gap-2.5 shrink-0">
                 <Button variant="outline"
                         className="flex-1 h-9 text-xs font-bold gap-2 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
-                        onClick={() => bulkUpdate(true)} disabled={isPending}>
+                        onClick={handleBulkGrantAll} disabled={isPending}>
                     <HugeIcon name="Tick01Icon" size={13}/> Grant All
                 </Button>
                 <Button variant="outline"
                         className="flex-1 h-9 text-xs font-bold gap-2 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all"
-                        onClick={() => bulkUpdate(false)} disabled={isPending}>
+                        onClick={handleBulkRevokeAll} disabled={isPending}>
                     <HugeIcon name="Cancel01Icon" size={13}/> Revoke All
                 </Button>
             </div>

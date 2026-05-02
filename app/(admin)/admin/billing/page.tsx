@@ -3,13 +3,14 @@ import {fetchAllTransactions} from "@/lib/actions/admin/billing";
 import {BillingDashboard} from "./_components/billing-dashboard";
 import {PageHeader} from "@/components/page-header";
 import {HugeIcon} from "@/components/huge-icon";
+import {ADMIN_CONTAINER_CLASS} from "@/lib/constants/admin";
 
 export default async function AdminBillingPage() {
     noStore();
     const transactions = await fetchAllTransactions();
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 p-2">
+        <div className={ADMIN_CONTAINER_CLASS}>
 
             <PageHeader title="Billing"
                         description="Manage system billing, invoices, and tenant subscriptions"

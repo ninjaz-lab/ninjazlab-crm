@@ -6,7 +6,7 @@ import {Button} from "@/components/ui/button";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {HugeIcon} from "@/components/huge-icon";
 import {PageHeader} from "@/components/page-header";
-import {getSession} from "@/lib/session";
+import {fetchSession} from "@/lib/session";
 import {db} from "@/lib/db";
 import {user as userTable} from "@/lib/db/schema";
 import {eq} from "drizzle-orm";
@@ -14,7 +14,7 @@ import {eq} from "drizzle-orm";
 export default async function SettingsPage() {
     noStore();
 
-    const session = await getSession();
+    const session = await fetchSession();
     const user = session.user;
 
     // Server Action for Personal Profile
@@ -23,7 +23,7 @@ export default async function SettingsPage() {
         const newName = formData.get("name") as string;
         if (!newName || newName.trim() === "") return;
 
-        const activeSession = await getSession();
+        const activeSession = await fetchSession();
         await db.update(userTable)
             .set({name: newName, updatedAt: new Date()})
             .where(eq(userTable.id, activeSession.user.id));

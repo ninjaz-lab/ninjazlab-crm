@@ -1,14 +1,18 @@
 "use client";
 
 import {useState} from "react";
-import {ColumnDef} from "@tanstack/react-table";
+import {ColumnDef, Row} from "@tanstack/react-table";
 import {Badge} from "@/components/ui/badge";
 import {HugeIcon} from "@/components/huge-icon";
 import {generateDateColumn} from "@/lib/utils/date";
 import {TableRowActions} from "@/components/data-table/table-row-actions";
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "@/components/ui/sheet";
+import {QueueJob} from "@/lib/types/admin";
 
-function ActionCell({row}: { row: any }) {
+/**
+ * Action cell component for queue job rows
+ */
+function ActionCell({row}: { row: Row<QueueJob> }) {
     const [open, setOpen] = useState(false);
     const job = row.original;
 
@@ -64,7 +68,11 @@ function ActionCell({row}: { row: any }) {
     );
 }
 
-export const getColumns = (): ColumnDef<any>[] => [
+/**
+ * Get column definitions for queue jobs table
+ * @returns Column definitions for TanStack React Table
+ */
+export const getColumns = (): ColumnDef<QueueJob>[] => [
     {
         id: "index",
         header: () => <div className="text-center font-bold uppercase text-[10px] tracking-widest w-[60px]">#</div>,

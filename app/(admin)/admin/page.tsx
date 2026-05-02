@@ -11,6 +11,7 @@ import {PageHeader} from "@/components/page-header";
 import {MetricCard} from "@/components/metric-card";
 import {DashboardPanel, EmptyState} from "@/components/dashboard-panel";
 import {Routes} from "@/lib/constants/routes";
+import {ADMIN_CONTAINER_CLASS} from "@/lib/constants/admin";
 
 // Helper for percentage calculations
 function calculateTrend(current: number, previous: number) {
@@ -95,7 +96,7 @@ export default async function AdminDashboardPage() {
     const stats = await getStats();
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 p-2">
+        <div className={ADMIN_CONTAINER_CLASS}>
 
             <PageHeader title="Admin Dashboard"
                         description="System-wide monitoring"

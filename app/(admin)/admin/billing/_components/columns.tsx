@@ -13,8 +13,13 @@ import {TRANSACTION_STATUS, TRANSACTION_TYPES} from "@/lib/enums";
 import {fetchAmountColor, formatAmount} from "@/lib/utils/amount";
 import {generateDateColumn} from "@/lib/utils/date";
 import {cn} from "@/lib/utils/utils";
+import {TransactionRecord} from "@/lib/types/admin";
 
-export const getColumns = (): ColumnDef<any>[] => [
+/**
+ * Get column definitions for billing/transactions table
+ * @returns Column definitions for TanStack React Table
+ */
+export const getColumns = (): ColumnDef<TransactionRecord>[] => [
     {
         id: "index",
         header: () => <div className="font-bold uppercase text-[10px] tracking-widest text-center w-8">#</div>,

@@ -3,7 +3,7 @@ import {Worker} from "bullmq";
 import {and, eq, inArray, or, sql} from "drizzle-orm";
 import {randomUUID} from "crypto";
 import {db} from "@/lib/db";
-import {audience, audienceList, audienceListMember, job_import_audience, notification} from "@/lib/db/schema";
+import {audience, audience_segment, audienceSegmentMember, job_import_audience, notification} from "@/lib/db/schema";
 import {type ContactImportJobData} from "@/lib/queue";
 import {type ImportField, sanitizeValue} from "@/lib/audience-utils";
 
@@ -287,12 +287,12 @@ const worker = new Worker<ContactImportJobData>(
                 const chunk = importedIds.slice(i, i + BATCH_SIZE);
 
                 const existingMembers = await db
-                    .select({audienceId: audienceListMember.audienceId})
-                    .from(audienceListMember)
+                    .select({audienceId: audienceSegmentMember.audienceId})
+                    .from(audienceSegmentMember)
                     .where(
                         and(
-                            eq(audienceListMember.listId, importJob.addToListId),
-                            inArray(audienceListMember.audienceId, chunk)
+                            eq(audienceSegmentMember.listId, importJob.addToListId),
+                            inArray(audienceSegmentMember.audienceId, chunk)
                         )
                     );
 
@@ -300,7 +300,7 @@ const worker = new Worker<ContactImportJobData>(
                 const newMembers = chunk.filter((id) => !existingSet.has(id));
 
                 if (newMembers.length > 0) {
-                    await db.insert(audienceListMember).values(
+                    await db.insert(audienceSegmentMember).values(
                         newMembers.map((contactId) => ({
                             id: randomUUID(),
                             listId: importJob.addToListId!,
@@ -313,14 +313,14 @@ const worker = new Worker<ContactImportJobData>(
 
             if (totalAddedToList > 0) {
                 await db
-                    .update(audienceList)
+                    .update(audience_segment)
                     .set({
-                        count: sql`${audienceList.count}
+                        count: sql`${audience_segment.count}
                         +
                         ${totalAddedToList}`,
                         updatedAt: new Date()
                     })
-                    .where(eq(audienceList.id, importJob.addToListId!));
+                    .where(eq(audience_segment.id, importJob.addToListId!));
                 console.log(`${logPrefix} ✅ Step 6 Complete - Added ${totalAddedToList} new members to the list (skipped existing).`);
             } else {
                 console.log(`${logPrefix} ✅ Step 6 Complete - No new members added to the list (all were already members).`);

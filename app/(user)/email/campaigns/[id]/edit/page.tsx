@@ -1,6 +1,5 @@
 import {notFound} from "next/navigation";
 import {fetchEmailCampaignById} from "@/lib/actions/email-marketing";
-import {fetchAudienceLists} from "@/lib/actions/audience"; // Check your import paths
 import {unstable_noStore as noStore} from "next/cache";
 import {EditCampaignForm} from "@/app/(user)/email/campaigns/_components/edit-campaign-form";
 import {fetchEmailTemplates} from "@/lib/actions/email-template";
@@ -13,10 +12,9 @@ export default async function EditCampaignPage({params}: Props) {
     noStore();
     const {id} = await params;
 
-    const [row, templates, segments] = await Promise.all([
+    const [row, templates] = await Promise.all([
         fetchEmailCampaignById(id),
         fetchEmailTemplates(),
-        fetchAudienceLists()
     ]);
 
     if (!row) notFound();
@@ -33,11 +31,9 @@ export default async function EditCampaignPage({params}: Props) {
                 </p>
             </div>
 
-            <EditCampaignForm
-                campaign={campaign}
-                detail={detail}
-                templates={templates || []}
-                segments={segments || []}
+            <EditCampaignForm campaign={campaign}
+                              detail={detail}
+                              templates={templates || []}
             />
         </div>
     );

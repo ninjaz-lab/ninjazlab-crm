@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useMemo} from "react";
+import React, {useMemo, useCallback} from "react";
 import {getColumns} from "./columns-overrides";
 import {Rule} from "./pricing-dashboard";
 import {DataTable} from "@/components/data-table/data-table";
@@ -18,13 +18,13 @@ interface Props {
 export function PricingTabOverrides({data, isPending, onEdit, onDelete, actionSlot, allRules}: Props) {
     const columns = useMemo(() => getColumns(onEdit, onDelete, isPending, allRules), [onEdit, onDelete, isPending, allRules]);
 
-    const filterFn = (row: any, columnId: string, filterValue: string) => {
+    const filterFn = useCallback((row: any, columnId: string, filterValue: string) => {
         const q = filterValue.toLowerCase();
         const name = row.original.userName?.toLowerCase() || "";
         const email = row.original.userEmail?.toLowerCase() || "";
         const note = row.original.note?.toLowerCase() || "";
         return name.includes(q) || email.includes(q) || note.includes(q);
-    };
+    }, []);
 
     return (
         <div className="space-y-4 animate-in fade-in duration-300">

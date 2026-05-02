@@ -3,11 +3,11 @@
 import {randomUUID} from "crypto";
 import {and, asc, count, desc, eq, ilike, inArray, or, sql} from "drizzle-orm";
 import {db} from "@/lib/db";
-import {audience, audienceList, audienceListMember} from "@/lib/db/schema";
+import {audience, audience_segment, audienceSegmentMember} from "@/lib/db/schema";
 import {SegmentRule} from "@/lib/audience-utils";
 import {revalidatePath} from "next/cache";
 import {buildDynamicSegmentQuery} from "@/lib/segments";
-import {getSession} from "@/lib/session";
+import {fetchSession} from "@/lib/session";
 import {CHANNEL_STATUS} from "@/lib/enums";
 
 // ─── Audience CRUD ─────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ export async function fetchAudiences(opts?: {
     page?: number;
     pageSize?: number;
 }) {
-    const session = await getSession();
+    const session = await fetchSession();
     const {search = "", listId, page = 1, pageSize = 50} = opts ?? {};
     const offset = (page - 1) * pageSize;
 
@@ -41,8 +41,8 @@ export async function fetchAudiences(opts?: {
         // 1. Fetch the segment to see what type it is
         const [segment] = await db
             .select()
-            .from(audienceList)
-            .where(and(eq(audienceList.id, listId), eq(audienceList.userId, session.user.id)));
+            .from(audience_segment)
+            .where(and(eq(audience_segment.id, listId), eq(audience_segment.userId, session.user.id)));
 
         if (!segment) return {audiences: [], total: 0};
 
@@ -75,8 +75,8 @@ export async function fetchAudiences(opts?: {
             const rows = await db
                 .select({audience: audience})
                 .from(audience)
-                .innerJoin(audienceListMember, eq(audienceListMember.audienceId, audience.id))
-                .where(and(baseWhere, eq(audienceListMember.listId, listId)))
+                .innerJoin(audienceSegmentMember, eq(audienceSegmentMember.audienceId, audience.id))
+                .where(and(baseWhere, eq(audienceSegmentMember.listId, listId)))
                 .orderBy(desc(audience.createdAt))
                 .limit(pageSize)
                 .offset(offset);
@@ -84,8 +84,8 @@ export async function fetchAudiences(opts?: {
             const [{total}] = await db
                 .select({total: count()})
                 .from(audience)
-                .innerJoin(audienceListMember, eq(audienceListMember.audienceId, audience.id))
-                .where(and(baseWhere, eq(audienceListMember.listId, listId)));
+                .innerJoin(audienceSegmentMember, eq(audienceSegmentMember.audienceId, audience.id))
+                .where(and(baseWhere, eq(audienceSegmentMember.listId, listId)));
 
             return {audiences: rows.map((r) => r.audience), total};
         }
@@ -120,7 +120,7 @@ export async function createAudience(data: {
     postalCode?: string;
     notes?: string;
 }) {
-    const session = await getSession();
+    const session = await fetchSession();
     const id = randomUUID();
     await db.insert(audience).values({
         id,
@@ -137,7 +137,7 @@ export async function updateAudience(
     audienceId: string,
     data: Partial<Omit<AudienceRow, "id" | "userId" | "createdAt" | "updatedAt" | "source">>
 ) {
-    const session = await getSession();
+    const session = await fetchSession();
     await db
         .update(audience)
         .set({...data, updatedAt: new Date()})
@@ -146,7 +146,7 @@ export async function updateAudience(
 }
 
 export async function deleteAudience(audienceId: string) {
-    const session = await getSession();
+    const session = await fetchSession();
     await db
         .delete(audience)
         .where(and(eq(audience.id, audienceId), eq(audience.userId, session.user.id)));
@@ -154,7 +154,7 @@ export async function deleteAudience(audienceId: string) {
 }
 
 export async function deleteAudiences(audienceIds: string[]) {
-    const session = await getSession();
+    const session = await fetchSession();
     await db
         .delete(audience)
         .where(and(eq(audience.userId, session.user.id), inArray(audience.id, audienceIds)));
@@ -163,17 +163,17 @@ export async function deleteAudiences(audienceIds: string[]) {
 
 // ─── Audience Lists ─────────────────────────────────────────────────────────────
 
-export type AudienceListRow = typeof audienceList.$inferSelect;
+export type AudienceListRow = typeof audience_segment.$inferSelect;
 
 export async function fetchAudienceLists() {
-    const session = await getSession();
+    const session = await fetchSession();
 
     // 1. Fetch all lists from the database
     const lists = await db
         .select()
-        .from(audienceList)
-        .where(eq(audienceList.userId, session.user.id))
-        .orderBy(asc(audienceList.name));
+        .from(audience_segment)
+        .where(eq(audience_segment.userId, session.user.id))
+        .orderBy(asc(audience_segment.name));
 
     // 2. Loop through the lists and calculate the live count for dynamic segments
     return await Promise.all(lists.map(async (list) => {
@@ -204,78 +204,78 @@ export async function fetchAudienceLists() {
 }
 
 export async function deleteAudienceList(listId: string) {
-    const session = await getSession();
+    const session = await fetchSession();
     await db
-        .delete(audienceList)
-        .where(and(eq(audienceList.id, listId), eq(audienceList.userId, session.user.id)));
+        .delete(audience_segment)
+        .where(and(eq(audience_segment.id, listId), eq(audience_segment.userId, session.user.id)));
     revalidatePath("/audiences");
 }
 
 export async function addAudiencesToList(listId: string, audienceIds: string[]) {
-    const session = await getSession();
+    const session = await fetchSession();
     // Verify list belongs to user
     const [list] = await db
         .select()
-        .from(audienceList)
-        .where(and(eq(audienceList.id, listId), eq(audienceList.userId, session.user.id)));
+        .from(audience_segment)
+        .where(and(eq(audience_segment.id, listId), eq(audience_segment.userId, session.user.id)));
     if (!list) throw new Error("List not found");
 
     // Insert members, skip duplicates
     const existing = await db
-        .select({audienceId: audienceListMember.audienceId})
-        .from(audienceListMember)
+        .select({audienceId: audienceSegmentMember.audienceId})
+        .from(audienceSegmentMember)
         .where(
             and(
-                eq(audienceListMember.listId, listId),
-                inArray(audienceListMember.audienceId, audienceIds)
+                eq(audienceSegmentMember.listId, listId),
+                inArray(audienceSegmentMember.audienceId, audienceIds)
             )
         );
     const existingIds = new Set(existing.map((e) => e.audienceId));
     const newIds = audienceIds.filter((id) => !existingIds.has(id));
 
     if (newIds.length > 0) {
-        await db.insert(audienceListMember).values(
+        await db.insert(audienceSegmentMember).values(
             newIds.map((audienceId) => ({id: randomUUID(), listId, audienceId}))
         );
         await db
-            .update(audienceList)
+            .update(audience_segment)
             .set({
-                count: sql`${audienceList.count}
+                count: sql`${audience_segment.count}
                 +
                 ${newIds.length}`, updatedAt: new Date()
             })
-            .where(eq(audienceList.id, listId));
+            .where(eq(audience_segment.id, listId));
     }
     revalidatePath("/audiences");
 }
 
 export async function removeAudienceFromList(listId: string, audienceId: string) {
-    const session = await getSession();
+    const session = await fetchSession();
     const [list] = await db
         .select()
-        .from(audienceList)
-        .where(and(eq(audienceList.id, listId), eq(audienceList.userId, session.user.id)));
+        .from(audience_segment)
+        .where(and(eq(audience_segment.id, listId), eq(audience_segment.userId, session.user.id)));
     if (!list) throw new Error("List not found");
 
     await db
-        .delete(audienceListMember)
+        .delete(audienceSegmentMember)
         .where(
-            and(eq(audienceListMember.listId, listId), eq(audienceListMember.audienceId, audienceId))
+            and(eq(audienceSegmentMember.listId, listId), eq(audienceSegmentMember.audienceId, audienceId))
         );
     await db
-        .update(audienceList)
+        .update(audience_segment)
         .set({
             count: sql`GREATEST
-            ( ${audienceList.count} -
+            ( ${audience_segment.count} -
                 1,
                 0)`, updatedAt: new Date()
         })
-        .where(eq(audienceList.id, listId));
+        .where(eq(audience_segment.id, listId));
     revalidatePath("/audiences");
 }
 
 export async function fetchUnsubscribedCounts() {
-    const session = await getSession();
+    const session = await fetchSession();
     const result = await db
         .select({
             emailUnsubscribe: sql<number>`cast

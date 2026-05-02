@@ -4,7 +4,13 @@ import {getSessionCookie} from "better-auth/cookies";
 import {USER_ROLES} from "@/lib/enums";
 import {Routes} from "@/lib/constants/routes";
 
-const publicRoutes = [Routes.LOGIN, Routes.REGISTER, "/api/auth", "/api/auth-redirect"];
+const publicRoutes = [
+    Routes.LOGIN,
+    Routes.REGISTER,
+    "/api/auth",
+    "/api/auth-redirect",
+    "/api/webhooks"
+];
 const adminRoutes = [Routes.HOME_ADMIN];
 
 export async function proxy(request: NextRequest) {

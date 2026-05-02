@@ -3,13 +3,13 @@
 import {and, count, desc, eq, or} from "drizzle-orm";
 import {db} from "@/lib/db";
 import {notification, user} from "@/lib/db/schema";
-import {getSession} from "@/lib/session";
+import {fetchSession} from "@/lib/session";
 import {USER_ROLES} from "@/lib/enums";
 import {revalidatePath} from "next/cache";
 import {Routes} from "@/lib/constants/routes";
 
 export async function fetchUnreadNotificationCount() {
-    const session = await getSession();
+    const session = await fetchSession();
     if (!session || !session.user) return 0;
 
     const [result] = await db
@@ -26,7 +26,7 @@ export async function fetchUnreadNotificationCount() {
 }
 
 export async function fetchAllNotifications() {
-    const session = await getSession();
+    const session = await fetchSession();
     if (!session || !session.user) return [];
 
     return await db
@@ -38,7 +38,7 @@ export async function fetchAllNotifications() {
 }
 
 export async function markNotificationAsRead(id: string) {
-    const session = await getSession();
+    const session = await fetchSession();
     if (!session || !session.user) return;
 
     await db
@@ -55,7 +55,7 @@ export async function markNotificationAsRead(id: string) {
 }
 
 export async function markAllNotificationsAsRead() {
-    const session = await getSession();
+    const session = await fetchSession();
     if (!session || !session.user) return 0;
 
     const results = await db
@@ -73,7 +73,7 @@ export async function markAllNotificationsAsRead() {
 }
 
 export async function clearNotification(id: string) {
-    const session = await getSession();
+    const session = await fetchSession();
     if (!session || !session.user) return;
 
     await db.delete(notification).where(
@@ -86,7 +86,7 @@ export async function clearNotification(id: string) {
 }
 
 export async function clearAllNotifications() {
-    const session = await getSession();
+    const session = await fetchSession();
     if (!session || !session.user) return;
 
     await db.delete(notification).where(

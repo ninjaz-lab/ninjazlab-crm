@@ -1,18 +1,28 @@
 "use client";
 
 import {ColumnDef} from "@tanstack/react-table";
-import {formatPricingAmount, SortHeader} from "./columns-helpers";
+import {SortHeader} from "./columns-helpers";
 import {PricingStatusBadge} from "@/components/badge/pricing-status-badge";
 import {CampaignTypeBadge} from "@/components/badge/campaign-type-badge";
 import {TableRowAction, TableRowActions} from "@/components/data-table/table-row-actions";
 import {generateDateColumn} from "@/lib/utils/date";
+import {PricingRule} from "@/lib/types/admin";
+import {formatPricingAmount} from "@/lib/utils/amount";
 
+/**
+ * Get column definitions for default pricing rules table
+ * @param onEdit - Callback when editing a rule
+ * @param setRuleToDelete - Callback to set rule for deletion
+ * @param isPending - Whether an operation is pending
+ * @param allRules - All rules (for duplication checking)
+ * @returns Column definitions for TanStack React Table
+ */
 export const getColumns = (
-    onEdit: (rule: any) => void,
-    setRuleToDelete: (rule: any) => void,
+    onEdit: (rule: PricingRule) => void,
+    setRuleToDelete: (rule: PricingRule) => void,
     isPending: boolean,
-    allRules?: any[],
-): ColumnDef<any>[] => [
+    allRules?: PricingRule[],
+): ColumnDef<PricingRule>[] => [
     {
         id: "index",
         header: () => <div className="text-center font-bold uppercase text-[10px] tracking-widest w-[60px]">#</div>,

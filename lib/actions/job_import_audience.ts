@@ -1,6 +1,6 @@
 "use server";
 
-import {getSession} from "@/lib/session";
+import {fetchSession} from "@/lib/session";
 import {db} from "@/lib/db";
 import {job_import_audience} from "@/lib/db/schema";
 import {desc, eq} from "drizzle-orm";
@@ -41,7 +41,7 @@ export async function parseImportFile(formData: FormData) {
 }
 
 export async function queueAudienceImport(formData: FormData) {
-    const session = await getSession();
+    const session = await fetchSession();
     const file = formData.get("file") as File;
     if (!file) throw new Error("No file provided");
     const mapping: Record<string, ImportField> = JSON.parse(formData.get("mapping") as string);
@@ -78,7 +78,7 @@ export async function queueAudienceImport(formData: FormData) {
 }
 
 export async function fetchImportJobs() {
-    const session = await getSession();
+    const session = await fetchSession();
     return db
         .select({
             id: job_import_audience.id,

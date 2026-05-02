@@ -2,7 +2,7 @@ import {db} from "@/lib/db";
 import {pricingRule, wallets, walletTransaction} from "@/lib/db/schema";
 import {and, desc, eq, isNull, lte, sql} from "drizzle-orm";
 import {randomUUID} from "crypto";
-import {CampaignType, WALLET_TYPES} from "@/lib/enums";
+import {CampaignType, TRANSACTION_STATUS, WALLET_TYPES} from "@/lib/enums";
 import {randomBytes} from "node:crypto";
 
 export async function resolveUnitPrice(
@@ -10,6 +10,11 @@ export async function resolveUnitPrice(
     campaign: string,
     action = "send"
 ): Promise<number | null> {
+    if (!campaign) {
+        console.warn(`[pricing] Warning: 'campaign' parameter is missing. Defaulting to 0.`);
+        return null;
+    }
+
     const now = new Date();
 
     // 1. User-specific rule
@@ -78,7 +83,12 @@ export async function chargeForSend(params: {
             .where(and(eq(wallets.userId, userId), eq(wallets.walletType, WALLET_TYPES.MAIN)))
             .limit(1);
 
-        if (!wallet) throw new Error("User has no main billing configured.");
+        if (!wallet)
+            throw new Error("User has no main billing configured.");
+
+        const currentBalance = Number(wallet.balance);
+        const deduction = Number(amountStr);
+        const newBalance = (currentBalance - deduction).toFixed(2);
 
         // 2. Record Debit Transaction (Absolute value in 'amount', type 'debit')
         await tx.insert(walletTransaction).values({
@@ -87,9 +97,12 @@ export async function chargeForSend(params: {
             walletId: wallet.id,
             transactionId: generateTransactionId(),
             amount: amountStr,
+            balanceBefore: currentBalance.toFixed(2),
+            balanceAfter: newBalance,
             type: "debit",
             campaign,
             referenceId,
+            status: TRANSACTION_STATUS.APPROVED,
             unitCost: unitPrice.toFixed(6),
             units,
             note: note ?? `${campaign} — ${units} units`,

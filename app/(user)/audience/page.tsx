@@ -7,7 +7,7 @@ import {PageHeader} from "@/components/page-header";
 import {fetchAudienceLists, fetchAudiences, fetchUnsubscribedCounts} from "@/lib/actions/audience";
 import {fetchImportJobs} from "@/lib/actions/job_import_audience";
 import {ImportListener} from "@/app/(user)/audience/_components/import-listener";
-import {getSession} from "@/lib/session";
+import {fetchSession} from "@/lib/session";
 import {IMPORT_JOB_STATUS, PAGINATION} from "@/lib/enums";
 
 interface Props {
@@ -22,7 +22,7 @@ interface Props {
 export default async function AudiencePage({searchParams}: Props) {
     noStore();
 
-    const session = await getSession();
+    const session = await fetchSession();
 
     const sp = await searchParams;
     const search = sp.search ?? "";

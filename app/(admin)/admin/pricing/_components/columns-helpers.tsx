@@ -3,15 +3,6 @@ import {HugeIcon} from "@/components/huge-icon";
 import {cn} from "@/lib/utils/utils";
 import {JSX} from "react";
 
-export function formatPricingAmount(price: string | number): string {
-    const num = typeof price === "string" ? parseFloat(price) : price;
-    if (isNaN(num)) return "0.00";
-    return new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 6,
-    }).format(num);
-}
-
 export function SortHeader({column, label}: { column: any; label: string }): JSX.Element {
     const isSorted = column.getIsSorted();
     return (

@@ -2,6 +2,7 @@ import {create} from "zustand";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
 
 export type SendMode = "draft" | "now" | "schedule";
+export type RecipientRow = { email: string; firstName?: string; lastName?: string };
 
 interface CampaignState {
     name: string;
@@ -9,7 +10,7 @@ interface CampaignState {
     fromEmail: string;
     replyTo: string;
     templateId: string;
-    listId: string;
+    recipientRows: RecipientRow[];
     sendMode: SendMode;
     scheduledAt: string;
     utmSource: string;
@@ -22,7 +23,7 @@ interface CampaignState {
     setFromEmail: (val: string) => void;
     setReplyTo: (val: string) => void;
     setTemplateId: (val: string) => void;
-    setListId: (val: string) => void;
+    setRecipientRows: (val: RecipientRow[]) => void;
     setSendMode: (val: SendMode) => void;
     setScheduledAt: (val: string) => void;
     setUtmSource: (val: string) => void;
@@ -38,7 +39,7 @@ export const useEmailCampaignStore = create<CampaignState>((set) => ({
     fromEmail: "",
     replyTo: "",
     templateId: "",
-    listId: "",
+    recipientRows: [],
     sendMode: CAMPAIGN_STATUS.DRAFT,
     scheduledAt: "",
     utmSource: "email",
@@ -51,7 +52,7 @@ export const useEmailCampaignStore = create<CampaignState>((set) => ({
     setFromEmail: (fromEmail) => set({fromEmail}),
     setReplyTo: (replyTo) => set({replyTo}),
     setTemplateId: (templateId) => set({templateId}),
-    setListId: (listId) => set({listId}),
+    setRecipientRows: (recipientRows) => set({recipientRows}),
     setSendMode: (sendMode) => set({sendMode}),
     setScheduledAt: (scheduledAt) => set({scheduledAt}),
     setUtmSource: (utmSource) => set({utmSource}),
@@ -65,7 +66,7 @@ export const useEmailCampaignStore = create<CampaignState>((set) => ({
         fromEmail: "",
         replyTo: "",
         templateId: "",
-        listId: "",
+        recipientRows: [],
         sendMode: CAMPAIGN_STATUS.DRAFT,
         scheduledAt: "",
         utmSource: "email",

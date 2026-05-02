@@ -11,7 +11,7 @@ export async function seedPricingRules() {
         {
             id: randomUUID(),
             userId: null,
-            module: TRANSACTION_CAMPAIGN.EMAIL,
+            campaign: TRANSACTION_CAMPAIGN.EMAIL,
             action: "send",
             unitPrice: "0.100000",
             currency: "MYR",
@@ -22,7 +22,7 @@ export async function seedPricingRules() {
         {
             id: randomUUID(),
             userId: null,
-            module: TRANSACTION_CAMPAIGN.SMS,
+            campaign: TRANSACTION_CAMPAIGN.SMS,
             action: "send",
             unitPrice: "0.100000",
             currency: "MYR",

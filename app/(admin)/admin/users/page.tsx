@@ -10,6 +10,7 @@ import {db} from "@/lib/db";
 import {user} from "@/lib/db/schema";
 import {count, eq} from "drizzle-orm";
 import {USER_ROLES} from "@/lib/enums";
+import {ADMIN_CONTAINER_CLASS} from "@/lib/constants/admin";
 
 interface Props {
     searchParams: Promise<{ page?: string; q?: string; role?: string }>;
@@ -38,7 +39,7 @@ export default async function AdminUsersPage({searchParams,}: Props) {
     const totalRegularUsers = userCount[0].count;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 p-2">
+        <div className={ADMIN_CONTAINER_CLASS}>
 
             <PageHeader title="Users"
                         description="Manage system users and their permissions"

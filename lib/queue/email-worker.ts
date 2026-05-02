@@ -9,21 +9,22 @@
 import {type Job, Worker} from "bullmq";
 import nodemailer from "nodemailer";
 import {SendEmailCommand, SESClient} from "@aws-sdk/client-ses";
+import {randomUUID} from "crypto";
+import {and, eq, inArray} from "drizzle-orm";
+import type {EmailBlastJobData, RecipientRow} from "./index";
 import {db} from "@/lib/db";
 import {
     audience,
-    emailCampaignDetail,
-    emailTemplateDetail,
+    emailCampaign,
+    emailTemplate,
     jobMarketingBlast,
     marketingCampaign,
     marketingProvider,
     marketingSendLog,
     marketingTemplate,
 } from "@/lib/db/schema";
-import {and, eq, inArray} from "drizzle-orm";
-import {randomUUID} from "crypto";
-import type {EmailBlastJobData} from "./index";
 import {CAMPAIGN_STATUS, CAMPAIGN_TYPE} from "@/lib/enums";
+import {chargeForSend} from "@/lib/pricing";
 
 const redisUrl = new URL(process.env.REDIS_URL || "redis://127.0.0.1:6379");
 
@@ -118,7 +119,7 @@ async function sendEmail(config: ProviderConfig, params: SendParams): Promise<st
 }
 
 async function processEmailBlast(job: Job<EmailBlastJobData>) {
-    const {campaignId, blastJobId, subscriberIds} = job.data;
+    const {campaignId, blastJobId, recipientRows, subscriberIds} = job.data;
 
     // Mark blast job as active
     await db
@@ -130,7 +131,7 @@ async function processEmailBlast(job: Job<EmailBlastJobData>) {
     const [campaignRow] = await db
         .select()
         .from(marketingCampaign)
-        .innerJoin(emailCampaignDetail, eq(emailCampaignDetail.campaignId, marketingCampaign.id))
+        .innerJoin(emailCampaign, eq(emailCampaign.campaignId, marketingCampaign.id))
         .where(eq(marketingCampaign.id, campaignId))
         .limit(1);
 
@@ -139,7 +140,7 @@ async function processEmailBlast(job: Job<EmailBlastJobData>) {
     const [templateRow] = await db
         .select()
         .from(marketingTemplate)
-        .innerJoin(emailTemplateDetail, eq(emailTemplateDetail.templateId, marketingTemplate.id))
+        .innerJoin(emailTemplate, eq(emailTemplate.templateId, marketingTemplate.id))
         .where(eq(marketingTemplate.id, campaignRow.marketing_campaign.templateId!))
         .limit(1);
 
@@ -147,29 +148,41 @@ async function processEmailBlast(job: Job<EmailBlastJobData>) {
 
     const providerConfig = await loadSystemProviderConfig("email");
 
-    // Load contacts
-    const contacts = await db
-        .select()
-        .from(audience)
-        .where(inArray(audience.id, subscriberIds));
+    // Resolve recipients: CSV-upload path or legacy audience-table path
+    let recipients: RecipientRow[];
+    if (recipientRows && recipientRows.length > 0) {
+        recipients = recipientRows;
+    } else if (subscriberIds && subscriberIds.length > 0) {
+        const contacts = await db.select().from(audience).where(inArray(audience.id, subscriberIds));
+        recipients = contacts.map((c) => ({
+            email: c.email ?? "",
+            firstName: c.firstName ?? undefined,
+            lastName: c.lastName ?? undefined,
+        }));
+    } else {
+        recipients = [];
+    }
 
     let sentCount = 0;
     let failedCount = 0;
 
-    for (const recipient of contacts) {
+    for (const recipient of recipients) {
         const sendLogId = randomUUID();
 
-        // Create pending send log
         await db.insert(marketingSendLog).values({
             id: sendLogId,
             campaignId,
-            subscriberId: recipient.id,
+            subscriberId: null,
+            recipientEmail: recipient.email,
             status: "pending",
             createdAt: new Date(),
             updatedAt: new Date(),
         });
 
         try {
+            if (!recipient.email)
+                throw new Error("Recipient has no valid email address.");
+
             // Simple variable substitution: {{firstName}}, {{lastName}}, {{email}}
             const html = templateRow.email_template_detail.htmlBody
                 .replace(/\{\{firstName\}\}/g, recipient.firstName ?? "")
@@ -183,7 +196,7 @@ async function processEmailBlast(job: Job<EmailBlastJobData>) {
             const messageId = await sendEmail(providerConfig, {
                 from: `"${campaignRow.email_campaign_detail.fromName}" <${campaignRow.email_campaign_detail.fromEmail}>`,
                 replyTo: campaignRow.email_campaign_detail.replyTo ?? undefined,
-                to: recipient.email!,
+                to: recipient.email,
                 subject,
                 html,
             });
@@ -238,10 +251,9 @@ async function processEmailBlast(job: Job<EmailBlastJobData>) {
     // Deduct from user's billing for successful sends
     if (sentCount > 0) {
         try {
-            const {chargeForSend} = await import("@/lib/pricing");
             await chargeForSend({
                 userId: campaignRow.marketing_campaign.userId,
-                module: CAMPAIGN_TYPE.EMAIL,
+                campaign: CAMPAIGN_TYPE.EMAIL,
                 units: sentCount,
                 referenceId: campaignId,
                 note: `Email campaign: ${campaignRow.marketing_campaign.name} (${sentCount} sent)`,

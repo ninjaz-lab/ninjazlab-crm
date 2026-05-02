@@ -151,13 +151,12 @@ export function SegmentsPanel({segments, activeSegmentId}: Props) {
                     </DialogHeader>
 
                     <div className="flex-1 overflow-hidden">
-                        <SegmentBuilder
-                            initialSegment={editingSegment}
-                            onDone={() => {
-                                setDialogOpen(false);
-                                setTimeout(() => setEditingSegment(null), 300);
-                                router.refresh();
-                            }}
+                        <SegmentBuilder initialSegment={editingSegment}
+                                        onDone={() => {
+                                            setDialogOpen(false);
+                                            setTimeout(() => setEditingSegment(null), 300);
+                                            router.refresh();
+                                        }}
                         />
                     </div>
                 </DialogContent>

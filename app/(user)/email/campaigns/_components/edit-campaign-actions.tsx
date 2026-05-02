@@ -1,17 +1,11 @@
 "use client";
 
 import {useState, useTransition} from "react";
+import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {cancelCampaign, scheduleCampaign} from "@/lib/actions/email-marketing";
-import {Button} from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import {format} from "date-fns";
+import {toast} from "sonner";
+import {HugeIcon} from "@/components/huge-icon";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -23,12 +17,20 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {Label} from "@/components/ui/label";
+import {cancelCampaign, scheduleCampaign} from "@/lib/actions/email-marketing";
 import {CAMPAIGN_STATUS} from "@/lib/enums";
-import {toast} from "sonner";
-import Link from "next/link";
-import {HugeIcon} from "@/components/huge-icon";
+import {formatToAppTimezone, parseFromAppTimezone} from "@/lib/utils/timezone";
+import {DateTimePicker} from "@/components/datetime-picker";
 
 export function EditCampaignActions(
     {
@@ -42,16 +44,19 @@ export function EditCampaignActions(
     }) {
     const router = useRouter();
     const [scheduleOpen, setScheduleOpen] = useState(false);
-    const [dateTime, setDateTime] = useState(
-        scheduledAt ? new Date(scheduledAt).toISOString().slice(0, 16) : ""
-    );
+    const [calendarOpen, setCalendarOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
+
+    const [dateTime, setDateTime] = useState(
+        scheduledAt ? formatToAppTimezone(scheduledAt) : ""
+    );
 
     function handleSchedule() {
         if (!dateTime) return;
         startTransition(async () => {
             try {
-                await scheduleCampaign(campaignId, new Date(dateTime));
+                const utcDate = parseFromAppTimezone(dateTime);
+                await scheduleCampaign(campaignId, utcDate);
                 toast.success("Campaign scheduled successfully!");
                 setScheduleOpen(false);
                 router.refresh();
@@ -159,14 +164,12 @@ export function EditCampaignActions(
                                    className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                                 Send Date & Time
                             </Label>
-                            <Input id="dt"
-                                   type="datetime-local"
-                                   className="bg-background font-mono font-bold"
-                                   value={dateTime}
-                                   onChange={(e) => setDateTime(e.target.value)}
+                            <DateTimePicker value={dateTime ? new Date(dateTime) : undefined}
+                                            onChange={(date) => setDateTime(date ? format(date, "yyyy-MM-dd'T'HH:mm") : "")}
                             />
                         </div>
                     </div>
+
                     <DialogFooter>
                         <Button variant="outline"
                                 onClick={() => setScheduleOpen(false)}>
